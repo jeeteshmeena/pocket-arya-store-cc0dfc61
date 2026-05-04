@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, ShoppingCart, Zap, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { STORIES } from "@/lib/data";
 import { cn } from "@/lib/utils";
@@ -52,15 +52,15 @@ export function DetailView({ storyId }: { storyId: string }) {
           </div>
           <button
             onClick={() => !inCart && addToCart(story)}
-            className="h-11 px-4 rounded-full bg-surface text-foreground text-sm font-semibold flex items-center gap-1.5 active:scale-95 transition"
+            className="h-11 px-4 rounded-full bg-transparent border border-border text-foreground text-sm font-semibold active:scale-95 transition"
           >
-            <ShoppingCart className="h-4 w-4" /> {inCart ? "In Cart" : "Add"}
+            {inCart ? "In Cart" : "Add to Cart"}
           </button>
           <button
             onClick={() => startCheckout([story])}
-            className="h-11 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-1.5 active:scale-95 transition"
+            className="h-11 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition"
           >
-            <Zap className="h-4 w-4" /> Buy Now
+            Buy Now
           </button>
         </div>
       </div>

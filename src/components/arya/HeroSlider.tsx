@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { HERO_SLIDES } from "@/lib/data";
 import { useApp } from "@/store/app-store";
-import { ShoppingCart, Zap } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 export function HeroSlider() {
@@ -40,15 +40,15 @@ export function HeroSlider() {
         <div className="flex items-center gap-2 mt-3">
           <button
             onClick={() => startCheckout([slide])}
-            className="h-9 px-4 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition"
+            className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-xs font-semibold active:scale-95 transition"
           >
-            <Zap className="h-3.5 w-3.5" /> Buy Now
+            Buy Now
           </button>
           <button
             onClick={() => addToCart(slide)}
-            className="h-9 px-4 rounded-full bg-white/15 backdrop-blur text-white text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition border border-white/20"
+            className="h-9 px-5 rounded-full bg-transparent border border-white/40 text-white text-xs font-semibold active:scale-95 transition"
           >
-            <ShoppingCart className="h-3.5 w-3.5" /> Add to Cart
+            Add to Cart
           </button>
         </div>
       </div>
