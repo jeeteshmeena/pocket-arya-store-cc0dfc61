@@ -15,7 +15,7 @@ export function ExploreView() {
           <Chip key={g} active={genre === g} onClick={() => setGenre(g)}>{g}</Chip>
         ))}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-4">
         {list.map((s) => (
           <div key={s.id} className="flex justify-center"><StoryCard story={s} wide /></div>
         ))}
