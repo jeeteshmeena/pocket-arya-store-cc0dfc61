@@ -55,6 +55,10 @@ type Ctx = {
   checkoutState: CheckoutState;
   resetCheckout: () => void;
   startCheckout: (items: Story[]) => Promise<void>;
+
+  // Deep link
+  deepLinkError: string | null;
+  clearDeepLinkError: () => void;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
