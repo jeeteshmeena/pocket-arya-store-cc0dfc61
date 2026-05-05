@@ -74,7 +74,7 @@ export async function createRazorpayOrder(
   storyIds: string[],
   identity: TelegramIdentity,
 ): Promise<RazorpayOrderResponse> {
-  return request<RazorpayOrderResponse>("/razorpay/order", {
+  return request<RazorpayOrderResponse>("/create-order", {
     method: "POST",
     body: JSON.stringify({
       story_ids: storyIds,
@@ -91,10 +91,23 @@ export async function verifyRazorpayPayment(data: {
   telegram_id: number | null;
   username: string | null;
 }): Promise<CheckoutResponse> {
-  return request<CheckoutResponse>("/razorpay/verify", {
+  return request<CheckoutResponse>("/verify-payment", {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export async function fetchMyPurchases(
+  telegramId: number,
+): Promise<{ story_id: string; title: string; poster?: string; price?: number; platform?: string; genre?: string; purchased_at?: string }[]> {
+  try {
+    const res = await fetch(`/api/my-purchases?telegram_id=${telegramId}`);
+    if (!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j.data) ? j.data : [];
+  } catch {
+    return [];
+  }
 }
 
 export function openTelegramLink(url: string) {

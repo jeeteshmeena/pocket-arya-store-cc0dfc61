@@ -16,20 +16,34 @@ import { DeepLinkErrorDialog } from "./DeepLinkErrorDialog";
 function Shell() {
   const { view } = useApp();
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    // Fixed-height container — prevents page scroll, enables app-like behavior
+    <div className="fixed inset-0 bg-background text-foreground flex flex-col overflow-hidden">
       <Header />
+
+      {/*
+        The ONLY scrollable region.
+        pt-14 = header height, pb-16 = bottom nav height.
+        -webkit-overflow-scrolling for smooth momentum scroll on iOS.
+      */}
       <main
-        className="mx-auto max-w-2xl pt-14"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)" }}
+        className="flex-1 overflow-y-auto"
+        style={{
+          paddingTop: "56px",   /* header */
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)", /* bottom nav */
+          WebkitOverflowScrolling: "touch",
+        }}
       >
-        {view.name === "home" && <HomeView />}
-        {view.name === "explore" && <ExploreView />}
-        {view.name === "mystories" && <MyStoriesView />}
-        {view.name === "profile" && <ProfileView />}
-        {view.name === "settings" && <SettingsView />}
-        {view.name === "detail" && <DetailView storyId={view.storyId} />}
-        {view.name === "checkout" && <CheckoutView />}
+        <div className="mx-auto max-w-2xl">
+          {view.name === "home"      && <HomeView />}
+          {view.name === "explore"   && <ExploreView />}
+          {view.name === "mystories" && <MyStoriesView />}
+          {view.name === "profile"   && <ProfileView />}
+          {view.name === "settings"  && <SettingsView />}
+          {view.name === "detail"    && <DetailView storyId={view.storyId} />}
+          {view.name === "checkout"  && <CheckoutView />}
+        </div>
       </main>
+
       <BottomNav />
       <CartPanel />
       <SearchOverlay />

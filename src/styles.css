@@ -105,7 +105,10 @@
    ══════════════════════════════════════════════════ */
 @layer base {
   * { border-color: var(--color-border); }
-  html, body, #root { height: 100%; }
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;   /* prevent all page-level scroll — app-like */
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -117,7 +120,7 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* Remove ALL blue focus rings */
+  /* Remove ALL blue focus rings globally */
   *:focus-visible {
     outline: 2px solid #111111;
     outline-offset: 2px;
