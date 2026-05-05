@@ -1,23 +1,20 @@
-import { useState } from "react";
 import { X, Trash2 } from "lucide-react";
 import { useApp } from "@/store/app-store";
 
 export function CartPanel() {
-  const { cartOpen, setCartOpen, cart, removeFromCart, startCheckout, navigate } = useApp();
-  const [submitting, setSubmitting] = useState(false);
+  const {
+    cartOpen, setCartOpen, cart, removeFromCart, navigate,
+    startCheckout, checkoutState,
+  } = useApp();
 
   if (!cartOpen) return null;
   const total = cart.reduce((a, b) => a + b.price, 0);
+  const submitting = checkoutState.status === "processing";
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (submitting || cart.length === 0) return;
-    setSubmitting(true);
-    // Brief inline status before handing off to the payment modal
-    setTimeout(() => {
-      startCheckout(cart);
-      setCartOpen(false);
-      setSubmitting(false);
-    }, 600);
+    await startCheckout(cart);
+    setCartOpen(false);
   };
 
   const openDetail = (id: string) => {
