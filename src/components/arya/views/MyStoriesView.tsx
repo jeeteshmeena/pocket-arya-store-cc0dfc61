@@ -10,7 +10,8 @@ type PurchasedStory = {
   price?: number;
   platform?: string;
   genre?: string;
-  purchased_at?: string;
+  isCompleted?: boolean;
+  episodes?: number | string;
 };
 
 function StoryThumb({ poster, title }: { poster?: string | null; title: string }) {
@@ -144,12 +145,17 @@ export function MyStoriesView() {
                   {[s.platform, s.genre].filter(Boolean).join(" · ")}
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-foreground">
-                    ✓ Purchased
+                  {/* Completed / Ongoing badge */}
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
+                    s.isCompleted ? "text-emerald-600" : "text-amber-600"
+                  }`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${
+                      s.isCompleted ? "bg-emerald-500" : "bg-amber-400"
+                    }`} />
+                    {s.isCompleted ? "Completed" : "Ongoing"}
                   </span>
-                  {s.price != null && (
-                    <span className="text-[10px] text-muted-foreground">· ₹{s.price}</span>
-                  )}
+                  <span className="text-[10px] font-bold text-foreground">✓ Purchased</span>
+                  {s.price != null && <span className="text-[10px] text-muted-foreground">· ₹{s.price}</span>}
                 </div>
               </div>
               <button

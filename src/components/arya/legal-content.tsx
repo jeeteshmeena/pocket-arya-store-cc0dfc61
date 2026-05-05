@@ -1,50 +1,229 @@
-export const TERMS_TEXT = `Welcome to Arya Premium. By accessing or using this Mini App, you agree to the following terms.
+// ═══════════════════════════════════════════════════════════
+// TERMS & CONDITIONS — Arya Premium
+// ═══════════════════════════════════════════════════════════
+export const TERMS_TEXT = `TERMS & CONDITIONS
+Last updated: May 2025
 
-1. Content. All stories, audio, and media are licensed for personal, non-commercial use only. Redistribution, resale, or public performance is prohibited.
+Welcome to Arya Premium ("the App"), a Telegram Mini App for purchasing and accessing premium audio story content. By using this App, you agree to be bound by these Terms & Conditions.
 
-2. Accounts. Your Telegram identity is used to deliver purchases. You are responsible for maintaining the security of your Telegram account.
+──────────────────────────────────────
+1. ACCEPTANCE OF TERMS
+──────────────────────────────────────
+By tapping "Accept & Continue," you confirm that you have read, understood, and agree to these Terms. If you do not agree, please do not use this App.
 
-3. Purchases. All purchases are processed through our official Telegram bot. Prices are listed in the app and may change at any time.
+──────────────────────────────────────
+2. CONTENT LICENSE
+──────────────────────────────────────
+All stories, audio content, and media are licensed for personal, non-commercial use only.
 
-4. Acceptable Use. You agree not to misuse the service, attempt to reverse-engineer the app, or infringe intellectual property rights.
+You may NOT:
+• Redistribute, resell, or share purchased content
+• Use content for public broadcast or commercial purposes
+• Attempt to download, copy, or extract audio files
+• Upload content to any third-party platform
 
-5. Disclaimer. The service is provided "as is" without warranties of any kind. We are not liable for any indirect or consequential damages.
+──────────────────────────────────────
+3. ACCOUNT & IDENTITY
+──────────────────────────────────────
+Your Telegram account is your identity on this platform. You are solely responsible for maintaining the security of your Telegram account. We are not liable for unauthorized access due to compromised Telegram credentials.
 
-6. Changes. We may update these terms from time to time. Continued use constitutes acceptance of the updated terms.
+──────────────────────────────────────
+4. PURCHASES & PRICING
+──────────────────────────────────────
+• All prices are listed in Indian Rupees (INR) and are inclusive of applicable taxes
+• Prices are subject to change at any time without prior notice
+• Once purchased, access to content is tied to your Telegram account permanently
+• We reserve the right to withdraw or modify content, but purchased content remains accessible
 
-By tapping Accept, you acknowledge that you have read and agreed to these Terms & Conditions.`;
+──────────────────────────────────────
+5. PAYMENT — POWERED BY RAZORPAY
+──────────────────────────────────────
+All payments are processed securely by Razorpay Payments Pvt. Ltd., a PCI-DSS compliant payment gateway.
 
-export const REFUND_TEXT = `Refund Policy
+Accepted payment methods:
+• UPI (GPay, PhonePe, Paytm, BHIM, and all UPI apps)
+• Credit Cards (Visa, Mastercard, RuPay, Amex)
+• Debit Cards
+• Net Banking (all major banks)
+• Mobile Wallets
+• EMI (on eligible cards)
 
-Due to the digital nature of our content, all sales are generally final. However, refunds may be considered in the following cases:
+Payment security:
+• Arya Premium does NOT store your card or UPI details
+• All transactions are 256-bit SSL encrypted
+• By completing payment, you also agree to Razorpay's Terms of Service (razorpay.com/terms)
 
-• The story you purchased fails to deliver within 24 hours of payment.
-• You were charged twice for the same story.
-• The audio file is corrupted or unplayable and cannot be re-delivered.
+Payment processing notes:
+• UPI payments are typically confirmed within 30–60 seconds
+• Card/Net Banking payments may take up to 2 minutes to confirm
+• Do NOT close the app or press back during payment
+• If payment is deducted but stories are not delivered within 24 hours, contact our support
 
-To request a refund, contact Admin Support from your Profile within 7 days of purchase. Include your Telegram username and order ID. Approved refunds are issued via the original payment method within 5–10 business days.
+Failed transactions:
+• If a payment fails after deduction, Razorpay automatically initiates a reversal
+• Reversal timeline: UPI (instant to 3 days), Cards (5–10 business days), Net Banking (3–7 days)
+• You will NOT be charged twice for a failed transaction
 
-We reserve the right to refuse refunds for requests that fall outside the conditions above or that show signs of abuse.`;
+──────────────────────────────────────
+6. DELIVERY
+──────────────────────────────────────
+After successful payment, stories are delivered via our official Telegram bot (@UseAryaBot). Delivery is typically instant (within minutes). If you do not receive your content within 24 hours, contact Admin Support with your Order ID.
 
+──────────────────────────────────────
+7. ACCEPTABLE USE
+──────────────────────────────────────
+You agree NOT to:
+• Misuse, abuse, or circumvent the service
+• Attempt to reverse-engineer the app or its APIs
+• Use bots, scripts, or automation to access the service
+• Infringe upon any intellectual property rights
+• Create fake orders or fraudulent payment attempts
+
+We reserve the right to suspend or terminate access for violations.
+
+──────────────────────────────────────
+8. DISCLAIMER
+──────────────────────────────────────
+The service is provided "as is" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from the use of this App.
+
+──────────────────────────────────────
+9. GOVERNING LAW
+──────────────────────────────────────
+These Terms are governed by the laws of India. Any disputes shall be subject to the jurisdiction of courts in India.
+
+──────────────────────────────────────
+10. CHANGES TO TERMS
+──────────────────────────────────────
+We may update these Terms periodically. Continued use of the App after changes constitutes acceptance of the updated Terms.
+
+──────────────────────────────────────
+CONTACT
+──────────────────────────────────────
+For any queries or concerns, contact us via Admin Support in the Profile tab or reach us at @UseAryaBot on Telegram.`;
+
+
+// ═══════════════════════════════════════════════════════════
+// REFUND POLICY — Arya Premium
+// ═══════════════════════════════════════════════════════════
+export const REFUND_TEXT = `REFUND POLICY
+Last updated: May 2025
+
+At Arya Premium, all sales of digital content are generally final due to the instant, non-returnable nature of digital goods. However, we are committed to fair treatment and will consider refund requests in the following circumstances.
+
+──────────────────────────────────────
+ELIGIBLE REFUND CONDITIONS
+──────────────────────────────────────
+We will process a full refund if:
+
+1. Non-delivery: Your story was not delivered within 24 hours of a confirmed payment, and we are unable to deliver it.
+
+2. Duplicate charge: You were charged more than once for the same story in the same session.
+
+3. Corrupted content: The audio file delivered is corrupted or completely unplayable, AND re-delivery fails.
+
+4. Technical error: A verified technical error on our end resulted in an incorrect charge.
+
+──────────────────────────────────────
+NOT ELIGIBLE FOR REFUND
+──────────────────────────────────────
+Refunds will NOT be issued for:
+
+• Change of mind after purchase
+• Content already listened to or accessed
+• Purchases made on a different Telegram account
+• Incompatibility with a specific device or app
+• Requests submitted after 7 days of purchase
+• Situations where content was already re-delivered successfully
+
+──────────────────────────────────────
+RAZORPAY PAYMENT REFUNDS
+──────────────────────────────────────
+All refunds for Razorpay payments are credited back to the original payment method:
+
+• UPI: Instantly to 3 business days
+• Credit/Debit Card: 5–10 business days (depends on your bank)
+• Net Banking: 3–7 business days
+• Wallets: 1–3 business days
+
+Failed payment reversals are handled automatically by Razorpay. You do not need to contact us for these.
+
+──────────────────────────────────────
+HOW TO REQUEST A REFUND
+──────────────────────────────────────
+1. Go to Profile → Admin Support
+2. Send your request with:
+   • Your Telegram username
+   • Order ID (found in Checkout success screen)
+   • Reason for refund
+   • Screenshot (if applicable)
+
+Requests must be submitted within 7 days of purchase. We aim to respond within 48 hours.
+
+──────────────────────────────────────
+ABUSE POLICY
+──────────────────────────────────────
+We reserve the right to decline refunds and suspend accounts that show patterns of abuse, including repeated refund requests or fraudulent claims.`;
+
+
+// ═══════════════════════════════════════════════════════════
+// FAQ
+// ═══════════════════════════════════════════════════════════
 export const FAQ_ITEMS: { q: string; a: string }[] = [
   {
     q: "How do I purchase a story?",
-    a: "Add stories to your cart, tap Checkout, and complete the payment in our official Telegram bot. Your library updates automatically once payment is confirmed.",
+    a: "Browse stories, add them to cart, then tap Checkout. Pay securely via Razorpay (UPI, Cards, Net Banking). Stories are delivered instantly to your Telegram via @UseAryaBot.",
   },
   {
-    q: "Where do I listen to my stories?",
-    a: "Purchased stories appear in the My Stories tab. Tap any title to open and play.",
+    q: "Which payment methods are accepted?",
+    a: "We accept UPI (GPay, PhonePe, Paytm, BHIM), Credit/Debit Cards (Visa, Mastercard, RuPay), Net Banking, Mobile Wallets, and EMI on eligible cards — all via Razorpay.",
   },
   {
-    q: "What if my purchase doesn't arrive?",
-    a: "Wait a few minutes and refresh. If it still doesn't appear after 24 hours, contact Admin Support from your Profile with your order ID.",
+    q: "Is my payment information safe?",
+    a: "Yes. Arya Premium does not store any card or UPI details. All payments are processed by Razorpay, a PCI-DSS compliant, RBI-regulated payment gateway with 256-bit SSL encryption.",
   },
   {
-    q: "Can I share my account?",
-    a: "No. Purchases are tied to your Telegram account and are for personal use only.",
+    q: "Where do I receive my purchased stories?",
+    a: "After payment, open @UseAryaBot on Telegram. Your stories will be delivered there automatically. You can also view them in the My Stories tab of this App.",
+  },
+  {
+    q: "My payment was deducted but I didn't receive the story. What do I do?",
+    a: "Wait 5–10 minutes and refresh the My Stories tab. If still not received after 24 hours, contact Admin Support from Profile with your Order ID and payment screenshot.",
+  },
+  {
+    q: "What is the difference between Completed and Ongoing?",
+    a: "Completed means the full story series is available for download in one go. Ongoing means episodes are still being added — you get all currently available episodes and may receive future updates.",
+  },
+  {
+    q: "Can I listen on multiple devices?",
+    a: "Your purchase is tied to your Telegram account. You can access content on any device where you're logged into the same Telegram account.",
+  },
+  {
+    q: "Can I share my purchased stories?",
+    a: "No. Content is licensed for personal use only. Sharing, reselling, or redistributing purchased content is strictly prohibited and may result in account suspension.",
+  },
+  {
+    q: "How do refunds work?",
+    a: "Refunds are available within 7 days for non-delivery or technical issues. Razorpay refunds are credited back to your original payment method (UPI: 1–3 days, Cards: 5–10 days).",
   },
   {
     q: "How does Refer & Earn work?",
     a: "Coming soon — you'll be able to invite friends and earn credits toward future purchases.",
   },
 ];
+
+
+// ═══════════════════════════════════════════════════════════
+// ABOUT
+// ═══════════════════════════════════════════════════════════
+export const ABOUT_TEXT = `About Arya Premium
+
+Arya Premium is a Telegram Mini App that brings you the best premium audio stories from platforms like Pocket FM, Kuku FM, and more — all in one place.
+
+Version: 1.0.0
+Platform: Telegram Mini App
+Payment Partner: Razorpay Payments Pvt. Ltd.
+Delivery: @UseAryaBot
+
+We are not affiliated with Pocket FM, Kuku FM, or any audio platform. All content rights belong to their respective owners. We act as a reseller of licensed digital content.
+
+For support, open the Profile tab → Admin Support.`;

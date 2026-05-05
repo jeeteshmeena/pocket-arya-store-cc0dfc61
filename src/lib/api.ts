@@ -99,7 +99,7 @@ export async function verifyRazorpayPayment(data: {
 
 export async function fetchMyPurchases(
   telegramId: number,
-): Promise<{ story_id: string; title: string; poster?: string; price?: number; platform?: string; genre?: string; purchased_at?: string }[]> {
+): Promise<{ story_id: string; title: string; poster?: string; price?: number; platform?: string; genre?: string; isCompleted?: boolean; episodes?: number | string }[]> {
   try {
     const res = await fetch(`/api/my-purchases?telegram_id=${telegramId}`);
     if (!res.ok) return [];

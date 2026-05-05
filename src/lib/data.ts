@@ -3,7 +3,8 @@ export type Story = {
   title: string;
   description: string;
   price: number;
-  episodes: number;
+  episodes: number | string;
+  totalEpisodes?: number | string;
   genre: string;
   language: string;
   platform: string;
@@ -11,6 +12,7 @@ export type Story = {
   banner: string;
   status: "available" | "coming_soon";
   size?: string;
+  isCompleted?: boolean;   // true = Completed series, false/undefined = Ongoing
 };
 
 // Static UI taxonomy (not story data). Real values still come from the API

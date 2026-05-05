@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
+import { flyToCart } from "@/lib/fly-to-cart";
 
 const BASE_URL = "/api";
 const ASPECT = 1184 / 556; // enforced banner size
@@ -28,10 +29,8 @@ function useBanners() {
   return { banners, loading };
 }
 
-const BADGE_COLORS: Record<string, string> = {
-  TRENDING: "bg-red-500 text-white",
-  NEW:      "bg-green-500 text-white",
-};
+// Only TRENDING badge is shown — NEW badge is removed
+const BADGE_STYLE = "bg-red-500 text-white";
 
 export function HeroSlider() {
   const { addToCart, goToCheckout, navigate, theme, stories } = useApp();
@@ -51,7 +50,7 @@ export function HeroSlider() {
         image: s.poster || s.banner,
         title: s.title,
         subtitle: s.genre,
-        badge: "",
+        badge: "",   // Never auto-add NEW badge
       }));
 
   // Auto-scroll every 5s
@@ -130,11 +129,11 @@ export function HeroSlider() {
       {/* Overlay gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
 
-      {/* Badge */}
-      {slide.badge && (
+      {/* Badge — ONLY show TRENDING, never NEW */}
+      {slide.badge === "TRENDING" && (
         <div className={cn(
           "absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide z-10",
-          BADGE_COLORS[slide.badge] || "bg-primary text-primary-foreground"
+          BADGE_STYLE
         )}>
           {slide.badge}
         </div>
@@ -155,15 +154,20 @@ export function HeroSlider() {
           <div className="flex items-center gap-2 mt-3">
             <button
               onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
-              className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition"
+              className="h-9 px-5 rounded-full bg-white text-foreground text-xs font-bold active:scale-95 transition"
             >
               Buy Now · ₹{story.price}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); addToCart(story); }}
-              className="h-9 px-4 rounded-full bg-white/10 border border-white/25 text-white text-xs font-semibold active:scale-95 transition backdrop-blur"
+              id="hero-add-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                flyToCart(e.currentTarget);
+                setTimeout(() => addToCart(story), 200);
+              }}
+              className="h-9 px-4 rounded-full bg-white/15 border border-white/30 text-white text-xs font-semibold active:scale-95 transition"
             >
-              Add to Cart
+              + Cart
             </button>
           </div>
         )}

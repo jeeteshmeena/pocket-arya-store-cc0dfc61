@@ -112,9 +112,22 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
       {/* Info */}
       <div className="mt-2 px-0.5">
         <div className="text-[13px] font-semibold truncate text-foreground">{story.title}</div>
-        {story.episodes && story.episodes !== "?" && (
-          <div className="text-[11px] text-muted-foreground mt-0.5">{story.episodes} episodes</div>
-        )}
+        {/* Completed / Ongoing status */}
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold",
+            story.isCompleted ? "text-emerald-600" : "text-muted-foreground"
+          )}>
+            <span className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              story.isCompleted ? "bg-emerald-500" : "bg-amber-400"
+            )} />
+            {story.isCompleted ? "Completed" : "Ongoing"}
+          </span>
+          {story.episodes && story.episodes !== "?" && (
+            <span className="text-[10px] text-muted-foreground">· {story.episodes} eps</span>
+          )}
+        </div>
         <div className="text-sm font-bold mt-0.5 text-foreground">₹{story.price}</div>
       </div>
     </div>

@@ -75,6 +75,24 @@ export function DetailView({ storyId }: { storyId: string }) {
             <div className="text-xs text-muted-foreground mt-1">
               {[story.genre, story.language, story.episodes && `${story.episodes} eps`].filter(Boolean).join(" · ")}
             </div>
+            {/* Completed / Ongoing badge */}
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className={cn(
+                "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border",
+                story.isCompleted
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                  : "border-amber-300 bg-amber-50 text-amber-700"
+              )}>
+                <span className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  story.isCompleted ? "bg-emerald-500" : "bg-amber-400"
+                )} />
+                {story.isCompleted ? "Completed" : "Ongoing"}
+              </span>
+              {story.size && (
+                <span className="text-[11px] text-muted-foreground">{story.size}</span>
+              )}
+            </div>
           </div>
         </div>
       </div>

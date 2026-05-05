@@ -1,9 +1,16 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import { FAQ_ITEMS } from "./legal-content";
 
 type Kind = "terms" | "refund" | "faq" | null;
 
+const TITLES: Record<NonNullable<Kind>, string> = {
+  terms:  "Terms & Conditions",
+  refund: "Refund Policy",
+  faq:    "FAQ",
+};
+
+/* ── Custom bottom-sheet modal — no Radix zoom animation ── */
 export function InfoDialog({
   kind,
   onOpenChange,
@@ -16,34 +23,86 @@ export function InfoDialog({
   refundText: string;
 }) {
   const open = kind !== null;
-  const title =
-    kind === "terms" ? "Terms & Conditions" : kind === "refund" ? "Refund Policy" : kind === "faq" ? "FAQ" : "";
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Reset scroll when kind changes
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [kind]);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  if (!open) return null;
+  const title = TITLES[kind!];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh] rounded-2xl bg-surface border-border">
-        <DialogHeader>
-          <DialogTitle className="font-display">{title}</DialogTitle>
-          <DialogDescription className="sr-only">{title}</DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="max-h-[60vh] pr-3">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 animate-fade-in"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Sheet — slides up from bottom */}
+      <div
+        className="relative w-full max-w-2xl bg-background rounded-t-3xl border-t border-border animate-slide-up"
+        style={{ maxHeight: "85vh", display: "flex", flexDirection: "column" }}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="h-1 w-10 rounded-full bg-border" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pb-3 shrink-0 border-b border-border">
+          <h2 className="font-display font-bold text-lg">{title}</h2>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="h-8 w-8 grid place-items-center rounded-full hover:bg-muted transition"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-5 py-4"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           {kind === "faq" ? (
-            <div className="space-y-4">
+            <div className="space-y-5 pb-6">
               {FAQ_ITEMS.map((item, i) => (
-                <div key={i}>
-                  <div className="text-sm font-semibold">{item.q}</div>
-                  <div className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.a}</div>
+                <div key={i} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                  <div className="text-sm font-semibold text-foreground">{item.q}</div>
+                  <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.a}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+            <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed pb-6">
               {kind === "terms" ? termsText : kind === "refund" ? refundText : ""}
             </p>
           )}
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+        </div>
+
+        {/* Footer close button */}
+        <div className="shrink-0 px-5 pt-3 pb-5 border-t border-border">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="w-full h-11 rounded-full bg-foreground text-background font-semibold text-sm active:scale-[0.98] transition"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
