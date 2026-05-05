@@ -97,12 +97,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   useEffect(() => {
-    try {
-      const tg = (window as any).Telegram?.WebApp;
-      tg?.ready?.();
-      tg?.expand?.();
-    } catch {}
-    setTgUser(readTelegramIdentity());
+    let cancelled = false;
+    let attempts = 0;
+    const init = () => {
+      if (cancelled) return;
+      try {
+        const tg = (window as any)?.Telegram?.WebApp;
+        if (tg && typeof tg === "object") {
+          if (typeof tg.ready === "function") tg.ready();
+          if (typeof tg.expand === "function") tg.expand();
+          setTgUser(readTelegramIdentity());
+          return;
+        }
+      } catch {}
+      if (attempts++ < 10) {
+        setTimeout(init, 150);
+      } else {
+        setTgUser(readTelegramIdentity());
+      }
+    };
+    init();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
