@@ -129,11 +129,11 @@ export function HeroSlider() {
       {/* Overlay gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
 
-      {/* Badge — ONLY show TRENDING, never NEW */}
-      {slide.badge === "TRENDING" && (
+      {/* Badge — Premium styling for TRENDING and NEW */}
+      {slide.badge && (
         <div className={cn(
           "absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide z-10",
-          BADGE_STYLE
+          slide.badge === "TRENDING" ? "bg-red-500 text-white" : "bg-white text-black"
         )}>
           {slide.badge}
         </div>
@@ -141,7 +141,7 @@ export function HeroSlider() {
 
       {/* Content */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-10" onClick={handleDetail}>
-        {slide.subtitle && (
+        {slide.subtitle && !slide.subtitle.includes("New Release") && (
           <p className="text-white/70 text-[11px] font-medium mb-1">{slide.subtitle}</p>
         )}
         <div className={cn(

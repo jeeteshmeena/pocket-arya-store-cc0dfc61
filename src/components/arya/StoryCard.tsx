@@ -58,7 +58,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
     <div
       className={cn(
         "shrink-0 cursor-pointer transition-transform duration-200 active:scale-[0.98]",
-        wide ? "w-44" : "w-40"
+        wide ? "w-full" : "w-40"
       )}
       onClick={() => navigate({ name: "detail", storyId: story.id })}
     >

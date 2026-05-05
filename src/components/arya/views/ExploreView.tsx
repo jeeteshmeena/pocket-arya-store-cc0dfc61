@@ -63,8 +63,12 @@ export function ExploreView() {
 function Chip({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick?: () => void }) {
   return (
     <button onClick={onClick} className={cn(
-      "shrink-0 h-9 px-4 rounded-full text-xs font-medium border transition",
-      active ? "bg-primary text-primary-foreground border-primary" : "bg-surface border-border text-muted-foreground"
-    )}>{children}</button>
+      "shrink-0 h-8 px-4 rounded-full text-[12px] font-semibold border transition-all duration-200",
+      active 
+        ? "bg-foreground text-background border-foreground" 
+        : "bg-transparent border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+    )}>
+      {children}
+    </button>
   );
 }
