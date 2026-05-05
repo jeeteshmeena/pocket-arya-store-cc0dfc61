@@ -1,67 +1,223 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
+const BASE_URL = "/api";
+const ASPECT = 1184 / 556; // enforced banner size
+
+type Banner = {
+  id: string;
+  type: "trending" | "new" | "manual";
+  story_id?: string;
+  image?: string | null;
+  title: string;
+  subtitle?: string;
+  badge?: string;
+};
+
+function useBanners() {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetch(`${BASE_URL}/banners`)
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setBanners(j.data); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+  return { banners, loading };
+}
+
+const BADGE_COLORS: Record<string, string> = {
+  TRENDING: "bg-red-500 text-white",
+  NEW:      "bg-green-500 text-white",
+};
+
 export function HeroSlider() {
-  const [i, setI] = useState(0);
-  const { addToCart, startCheckout, theme, stories } = useApp();
+  const { addToCart, goToCheckout, navigate, theme, stories } = useApp();
+  const { banners, loading } = useBanners();
+  const [idx, setIdx] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
+  const isDragging = useRef(false);
 
-  const slides = stories.slice(0, 3);
+  // Use stories as fallback if no banners yet
+  const slides: Banner[] = banners.length > 0
+    ? banners
+    : stories.slice(0, 3).map((s) => ({
+        id: s.id,
+        type: "manual" as const,
+        story_id: s.id,
+        image: s.poster || s.banner,
+        title: s.title,
+        subtitle: s.genre,
+        badge: "",
+      }));
 
+  // Auto-scroll every 5s
   useEffect(() => {
     if (slides.length <= 1) return;
-    const t = setInterval(() => setI((x) => (x + 1) % slides.length), 4500);
+    const t = setInterval(() => setIdx((x) => (x + 1) % slides.length), 5000);
     return () => clearInterval(t);
   }, [slides.length]);
 
-  if (slides.length === 0) return null;
-  const slide = slides[Math.min(i, slides.length - 1)];
+  // Touch/mouse swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    isDragging.current = true;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    const diff = startX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      setIdx((x) => diff > 0 ? (x + 1) % slides.length : (x - 1 + slides.length) % slides.length);
+    }
+    isDragging.current = false;
+  };
+  const onMouseDown = (e: React.MouseEvent) => {
+    startX.current = e.clientX;
+    isDragging.current = true;
+  };
+  const onMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    const diff = startX.current - e.clientX;
+    if (Math.abs(diff) > 40) {
+      setIdx((x) => diff > 0 ? (x + 1) % slides.length : (x - 1 + slides.length) % slides.length);
+    }
+    isDragging.current = false;
+  };
+
+  if (loading || slides.length === 0) {
+    return (
+      <div
+        className={cn("mx-4 mt-3 rounded-2xl bg-surface animate-pulse", theme === "pfm" ? "rounded-3xl" : "rounded-2xl")}
+        style={{ aspectRatio: ASPECT }}
+      />
+    );
+  }
+
+  const slide = slides[Math.min(idx, slides.length - 1)];
+  const story = slide.story_id ? stories.find((s) => s.id === slide.story_id) : null;
+
+  const handleBuyNow = () => {
+    if (story) {
+      addToCart(story);
+      goToCheckout();
+    } else if (slide.story_id) {
+      navigate({ name: "detail", storyId: slide.story_id });
+    }
+  };
+
+  const handleDetail = () => {
+    if (slide.story_id) navigate({ name: "detail", storyId: slide.story_id });
+  };
 
   return (
-    <div className={cn(
-      "relative overflow-hidden mx-4 mt-3 shadow-xl",
-      theme === "pfm" ? "rounded-3xl aspect-[1264/700]" : "rounded-2xl aspect-[1264/590]"
-    )}>
-      {slides.map((s, idx) => (
-        <img
-          key={s.id}
-          src={s.banner}
-          alt={s.title}
-          className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-opacity duration-700",
-            idx === i ? "opacity-100" : "opacity-0"
-          )}
-        />
+    <div
+      ref={trackRef}
+      className={cn(
+        "relative overflow-hidden mx-4 mt-3 shadow-xl select-none cursor-grab active:cursor-grabbing",
+        theme === "pfm" ? "rounded-3xl" : "rounded-2xl"
+      )}
+      style={{ aspectRatio: `${1184}/${556}` }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onMouseDown={onMouseDown}
+      onMouseUp={onMouseUp}
+    >
+      {/* Image slides */}
+      {slides.map((s, i) => (
+        <SlideImage key={s.id} src={s.image} title={s.title} active={i === idx} />
       ))}
-      <div className="absolute inset-0 bg-black/55" />
-      <div className="relative z-10 h-full flex flex-col justify-end p-4 text-white">
-        <div className={cn("font-display font-bold leading-tight", theme === "pfm" ? "text-2xl" : "text-xl")}>
+
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+
+      {/* Badge */}
+      {slide.badge && (
+        <div className={cn(
+          "absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide z-10",
+          BADGE_COLORS[slide.badge] || "bg-primary text-primary-foreground"
+        )}>
+          {slide.badge}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-10" onClick={handleDetail}>
+        {slide.subtitle && (
+          <p className="text-white/70 text-[11px] font-medium mb-1">{slide.subtitle}</p>
+        )}
+        <div className={cn(
+          "font-display font-bold leading-tight text-white",
+          theme === "pfm" ? "text-xl" : "text-lg"
+        )}>
           {slide.title}
         </div>
-        <p className="text-xs text-white/80 mt-1 line-clamp-2 max-w-[90%]">{slide.description}</p>
-        <div className="flex items-center gap-2 mt-3">
-          <button
-            onClick={() => startCheckout([slide])}
-            className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-xs font-semibold active:scale-95 transition"
-          >
-            Buy Now
-          </button>
-          <button
-            onClick={() => addToCart(slide)}
-            className="h-9 px-5 rounded-full bg-transparent border border-white/40 text-white text-xs font-semibold active:scale-95 transition"
-          >
-            Add to Cart
-          </button>
-        </div>
+        {story && (
+          <div className="flex items-center gap-2 mt-3">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
+              className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition"
+            >
+              Buy Now · ₹{story.price}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); addToCart(story); }}
+              className="h-9 px-4 rounded-full bg-white/10 border border-white/25 text-white text-xs font-semibold active:scale-95 transition backdrop-blur"
+            >
+              Add to Cart
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Dot indicators */}
       <div className="absolute bottom-2 right-3 z-10 flex gap-1">
-        {slides.map((_, idx) => (
-          <span key={idx} className={cn(
-            "h-1 rounded-full transition-all",
-            idx === i ? "w-5 bg-white" : "w-1.5 bg-white/40"
-          )} />
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setIdx(i)}
+            className={cn(
+              "h-1.5 rounded-full transition-all duration-300",
+              i === idx ? "w-5 bg-white" : "w-1.5 bg-white/35"
+            )}
+          />
         ))}
       </div>
+    </div>
+  );
+}
+
+function SlideImage({ src, title, active }: { src?: string | null; title: string; active: boolean }) {
+  const [err, setErr] = useState(false);
+  const GENRE_COLORS: Record<string, string> = {
+    "Horror": "#7c3aed", "Thriller": "#0369a1",
+    "Romance": "#e11d48", "Fantasy": "#6d28d9",
+    "Drama": "#b45309", "Action": "#1d4ed8",
+  };
+  const color = GENRE_COLORS[Object.keys(GENRE_COLORS).find(k => title.toLowerCase().includes(k.toLowerCase())) || ""] || "#166534";
+
+  if (src && !err) {
+    return (
+      <img
+        src={src}
+        alt={title}
+        onError={() => setErr(true)}
+        draggable={false}
+        className={cn(
+          "absolute inset-0 h-full w-full object-cover transition-opacity duration-700",
+          active ? "opacity-100" : "opacity-0"
+        )}
+      />
+    );
+  }
+  return (
+    <div
+      className={cn("absolute inset-0 transition-opacity duration-700 flex items-center justify-center", active ? "opacity-100" : "opacity-0")}
+      style={{ background: `linear-gradient(135deg, ${color}cc, ${color}44)` }}
+    >
+      <span className="text-white text-lg font-bold text-center px-4">{title}</span>
     </div>
   );
 }
