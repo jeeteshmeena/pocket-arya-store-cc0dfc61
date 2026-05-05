@@ -37,7 +37,7 @@ export function ProfileView() {
       <h1 className="font-display font-bold text-xl pfm:text-2xl">Profile</h1>
       <div className="mt-4 flex items-center gap-3 p-4 rounded-2xl bg-surface">
         <div className="h-12 w-12 rounded-full bg-primary/20 grid place-items-center text-primary overflow-hidden">
-          {tgUser.photoUrl ? (
+          {tgUser?.photoUrl ? (
             <img src={tgUser.photoUrl} alt={displayName} className="h-full w-full object-cover" />
           ) : (
             <User className="h-6 w-6" />
