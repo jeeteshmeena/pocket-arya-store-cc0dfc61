@@ -41,7 +41,7 @@ export function CartPanel() {
                 className="flex flex-1 min-w-0 gap-3 text-left active:scale-[0.99] transition"
                 aria-label={`Open ${s.title}`}
               >
-                <div className="h-16 w-16 rounded-lg overflow-hidden shrink-0 bg-primary/10">
+                <div className="h-16 w-16 rounded-lg overflow-hidden shrink-0 bg-muted">
                   {s.poster ? (
                     <img src={s.poster} alt={s.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   ) : null}

@@ -1,4 +1,4 @@
-/* Google Fonts — must be first */
+/* Google Fonts */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&display=swap");
 
 @import "tailwindcss" source(none);
@@ -14,103 +14,95 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
+  --color-background:         var(--background);
+  --color-foreground:         var(--foreground);
+  --color-card:               var(--card);
+  --color-card-foreground:    var(--card-foreground);
+  --color-popover:            var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
+  --color-primary:            var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
+  --color-secondary:          var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  --color-muted:              var(--muted);
+  --color-muted-foreground:   var(--muted-foreground);
+  --color-accent:             var(--accent);
+  --color-accent-foreground:  var(--accent-foreground);
+  --color-destructive:        var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-surface: var(--surface);
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --color-border:             var(--border);
+  --color-input:              var(--input);
+  --color-ring:               var(--ring);
+  --color-surface:            var(--surface);
+  --font-sans:                var(--font-sans);
+  --font-display:             var(--font-display);
 }
 
-/* ══════════════════════════════════════════════════════════
-   DEFAULT THEME — Clean dark (Spotify-like)
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   DEFAULT — Premium Light (Nike / Apple Store feel)
+   ══════════════════════════════════════════════════ */
 :root {
-  --radius: 0.875rem;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --radius: 1rem;
+  --font-sans:    "Inter", system-ui, -apple-system, sans-serif;
   --font-display: "Inter", system-ui, sans-serif;
 
-  --background:          oklch(0.14 0 0);
-  --foreground:          oklch(0.97 0 0);
-  --surface:             oklch(0.20 0 0);
-  --card:                oklch(0.20 0 0);
-  --card-foreground:     oklch(0.97 0 0);
-  --popover:             oklch(0.20 0 0);
-  --popover-foreground:  oklch(0.97 0 0);
-  --primary:             oklch(0.78 0.18 145);    /* green */
-  --primary-foreground:  oklch(0.12 0 0);
-  --secondary:           oklch(0.26 0 0);
-  --secondary-foreground:oklch(0.97 0 0);
-  --muted:               oklch(0.22 0 0);
-  --muted-foreground:    oklch(0.68 0 0);
-  --accent:              oklch(0.28 0 0);
-  --accent-foreground:   oklch(0.97 0 0);
-  --destructive:         oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.97 0 0);
-  --border:              oklch(0.25 0 0);
-  --input:               oklch(0.25 0 0);
-  --ring:                oklch(0.78 0.18 145);
+  --background:           #F8F8F8;
+  --foreground:           #111111;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #111111;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #111111;
+  --primary:              #111111;   /* Black — premium CTA */
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #F3F4F6;
+  --secondary-foreground: #111111;
+  --muted:                #F3F4F6;
+  --muted-foreground:     #6B7280;
+  --accent:               #F3F4F6;
+  --accent-foreground:    #111111;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #E5E7EB;
+  --input:                #F3F4F6;
+  --ring:                 #111111;
 }
 
-/* ══════════════════════════════════════════════════════════
-   POCKET FM THEME — Matches real Pocket FM app design
-   - Font: Nunito (rounded, friendly — same feel as PFM)
-   - BG: Very dark navy-black
-   - Primary: Pocket FM orange #FF6B00
-   - Cards: Slightly lighter dark
-   - Borders: subtle
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   POCKET FM — Same light base, PFM-specific layout
+   (bottom nav, fonts handled separately in component)
+   ══════════════════════════════════════════════════ */
 .theme-pfm {
   --radius: 1rem;
-  /* Nunito — same rounded sans-serif feel as Pocket FM uses */
   --font-sans:    "Nunito", "Inter", system-ui, sans-serif;
   --font-display: "Nunito", "Inter", system-ui, sans-serif;
 
-  /* Pocket FM's dark background — near black with subtle warm tint */
-  --background:          #0F0F0F;
-  --foreground:          #F5F5F5;
-  --surface:             #1A1A1A;
-  --card:                #1A1A1A;
-  --card-foreground:     #F5F5F5;
-  --popover:             #1A1A1A;
-  --popover-foreground:  #F5F5F5;
-
-  /* Pocket FM orange — their brand primary color */
-  --primary:             #FF6B00;
-  --primary-foreground:  #FFFFFF;
-
-  --secondary:           #262626;
-  --secondary-foreground:#F5F5F5;
-  --muted:               #222222;
-  --muted-foreground:    #888888;
-  --accent:              #2C2C2C;
-  --accent-foreground:   #F5F5F5;
-  --destructive:         #E53935;
+  /* Same light palette */
+  --background:           #F8F8F8;
+  --foreground:           #111111;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #111111;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #111111;
+  --primary:              #111111;
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #F3F4F6;
+  --secondary-foreground: #111111;
+  --muted:                #F3F4F6;
+  --muted-foreground:     #6B7280;
+  --accent:               #F3F4F6;
+  --accent-foreground:    #111111;
+  --destructive:          #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border:              #2A2A2A;
-  --input:               #2A2A2A;
-  --ring:                #FF6B00;
+  --border:               #E5E7EB;
+  --input:                #F3F4F6;
+  --ring:                 #111111;
 }
 
-/* ══════════════════════════════════════════════════════════
-   BASE STYLES
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   BASE
+   ══════════════════════════════════════════════════ */
 @layer base {
   * { border-color: var(--color-border); }
   html, body, #root { height: 100%; }
@@ -124,13 +116,19 @@
   }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Remove ALL blue focus rings */
+  *:focus-visible {
+    outline: 2px solid #111111;
+    outline-offset: 2px;
+  }
 }
 
-/* ══════════════════════════════════════════════════════════
-   ANIMATIONS
-   ══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   ANIMATIONS — clean, no bounce
+   ══════════════════════════════════════════════════ */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes slide-in-right {
@@ -138,15 +136,10 @@
   to   { transform: translateX(0); }
 }
 @keyframes slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-@keyframes slide-down {
-  from { transform: translateY(-100%); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in        { animation: fade-in 0.22s ease-out both; }
-.animate-slide-in-right { animation: slide-in-right 0.28s cubic-bezier(.2,.8,.2,1) both; }
-.animate-slide-up       { animation: slide-up 0.3s cubic-bezier(.2,.8,.2,1) both; }
-.animate-slide-down     { animation: slide-down 0.2s ease-out both; }
+.animate-fade-in        { animation: fade-in 0.2s ease-out both; }
+.animate-slide-in-right { animation: slide-in-right 0.25s cubic-bezier(.2,.8,.2,1) both; }
+.animate-slide-up       { animation: slide-up 0.25s ease-out both; }

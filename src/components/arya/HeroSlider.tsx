@@ -90,8 +90,8 @@ export function HeroSlider() {
   if (loading || slides.length === 0) {
     return (
       <div
-        className={cn("mx-4 mt-3 rounded-2xl bg-surface animate-pulse", theme === "pfm" ? "rounded-3xl" : "rounded-2xl")}
-        style={{ aspectRatio: ASPECT }}
+        className="mx-4 mt-3 rounded-2xl bg-muted animate-pulse"
+        style={{ aspectRatio: `${1184}/${556}` }}
       />
     );
   }
@@ -115,10 +115,7 @@ export function HeroSlider() {
   return (
     <div
       ref={trackRef}
-      className={cn(
-        "relative overflow-hidden mx-4 mt-3 shadow-xl select-none cursor-grab active:cursor-grabbing",
-        theme === "pfm" ? "rounded-3xl" : "rounded-2xl"
-      )}
+      className="relative overflow-hidden mx-4 mt-3 rounded-2xl shadow-sm select-none cursor-grab active:cursor-grabbing bg-muted"
       style={{ aspectRatio: `${1184}/${556}` }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
@@ -191,12 +188,6 @@ export function HeroSlider() {
 
 function SlideImage({ src, title, active }: { src?: string | null; title: string; active: boolean }) {
   const [err, setErr] = useState(false);
-  const GENRE_COLORS: Record<string, string> = {
-    "Horror": "#7c3aed", "Thriller": "#0369a1",
-    "Romance": "#e11d48", "Fantasy": "#6d28d9",
-    "Drama": "#b45309", "Action": "#1d4ed8",
-  };
-  const color = GENRE_COLORS[Object.keys(GENRE_COLORS).find(k => title.toLowerCase().includes(k.toLowerCase())) || ""] || "#166534";
 
   if (src && !err) {
     return (
@@ -206,18 +197,21 @@ function SlideImage({ src, title, active }: { src?: string | null; title: string
         onError={() => setErr(true)}
         draggable={false}
         className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-opacity duration-700",
+          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
           active ? "opacity-100" : "opacity-0"
         )}
       />
     );
   }
+  /* Clean neutral fallback — title centered on grey */
   return (
     <div
-      className={cn("absolute inset-0 transition-opacity duration-700 flex items-center justify-center", active ? "opacity-100" : "opacity-0")}
-      style={{ background: `linear-gradient(135deg, ${color}cc, ${color}44)` }}
+      className={cn(
+        "absolute inset-0 flex items-end bg-muted transition-opacity duration-500",
+        active ? "opacity-100" : "opacity-0"
+      )}
     >
-      <span className="text-white text-lg font-bold text-center px-4">{title}</span>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
     </div>
   );
 }

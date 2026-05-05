@@ -6,90 +6,116 @@ import { useRef, useState } from "react";
 import { flyToCart } from "@/lib/fly-to-cart";
 
 function isDisplayableUrl(src?: string | null): boolean {
-  return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image/"));
+  return !!src && (
+    src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image/")
+  );
 }
 
 const GENRE_COLORS: Record<string, string> = {
-  "Romance":  "#e11d48",
-  "Horror":   "#7c3aed",
-  "Thriller": "#0369a1",
-  "Fantasy":  "#6d28d9",
-  "Drama":    "#b45309",
-  "Action":   "#1d4ed8",
-  "Mystery":  "#0f766e",
-  "Comedy":   "#ca8a04",
+  "Romance":  "#FEE2E2",
+  "Horror":   "#EDE9FE",
+  "Thriller": "#DBEAFE",
+  "Fantasy":  "#F3E8FF",
+  "Drama":    "#FEF3C7",
+  "Action":   "#DBEAFE",
+  "Mystery":  "#CCFBF1",
+  "Comedy":   "#FEF9C3",
+};
+const GENRE_TEXT: Record<string, string> = {
+  "Romance":  "#991B1B",
+  "Horror":   "#5B21B6",
+  "Thriller": "#1E40AF",
+  "Fantasy":  "#6B21A8",
+  "Drama":    "#92400E",
+  "Action":   "#1E40AF",
+  "Mystery":  "#134E4A",
+  "Comedy":   "#713F12",
 };
 
-function getGenreColor(genre?: string): string {
-  if (!genre) return "#166534";
-  const key = Object.keys(GENRE_COLORS).find(k => genre.toLowerCase().includes(k.toLowerCase()));
-  return key ? GENRE_COLORS[key] : "#166534";
+function getGenre(genre?: string) {
+  const key = Object.keys(GENRE_COLORS).find(k => (genre || "").toLowerCase().includes(k.toLowerCase()));
+  return { bg: key ? GENRE_COLORS[key] : "#F3F4F6", text: key ? GENRE_TEXT[key] : "#374151" };
 }
 
 export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
-  const { addToCart, cart, navigate, theme } = useApp();
+  const { addToCart, cart, navigate } = useApp();
   const inCart = cart.some((x) => x.id === story.id);
   const imgRef = useRef<HTMLImageElement>(null);
   const [imgError, setImgError] = useState(false);
 
   const poster = story.poster;
   const hasImage = isDisplayableUrl(poster) && !imgError;
-  const color = getGenreColor(story.genre);
+  const { bg, text } = getGenre(story.genre);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (inCart) return;
     if (imgRef.current) flyToCart(imgRef.current);
-    setTimeout(() => addToCart(story), 250);
+    setTimeout(() => addToCart(story), 200);
   };
 
   return (
     <div
       className={cn(
-        "shrink-0 group cursor-pointer transition-transform duration-200 active:scale-[0.98]",
-        wide ? "w-40 pfm:w-44" : "w-36 pfm:w-40"
+        "shrink-0 cursor-pointer group transition-transform duration-200 active:scale-[0.98]",
+        wide ? "w-40" : "w-36"
       )}
       onClick={() => navigate({ name: "detail", storyId: story.id })}
     >
-      <div className={cn(
-        "relative overflow-hidden bg-surface shadow-md aspect-[5/6]",
-        theme === "pfm" ? "rounded-2xl" : "rounded-xl"
-      )}>
+      {/* Poster */}
+      <div className="relative overflow-hidden rounded-2xl bg-muted shadow-sm aspect-[3/4]">
         {hasImage ? (
           <img
             ref={imgRef}
             src={poster!}
             alt={story.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover"
             loading="lazy"
             onError={() => setImgError(true)}
           />
         ) : (
-          /* Clean gradient fallback based on genre color */
+          /* Soft pastel fallback — genre tinted */
           <div
-            style={{ background: `linear-gradient(135deg, ${color}cc 0%, ${color}66 100%)` }}
-            className="h-full w-full flex flex-col items-center justify-center p-3"
+            className="h-full w-full flex flex-col items-center justify-center p-3 gap-2"
+            style={{ backgroundColor: bg }}
           >
-            <div className="text-white text-xs font-bold text-center leading-tight line-clamp-4 drop-shadow-md">
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider"
+              style={{ color: text }}
+            >
+              {story.genre}
+            </span>
+            <span
+              className="text-xs font-semibold text-center leading-tight line-clamp-4"
+              style={{ color: text }}
+            >
               {story.title}
-            </div>
-            <div className="mt-2 text-white/70 text-[10px] text-center">{story.genre}</div>
+            </span>
           </div>
         )}
+
+        {/* Add button — black circle */}
         <button
           onClick={handleAdd}
-          className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-lg active:scale-90 transition"
-          aria-label="Add to cart"
+          className={cn(
+            "absolute bottom-2 right-2 h-8 w-8 rounded-full grid place-items-center shadow-md transition-all active:scale-90",
+            inCart
+              ? "bg-foreground text-background"
+              : "bg-foreground text-background hover:scale-105"
+          )}
+          aria-label={inCart ? "In cart" : "Add to cart"}
         >
           {inCart ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
         </button>
       </div>
+
+      {/* Info */}
       <div className="mt-2 px-0.5">
-        <div className={cn("font-semibold truncate", theme === "pfm" ? "text-sm" : "text-[13px]")}>{story.title}</div>
+        <div className="text-[13px] font-semibold truncate text-foreground">{story.title}</div>
         {story.episodes && story.episodes !== "?" && (
-          <div className="text-[11px] text-muted-foreground mt-0.5">{story.episodes} eps</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">{story.episodes} episodes</div>
         )}
-        <div className="text-sm font-bold mt-0.5">₹{story.price}</div>
+        <div className="text-sm font-bold mt-0.5 text-foreground">₹{story.price}</div>
       </div>
     </div>
   );
