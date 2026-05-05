@@ -3,13 +3,13 @@ import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
 import { CartPanel } from "./CartPanel";
 import { SearchOverlay } from "./SearchOverlay";
-import { PaymentModal } from "./PaymentModal";
 import { HomeView } from "./views/HomeView";
 import { ExploreView } from "./views/ExploreView";
 import { MyStoriesView } from "./views/MyStoriesView";
 import { ProfileView } from "./views/ProfileView";
 import { SettingsView } from "./views/SettingsView";
 import { DetailView } from "./views/DetailView";
+import { CheckoutView } from "./views/CheckoutView";
 
 function Shell() {
   const { view } = useApp();
