@@ -134,140 +134,147 @@ export function CheckoutView() {
   };
 
   return (
-    <div className="animate-fade-in px-4 pt-3 pb-10">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-5">
-        <button
-          onClick={phase.name === "idle" ? back : () => setPhase({ name: "idle" })}
-          className="h-9 w-9 grid place-items-center rounded-full hover:bg-muted transition"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="font-display font-bold text-xl">Checkout</h1>
-      </div>
-
-      {/* ── Cart summary ────────────────────────────────────── */}
-      {(phase.name === "idle" || phase.name === "loading") && cartSnap.current.length > 0 && (
-        <div className="rounded-2xl bg-surface border border-border divide-y divide-border overflow-hidden mb-4">
-          {cartSnap.current.map((s) => (
-            <div key={s.id} className="flex items-center gap-3 p-3">
-              <Thumb poster={s.poster} title={s.title} />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold truncate">{s.title}</div>
-                <div className="text-xs text-muted-foreground">{s.platform} · {s.genre}</div>
-              </div>
-              <div className="text-sm font-bold">₹{s.price}</div>
-            </div>
-          ))}
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm text-muted-foreground font-medium">Total</span>
-            <span className="font-display font-bold text-lg">₹{total}</span>
-          </div>
-        </div>
-      )}
-
-      {/* ── IDLE: Pay button ────────────────────────────────── */}
-      {phase.name === "idle" && (
-        <div className="space-y-3">
+    <div className="animate-fade-in pb-40 bg-background min-h-screen">
+      <div className="px-4 pt-3">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-5">
           <button
-            onClick={handlePay}
-            disabled={cartSnap.current.length === 0}
-            className="w-full h-14 rounded-2xl bg-foreground text-background font-bold flex items-center gap-4 px-5 active:scale-[0.98] transition disabled:opacity-40"
+            onClick={phase.name === "idle" ? back : () => setPhase({ name: "idle" })}
+            className="h-9 w-9 grid place-items-center rounded-full hover:bg-muted transition"
+            aria-label="Back"
           >
-            <div className="h-9 w-9 rounded-xl bg-background/20 grid place-items-center shrink-0">
-              <CreditCard className="h-5 w-5" />
-            </div>
-            <div className="text-left flex-1">
-              <div className="text-sm font-bold">Pay ₹{total}</div>
-              <div className="text-[11px] opacity-70">UPI · Cards · Net Banking · Wallets</div>
-            </div>
+            <ArrowLeft className="h-5 w-5" />
           </button>
-
-          <p className="text-center text-[11px] text-muted-foreground">
-            Secured by Razorpay · 256-bit encrypted
-          </p>
+          <h1 className="font-display font-bold text-xl">Checkout</h1>
         </div>
-      )}
 
-      {/* ── LOADING ─────────────────────────────────────────── */}
-      {phase.name === "loading" && (
-        <div className="rounded-2xl bg-surface border border-border p-10 flex flex-col items-center text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-          <h2 className="mt-4 font-display font-bold text-lg">Opening payment…</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Please wait, do not close this screen</p>
-        </div>
-      )}
-
-      {/* ── SUCCESS ─────────────────────────────────────────── */}
-      {phase.name === "success" && (
-        <div className="rounded-2xl bg-surface border border-border p-6">
-          <div className="flex flex-col items-center text-center">
-            <div className="h-16 w-16 rounded-full bg-muted grid place-items-center">
-              <CheckCircle2 className="h-9 w-9 text-foreground" />
-            </div>
-            <h2 className="mt-4 font-display font-bold text-xl">Payment Successful!</h2>
-            <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-              Your purchase is confirmed. Open the bot to receive your stories.
-            </p>
-          </div>
-
-          {/* Order ID */}
-          {phase.order_id && (
-            <div className="mt-5 rounded-xl bg-muted px-4 py-3 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Order ID</div>
-                <div className="font-mono text-sm font-semibold truncate">{phase.order_id}</div>
+        {/* ── Cart summary ────────────────────────────────────── */}
+        {(phase.name === "idle" || phase.name === "loading") && cartSnap.current.length > 0 && (
+          <div className="rounded-2xl bg-surface border border-border divide-y divide-border overflow-hidden mb-4 shadow-sm">
+            {cartSnap.current.map((s) => (
+              <div key={s.id} className="flex items-center gap-3 p-3">
+                <Thumb poster={s.poster} title={s.title} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate text-foreground">{s.title}</div>
+                  <div className="text-xs text-muted-foreground">{s.platform} · {s.genre}</div>
+                </div>
+                <div className="text-sm font-bold text-foreground">₹{s.price}</div>
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── LOADING ─────────────────────────────────────────── */}
+        {phase.name === "loading" && (
+          <div className="rounded-2xl bg-surface border border-border p-10 flex flex-col items-center text-center shadow-sm">
+            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+            <h2 className="mt-4 font-display font-bold text-lg text-foreground">Opening payment…</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Please wait, do not close this screen</p>
+          </div>
+        )}
+
+        {/* ── SUCCESS ─────────────────────────────────────────── */}
+        {phase.name === "success" && (
+          <div className="rounded-2xl bg-surface border border-border p-6 shadow-sm">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-16 w-16 rounded-full bg-emerald-50 grid place-items-center mb-4">
+                <CheckCircle2 className="h-9 w-9 text-emerald-600" />
+              </div>
+              <h2 className="font-display font-bold text-xl text-foreground">Payment Successful!</h2>
+              <p className="mt-2 text-sm text-muted-foreground max-w-xs">
+                Your purchase is confirmed. Open the bot to receive your stories.
+              </p>
+            </div>
+
+            {/* Order ID */}
+            {phase.order_id && (
+              <div className="mt-6 rounded-xl bg-muted px-4 py-3 flex items-center justify-between gap-3 border border-border">
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Order ID</div>
+                  <div className="font-mono text-sm font-bold truncate text-foreground mt-0.5">{phase.order_id}</div>
+                </div>
+                <button
+                  onClick={() => copyOrderId(phase.order_id)}
+                  className="h-8 w-8 grid place-items-center rounded-full hover:bg-background border border-transparent hover:border-border text-muted-foreground shrink-0 transition"
+                >
+                  {copied ? <Check className="h-4 w-4 text-foreground" /> : <Copy className="h-4 w-4" />}
+                </button>
+              </div>
+            )}
+
+            <div className="mt-6 space-y-3">
               <button
-                onClick={() => copyOrderId(phase.order_id)}
-                className="h-8 w-8 grid place-items-center rounded-full hover:bg-background text-muted-foreground shrink-0 transition"
+                onClick={() => openTelegramLink(phase.bot_url)}
+                className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md"
               >
-                {copied ? <Check className="h-4 w-4 text-foreground" /> : <Copy className="h-4 w-4" />}
+                <Send className="h-4 w-4" />
+                Open @{BOT_USERNAME}
+              </button>
+              <button
+                onClick={goHome}
+                className="w-full h-[52px] rounded-2xl bg-surface border border-border text-sm font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                Continue browsing
               </button>
             </div>
-          )}
-
-          <div className="mt-4 space-y-2">
-            <button
-              onClick={() => openTelegramLink(phase.bot_url)}
-              className="w-full h-12 rounded-full bg-foreground text-background font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
-            >
-              <Send className="h-4 w-4" />
-              Open @{BOT_USERNAME}
-            </button>
-            <button
-              onClick={goHome}
-              className="w-full h-11 rounded-full border border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground inline-flex items-center justify-center gap-2 transition"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              Continue browsing
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── ERROR ───────────────────────────────────────────── */}
-      {phase.name === "error" && (
-        <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col items-center text-center">
-          <div className="h-16 w-16 rounded-full bg-muted grid place-items-center">
-            <AlertCircle className="h-9 w-9 text-destructive" />
+        {/* ── ERROR ───────────────────────────────────────────── */}
+        {phase.name === "error" && (
+          <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col items-center text-center shadow-sm">
+            <div className="h-16 w-16 rounded-full bg-red-50 grid place-items-center mb-4">
+              <AlertCircle className="h-9 w-9 text-red-600" />
+            </div>
+            <h2 className="font-display font-bold text-lg text-foreground">Payment Failed</h2>
+            <p className="mt-2 text-sm text-muted-foreground max-w-xs">{phase.message}</p>
+            <div className="mt-6 w-full space-y-3">
+              <button
+                onClick={() => setPhase({ name: "idle" })}
+                className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold active:scale-[0.98] transition shadow-md"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
+                className="w-full h-[52px] rounded-2xl bg-surface border border-border text-sm font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
+              >
+                <Send className="h-4 w-4" /> Contact @{BOT_USERNAME}
+              </button>
+            </div>
           </div>
-          <h2 className="mt-4 font-display font-bold text-lg">Payment Failed</h2>
-          <p className="mt-2 text-sm text-muted-foreground max-w-xs">{phase.message}</p>
-          <div className="mt-5 w-full space-y-2">
+        )}
+      </div>
+
+      {/* ── IDLE: STICKY FOOTER ──────────────────────────────── */}
+      {phase.name === "idle" && (
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-background border-t border-border/60 shadow-[0_-12px_40px_rgba(0,0,0,0.06)] pb-[env(safe-area-inset-bottom)]">
+          <div className="mx-auto max-w-2xl px-4 pt-4 pb-5">
+            
+            {/* Total Row */}
+            <div className="flex items-center justify-between mb-4 px-1">
+              <span className="text-sm font-semibold text-muted-foreground">Total Amount</span>
+              <span className="font-display font-extrabold text-2xl tracking-tight text-foreground">₹{total}</span>
+            </div>
+
+            {/* Pay Button */}
             <button
-              onClick={() => setPhase({ name: "idle" })}
-              className="w-full h-12 rounded-full bg-foreground text-background font-semibold active:scale-[0.98] transition"
+              onClick={handlePay}
+              disabled={cartSnap.current.length === 0}
+              className="w-full h-[54px] rounded-[14px] bg-foreground text-background font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md disabled:opacity-40"
             >
-              Try Again
+              <CreditCard className="h-5 w-5" />
+              Pay Now
             </button>
-            <button
-              onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
-              className="w-full h-11 rounded-full border border-border text-sm text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-2 transition"
-            >
-              <Send className="h-4 w-4" /> Contact @{BOT_USERNAME}
-            </button>
+
+            {/* Razorpay Trust Badge */}
+            <div className="mt-3.5 text-center text-[12px] font-medium text-muted-foreground/70 flex items-center justify-center gap-1.5">
+              <span>Secured by Razorpay</span>
+              <span>·</span>
+              <span>256-bit encryption</span>
+            </div>
+
           </div>
         </div>
       )}
