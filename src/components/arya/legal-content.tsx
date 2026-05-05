@@ -213,17 +213,62 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
 
 
 // ═══════════════════════════════════════════════════════════
-// ABOUT
+// ABOUT — Matches Arya Premium Bot content exactly
 // ═══════════════════════════════════════════════════════════
-export const ABOUT_TEXT = `About Arya Premium
+export const ABOUT_TEXT = `⟦ ABOUT ARYA PREMIUM ⟧
 
-Arya Premium is a Telegram Mini App that brings you the best premium audio stories from platforms like Pocket FM, Kuku FM, and more — all in one place.
+Welcome to Arya Premium — the ultimate, fully automated storefront for exclusive, high-quality stories.
 
-Version: 1.0.0
-Platform: Telegram Mini App
-Payment Partner: Razorpay Payments Pvt. Ltd.
-Delivery: @UseAryaBot
+──────────────────────────────────────
+WHAT IT IS
+──────────────────────────────────────
+Arya Premium is a state-of-the-art paid content delivery ecosystem. It enables users to browse, purchase, and instantly receive premium stories without any manual intervention.
 
-We are not affiliated with Pocket FM, Kuku FM, or any audio platform. All content rights belong to their respective owners. We act as a reseller of licensed digital content.
+──────────────────────────────────────
+HOW IT WORKS
+──────────────────────────────────────
+• Browse the Marketplace to find your desired story.
+• Make a secure payment via Razorpay (UPI, Cards, Net Banking, Wallets).
+• Upon successful validation, your story is delivered instantly to your Telegram via @UseAryaBot.
 
-For support, open the Profile tab → Admin Support.`;
+──────────────────────────────────────
+CORE FEATURES
+──────────────────────────────────────
+• Instant Access: The moment your payment is verified, the content is unlocked forever.
+• Permanent Library: All your purchases are safely stored in My Stories. You never lose access.
+• Seamless Experience: Clean UI, fast response times, and high-quality file delivery.
+• Bot + App Sync: Stories purchased from the bot and from the mini app are merged in one library.
+
+──────────────────────────────────────
+⟦ ABOUT ARYA BOT (PARENT) ⟧
+──────────────────────────────────────
+
+Arya Premium is proudly powered by the Main Arya Bot architecture — a trusted name in Telegram automation.
+
+WHAT IT IS
+──────────────────────────────────────
+The parent Arya Bot is a highly advanced file management and delivery juggernaut, built to handle massive loads and complex operations.
+
+WHY CHOOSE US
+──────────────────────────────────────
+• Instant Delivery: High-speed servers ensure files are forwarded to you with zero lag.
+• Fully Automatic: No waiting for human admins. Everything is handled securely by code.
+• Trusted Service: Used by thousands to manage and deliver files reliably every single day.
+
+FEATURES
+──────────────────────────────────────
+• Batch Links: Group hundreds of files securely for public or private sharing.
+• Live Sync: Real-time mirroring across multiple channels.
+• Smart Management: Auto-approve logic, Force Subscribe walls, and deep user analytics.
+
+──────────────────────────────────────
+APP INFO
+──────────────────────────────────────
+Version:          1.0.0
+Type:             Telegram Mini App
+Bot:              @UseAryaBot
+Payment Partner:  Razorpay Payments Pvt. Ltd.
+Content:          Pocket FM · Kuku FM · Headphone & More
+
+Disclaimer: Arya Premium is not affiliated with Pocket FM, Kuku FM, or any audio platform. All content rights belong to their respective owners. We act as a licensed reseller of digital content.`;
+

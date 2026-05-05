@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { Skeleton } from "@/components/ui/skeleton";
-import { openTelegramLink } from "@/lib/api";
+import { openTelegramLink, BOT_USERNAME } from "@/lib/api";
 import { InfoDialog, type InfoDialogKind } from "../InfoDialog";
 import { TERMS_TEXT, REFUND_TEXT } from "../legal-content";
 
@@ -134,7 +134,7 @@ export function ProfileView() {
       {/* Identity card */}
       <div className="mt-4 p-4 rounded-2xl bg-surface">
         <div className="flex items-center gap-3">
-          <div className="h-14 w-14 rounded-full bg-primary/20 grid place-items-center text-primary overflow-hidden font-semibold">
+          <div className="h-14 w-14 rounded-full bg-muted grid place-items-center text-foreground overflow-hidden font-semibold border border-border">
             {showPhoto ? (
               <img
                 src={tgProfile!.photoUrl!}
@@ -169,7 +169,7 @@ export function ProfileView() {
             className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-40 transition"
             aria-label="Copy Telegram ID"
           >
-            {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4 text-foreground" /> : <Copy className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -186,8 +186,10 @@ export function ProfileView() {
         <Item icon={ScrollText} label="Terms & Conditions" onClick={() => setDialog("terms")} />
         <Item icon={Receipt} label="Refund Policy" onClick={() => setDialog("refund")} />
         <Item icon={Settings} label="Settings" onClick={() => navigate({ name: "settings" })} />
-        <Item icon={FileText} label="About" />
-        <Item icon={LogOut} label="Sign out" />
+        <Item icon={FileText} label="About" onClick={() => setDialog("about")} />
+        <Item icon={LogOut} label="Sign out" onClick={() => {
+          try { (window as any).Telegram?.WebApp?.close(); } catch {}
+        }} />
       </div>
 
       <InfoDialog
@@ -219,7 +221,7 @@ function Item({
       <Icon className="h-4 w-4 text-muted-foreground" />
       <span className="flex-1 text-sm font-medium">{label}</span>
       {badge && (
-        <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary font-semibold">
+        <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
           {badge}
         </span>
       )}

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { FAQ_ITEMS } from "./legal-content";
+import { FAQ_ITEMS, ABOUT_TEXT } from "./legal-content";
 
-type Kind = "terms" | "refund" | "faq" | null;
+type Kind = "terms" | "refund" | "faq" | "about" | null;
 
 const TITLES: Record<NonNullable<Kind>, string> = {
   terms:  "Terms & Conditions",
   refund: "Refund Policy",
   faq:    "FAQ",
+  about:  "About Arya Premium",
 };
 
 /* ── Custom bottom-sheet modal — no Radix zoom animation ── */
@@ -84,6 +85,18 @@ export function InfoDialog({
                   <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.a}</div>
                 </div>
               ))}
+            </div>
+          ) : kind === "about" ? (
+            /* About — styled with section headers */
+            <div className="pb-6">
+              <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                {ABOUT_TEXT}
+              </p>
+              <div className="mt-5 rounded-xl bg-muted p-3 space-y-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Quick Contact</div>
+                <div className="text-sm font-semibold">@UseAryaBot</div>
+                <div className="text-xs text-muted-foreground">Telegram · Instant delivery</div>
+              </div>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed pb-6">
