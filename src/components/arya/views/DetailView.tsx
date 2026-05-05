@@ -82,23 +82,10 @@ export function DetailView({ storyId }: { storyId: string }) {
               {[story.genre, story.language].filter(Boolean).join(" · ")}
             </div>
 
-            {/* Completed / Ongoing — only here in detail */}
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              <span className={cn(
-                "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border",
-                isCompleted
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                  : "border-amber-300 bg-amber-50 text-amber-700"
-              )}>
-                <span className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  isCompleted ? "bg-emerald-500" : "bg-amber-400"
-                )} />
-                {statusLabel}
-              </span>
               {/* Episodes count — only in detail */}
               {story.episodes && story.episodes !== "?" && (
-                <span className="text-[11px] text-muted-foreground">{story.episodes} eps</span>
+                <span className="text-[11px] font-semibold text-muted-foreground">{story.episodes} eps</span>
               )}
             </div>
           </div>
@@ -138,9 +125,14 @@ export function DetailView({ storyId }: { storyId: string }) {
             <div className="font-display font-bold text-lg text-foreground">₹{story.price}</div>
           </div>
           <button
-            onClick={() => !inCart && addToCart(story)}
+            onClick={() => {
+              if (!inCart) {
+                import("@/lib/haptics").then(m => m.haptics.light());
+                addToCart(story);
+              }
+            }}
             className={cn(
-              "h-11 px-4 rounded-full border text-sm font-semibold transition active:scale-95",
+              "h-11 px-4 rounded-full border text-sm font-semibold transition active:scale-[0.97]",
               inCart
                 ? "border-foreground bg-foreground/5 text-foreground"
                 : "border-border text-foreground hover:border-foreground"

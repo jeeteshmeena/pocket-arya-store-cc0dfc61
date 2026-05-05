@@ -4,6 +4,7 @@ import { Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 import { flyToCart } from "@/lib/fly-to-cart";
+import { haptics } from "@/lib/haptics";
 
 function isDisplayableUrl(src?: string | null): boolean {
   return !!src && (
@@ -50,6 +51,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (inCart) return;
+    haptics.light();
     if (imgRef.current) flyToCart(imgRef.current);
     setTimeout(() => addToCart(story), 200);
   };
@@ -94,27 +96,35 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
           </div>
         )}
 
+        {/* Top-left status badge */}
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/90 backdrop-blur-sm shadow-sm border border-border/50">
+          <span className={cn("h-1.5 w-1.5 rounded-full", story.isCompleted ? "bg-emerald-500" : "bg-orange-500")} />
+          <span className={cn("text-[9px] font-bold uppercase tracking-wider", story.isCompleted ? "text-emerald-700 dark:text-emerald-400" : "text-orange-700 dark:text-orange-400")}>
+            {story.isCompleted ? "Completed" : "Ongoing"}
+          </span>
+        </div>
+
         {/* Add to cart button — black circle, bottom-right */}
         <button
           onClick={handleAdd}
           className={cn(
-            "absolute bottom-2 right-2 h-8 w-8 rounded-full grid place-items-center shadow-md transition-all active:scale-90",
+            "absolute bottom-2 right-2 h-[34px] w-[34px] rounded-full grid place-items-center shadow-md transition-all active:scale-[0.85]",
             inCart
               ? "bg-foreground text-background"
               : "bg-foreground text-background hover:scale-105"
           )}
           aria-label={inCart ? "In cart" : "Add to cart"}
         >
-          {inCart ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {inCart ? <Check className="h-4 w-4" /> : <Plus className="h-[18px] w-[18px]" />}
         </button>
       </div>
 
-      {/* Info — only title + price (no Completed/Ongoing on home) */}
-      <div className="mt-2 px-0.5">
-        <div className="text-[13px] font-semibold truncate text-foreground leading-tight">
+      {/* Info */}
+      <div className="mt-2 px-1">
+        <div className="text-[14px] font-semibold truncate text-foreground leading-tight">
           {story.title}
         </div>
-        <div className="text-sm font-bold mt-0.5 text-foreground">₹{story.price}</div>
+        <div className="text-[13px] font-bold mt-1 text-foreground">₹{story.price}</div>
       </div>
     </div>
   );

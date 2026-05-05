@@ -70,14 +70,11 @@
 
 /* ══════════════════════════════════════════════════
    POCKET FM — Same light base, PFM-specific layout
-   (bottom nav, fonts handled separately in component)
    ══════════════════════════════════════════════════ */
 .theme-pfm {
   --radius: 1rem;
   --font-sans:    "Nunito", "Inter", system-ui, sans-serif;
   --font-display: "Nunito", "Inter", system-ui, sans-serif;
-
-  /* Same light palette */
   --background:           #F8F8F8;
   --foreground:           #111111;
   --surface:              #FFFFFF;
@@ -98,6 +95,33 @@
   --border:               #E5E7EB;
   --input:                #F3F4F6;
   --ring:                 #111111;
+}
+
+/* ══════════════════════════════════════════════════
+   DARK THEME
+   ══════════════════════════════════════════════════ */
+.theme-dark {
+  --radius: 1rem;
+  --background:           #09090B;
+  --foreground:           #FAFAFA;
+  --surface:              #18181B;
+  --card:                 #18181B;
+  --card-foreground:      #FAFAFA;
+  --popover:              #18181B;
+  --popover-foreground:   #FAFAFA;
+  --primary:              #FAFAFA;
+  --primary-foreground:   #09090B;
+  --secondary:            #27272A;
+  --secondary-foreground: #FAFAFA;
+  --muted:                #27272A;
+  --muted-foreground:     #A1A1AA;
+  --accent:               #27272A;
+  --accent-foreground:    #FAFAFA;
+  --destructive:          #7F1D1D;
+  --destructive-foreground: #FEF2F2;
+  --border:               #27272A;
+  --input:                #27272A;
+  --ring:                 #FAFAFA;
 }
 
 /* ══════════════════════════════════════════════════

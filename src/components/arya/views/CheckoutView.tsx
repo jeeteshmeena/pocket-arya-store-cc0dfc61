@@ -59,6 +59,7 @@ export function CheckoutView() {
   // ── Main payment handler ───────────────────────────────────────
   const handlePay = async () => {
     if (!cartSnap.current.length) return;
+    import("@/lib/haptics").then(m => m.haptics.heavy());
     setPhase({ name: "loading" });
 
     try {
