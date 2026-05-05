@@ -8,9 +8,21 @@ export function HomeView() {
 
   if (storiesLoading) {
     return (
-      <div className="animate-fade-in flex flex-col items-center justify-center pt-32 text-muted-foreground">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        <p className="text-sm mt-3">Loading stories…</p>
+      <div className="animate-fade-in px-4 pt-4 space-y-8">
+        {/* Hero Skeleton */}
+        <div className="h-48 w-full rounded-2xl bg-muted animate-pulse"></div>
+        
+        {/* Rows Skeleton */}
+        {[1, 2, 3].map(i => (
+          <div key={i} className="space-y-3">
+            <div className="h-6 w-32 rounded bg-muted animate-pulse"></div>
+            <div className="flex gap-3 overflow-hidden">
+              <div className="h-40 w-40 shrink-0 rounded-2xl bg-muted animate-pulse"></div>
+              <div className="h-40 w-40 shrink-0 rounded-2xl bg-muted animate-pulse"></div>
+              <div className="h-40 w-40 shrink-0 rounded-2xl bg-muted animate-pulse"></div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -30,14 +42,20 @@ export function HomeView() {
     );
   }
 
+  // Extract dynamic categories (genres) from available stories
+  const genres = Array.from(new Set(stories.map((s) => s.genre).filter(Boolean))).sort();
+
   return (
     <div className="animate-fade-in">
       <HeroSlider />
       {purchased.length > 0 && <Row title="Continue" stories={purchased} />}
       <Row title="Trending Now" stories={stories.slice(0, 6)} wide />
       <Row title="New Releases" stories={[...stories].reverse().slice(0, 6)} />
-      <Row title="Horror" stories={stories.filter((s) => s.genre === "Horror")} />
-      <Row title="Thriller & Crime" stories={stories.filter((s) => ["Thriller", "Crime"].includes(s.genre))} />
+      
+      {/* Dynamic Categories */}
+      {genres.map(g => (
+        <Row key={g} title={g} stories={stories.filter((s) => s.genre === g)} />
+      ))}
     </div>
   );
 }

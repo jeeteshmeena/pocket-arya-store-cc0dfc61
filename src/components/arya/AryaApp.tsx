@@ -2,7 +2,6 @@ import { AppProvider, useApp } from "@/store/app-store";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
 import { CartPanel } from "./CartPanel";
-import { SearchOverlay } from "./SearchOverlay";
 import { HomeView } from "./views/HomeView";
 import { ExploreView } from "./views/ExploreView";
 import { MyStoriesView } from "./views/MyStoriesView";
@@ -46,7 +45,6 @@ function Shell() {
 
       <BottomNav />
       <CartPanel />
-      <SearchOverlay />
       <TermsOnboarding />
       <DeepLinkErrorDialog />
     </div>

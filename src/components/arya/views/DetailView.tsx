@@ -110,10 +110,12 @@ export function DetailView({ storyId }: { storyId: string }) {
         )}
 
         {/* Meta chips — Episodes, Files (replaces Size), Platform */}
-        <div className="mt-5 grid grid-cols-3 gap-2">
+        <div className={cn("mt-5 grid gap-2", (filesLabel || story.size) ? "grid-cols-3" : "grid-cols-2")}>
           <Meta label="Platform"  value={story.platform} />
           <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
-          <Meta label="Files"     value={filesLabel ?? (story.size ?? "—")} />
+          {(filesLabel || story.size) && (
+            <Meta label={filesLabel ? "Files" : "Size"} value={(filesLabel ?? story.size) as string} />
+          )}
         </div>
       </div>
 

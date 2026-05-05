@@ -90,7 +90,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [tgUser, setTgUser] = useState<TelegramIdentity>({ telegram_id: null, username: null });
 
-  const [cart, setCart] = useState<Story[]>([]);
+  const [cart, setCart] = useState<Story[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem("arya_cart");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+  
+  useEffect(() => {
+    localStorage.setItem("arya_cart", JSON.stringify(cart));
+  }, [cart]);
   const [purchased, setPurchased] = useState<Story[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);

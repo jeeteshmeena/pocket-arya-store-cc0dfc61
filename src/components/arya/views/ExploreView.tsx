@@ -90,10 +90,10 @@ export function ExploreView() {
       </div>
 
       {/* Grid */}
-      <div className="flex-1 p-3">
-        <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+      <div className="flex-1 p-[12px]">
+        <div className="grid grid-cols-2 gap-[12px]">
           {list.map(s => (
-            <div key={s.id} className="flex justify-center w-full">
+            <div key={s.id} className="w-full">
               <StoryCard story={s} wide />
             </div>
           ))}
