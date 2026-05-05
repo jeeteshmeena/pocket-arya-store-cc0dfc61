@@ -10,6 +10,7 @@ import { ProfileView } from "./views/ProfileView";
 import { SettingsView } from "./views/SettingsView";
 import { DetailView } from "./views/DetailView";
 import { CheckoutView } from "./views/CheckoutView";
+import { TermsOnboarding } from "./TermsOnboarding";
 
 function Shell() {
   const { view } = useApp();
@@ -31,6 +32,7 @@ function Shell() {
       <BottomNav />
       <CartPanel />
       <SearchOverlay />
+      <TermsOnboarding />
     </div>
   );
 }

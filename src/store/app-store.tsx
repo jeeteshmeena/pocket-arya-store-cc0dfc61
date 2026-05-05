@@ -132,6 +132,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .then((list) => {
         if (cancelled) return;
         setStories(list);
+        // Deep link: open a specific story if requested via Telegram start_param or ?story=
+        try {
+          let target: string | null = null;
+          const tg = (window as any)?.Telegram?.WebApp;
+          const sp = tg?.initDataUnsafe?.start_param;
+          if (typeof sp === "string" && sp) {
+            target = sp.replace(/^story[_-]?/i, "");
+          }
+          if (!target && typeof window !== "undefined") {
+            const usp = new URLSearchParams(window.location.search);
+            target = usp.get("story");
+          }
+          if (target && list.find((s) => s.id === target)) {
+            setHistory((h) => [...h, { name: "detail", storyId: target! }]);
+          }
+        } catch {}
       })
       .catch((err: Error) => {
         if (cancelled) return;
