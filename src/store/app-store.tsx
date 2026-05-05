@@ -55,6 +55,7 @@ type Ctx = {
   checkoutState: CheckoutState;
   resetCheckout: () => void;
   startCheckout: (items: Story[]) => Promise<void>;
+  goToCheckout: () => void;  // just navigate, payment handled in CheckoutView
 
   // Deep link
   deepLinkError: string | null;
@@ -196,6 +197,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     back: () => setHistory((h) => (h.length > 1 ? h.slice(0, -1) : h)),
     checkoutState,
     resetCheckout: () => setCheckoutState({ status: "idle" }),
+    goToCheckout: () => {
+      setCartOpen(false);
+      setHistory((h) => [...h, { name: "checkout" }]);
+    },
     startCheckout: async (items) => {
       if (!items.length) return;
       setCheckoutState({ status: "processing" });
