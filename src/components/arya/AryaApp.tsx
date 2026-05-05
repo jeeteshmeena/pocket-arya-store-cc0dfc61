@@ -34,6 +34,7 @@ function Shell() {
       <CartPanel />
       <SearchOverlay />
       <TermsOnboarding />
+      <DeepLinkErrorDialog />
     </div>
   );
 }
