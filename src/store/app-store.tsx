@@ -148,8 +148,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const usp = new URLSearchParams(window.location.search);
             target = usp.get("story");
           }
-          if (target && list.find((s) => s.id === target)) {
-            setHistory((h) => [...h, { name: "detail", storyId: target! }]);
+          if (target) {
+            if (list.find((s) => s.id === target)) {
+              setHistory((h) => [...h, { name: "detail", storyId: target! }]);
+            } else {
+              setDeepLinkError(target);
+            }
           }
         } catch {}
       })
