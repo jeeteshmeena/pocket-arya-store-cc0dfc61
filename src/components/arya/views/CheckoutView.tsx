@@ -134,8 +134,8 @@ export function CheckoutView() {
   };
 
   return (
-    <div className="animate-fade-in pb-40 bg-background min-h-screen">
-      <div className="px-4 pt-3">
+    <div className="relative">
+      <main className="flex-1 overflow-y-auto pb-[140px] px-4 pt-3 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
           <button
@@ -245,13 +245,12 @@ export function CheckoutView() {
             </div>
           </div>
         )}
-      </div>
+      </main>
 
       {/* ── IDLE: STICKY FOOTER ──────────────────────────────── */}
       {phase.name === "idle" && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-background border-t border-border/60 shadow-[0_-12px_40px_rgba(0,0,0,0.06)] pb-[env(safe-area-inset-bottom)]">
-          <div className="mx-auto max-w-2xl px-4 pt-4 pb-5">
-            
+        <footer className="fixed bottom-[70px] left-0 right-0 z-40 p-4 bg-background/80 backdrop-blur-[20px] border-t border-border/60 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+          <div className="mx-auto max-w-2xl">
             {/* Total Row */}
             <div className="flex items-center justify-between mb-4 px-1">
               <span className="text-sm font-semibold text-muted-foreground">Total Amount</span>
@@ -274,9 +273,8 @@ export function CheckoutView() {
               <span>·</span>
               <span>256-bit encryption</span>
             </div>
-
           </div>
-        </div>
+        </footer>
       )}
     </div>
   );
