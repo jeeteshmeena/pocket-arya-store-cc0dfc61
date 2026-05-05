@@ -15,8 +15,11 @@ export function BottomNav() {
   const isPfm = theme === "pfm";
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto max-w-2xl px-3 pb-3 pt-2">
+    <nav
+      className="fixed bottom-0 inset-x-0 z-40"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}
+    >
+      <div className="mx-auto max-w-2xl px-3 pb-2 pt-2">
         <div
           className={cn(
             "flex items-center justify-between gap-1",

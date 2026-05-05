@@ -16,7 +16,10 @@ function Shell() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header />
-      <main className="mx-auto max-w-2xl pt-14 pb-24">
+      <main
+        className="mx-auto max-w-2xl pt-14"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)" }}
+      >
         {view.name === "home" && <HomeView />}
         {view.name === "explore" && <ExploreView />}
         {view.name === "mystories" && <MyStoriesView />}
