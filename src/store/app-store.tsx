@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Story } from "@/lib/data";
+import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
 
 type Theme = "default" | "pfm";
 type View =
@@ -10,15 +11,36 @@ type View =
   | { name: "detail"; storyId: string }
   | { name: "settings" };
 
+type CheckoutState =
+  | { status: "idle" }
+  | { status: "processing" }
+  | { status: "success"; url: string }
+  | { status: "error"; message: string };
+
 type Ctx = {
   theme: Theme;
   setTheme: (t: Theme) => void;
+
+  // Data
+  stories: Story[];
+  storiesLoading: boolean;
+  storiesError: string | null;
+  reloadStories: () => void;
+
+  // Telegram
+  tgUser: TelegramIdentity;
+
+  // Cart
   cart: Story[];
   addToCart: (s: Story) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
+
+  // Library (delivered after bot confirms — kept locally for now)
   purchased: Story[];
   purchase: (items: Story[]) => void;
+
+  // UI
   cartOpen: boolean;
   setCartOpen: (v: boolean) => void;
   searchOpen: boolean;
@@ -26,27 +48,47 @@ type Ctx = {
   view: View;
   navigate: (v: View) => void;
   back: () => void;
-  paymentItems: Story[] | null;
-  startCheckout: (items: Story[]) => void;
-  endCheckout: () => void;
-  successOpen: boolean;
-  setSuccessOpen: (v: boolean) => void;
+
+  // Checkout
+  checkoutState: CheckoutState;
+  resetCheckout: () => void;
+  startCheckout: (items: Story[]) => Promise<void>;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
+
+function readTelegramIdentity(): TelegramIdentity {
+  if (typeof window === "undefined") return { telegram_id: null, username: null };
+  try {
+    const u = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+    if (!u) return { telegram_id: null, username: null };
+    return {
+      telegram_id: typeof u.id === "number" ? u.id : null,
+      username: typeof u.username === "string" ? u.username : null,
+    };
+  } catch {
+    return { telegram_id: null, username: null };
+  }
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") return "default";
     return (localStorage.getItem("arya_theme") as Theme) || "default";
   });
+  const [stories, setStories] = useState<Story[]>([]);
+  const [storiesLoading, setStoriesLoading] = useState(true);
+  const [storiesError, setStoriesError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const [tgUser, setTgUser] = useState<TelegramIdentity>({ telegram_id: null, username: null });
+
   const [cart, setCart] = useState<Story[]>([]);
   const [purchased, setPurchased] = useState<Story[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [history, setHistory] = useState<View[]>([{ name: "home" }]);
-  const [paymentItems, setPaymentItems] = useState<Story[] | null>(null);
-  const [successOpen, setSuccessOpen] = useState(false);
+  const [checkoutState, setCheckoutState] = useState<CheckoutState>({ status: "idle" });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -54,11 +96,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("arya_theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      tg?.ready?.();
+      tg?.expand?.();
+    } catch {}
+    setTgUser(readTelegramIdentity());
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStoriesLoading(true);
+    setStoriesError(null);
+    fetchStories()
+      .then((list) => {
+        if (cancelled) return;
+        setStories(list);
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setStoriesError(err.message || "Failed to load stories");
+      })
+      .finally(() => {
+        if (!cancelled) setStoriesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
   const view = history[history.length - 1];
 
   const value = useMemo<Ctx>(() => ({
     theme,
     setTheme: setThemeState,
+    stories,
+    storiesLoading,
+    storiesError,
+    reloadStories: () => setReloadKey((k) => k + 1),
+    tgUser,
     cart,
     addToCart: (s) => setCart((c) => (c.find((x) => x.id === s.id) ? c : [...c, s])),
     removeFromCart: (id) => setCart((c) => c.filter((x) => x.id !== id)),
@@ -73,11 +150,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     view,
     navigate: (v) => setHistory((h) => [...h, v]),
     back: () => setHistory((h) => (h.length > 1 ? h.slice(0, -1) : h)),
-    paymentItems,
-    startCheckout: (items) => setPaymentItems(items),
-    endCheckout: () => setPaymentItems(null),
-    successOpen, setSuccessOpen,
-  }), [theme, cart, purchased, cartOpen, searchOpen, view, paymentItems, successOpen]);
+    checkoutState,
+    resetCheckout: () => setCheckoutState({ status: "idle" }),
+    startCheckout: async (items) => {
+      if (!items.length) return;
+      setCheckoutState({ status: "processing" });
+      try {
+        const res = await checkoutCart(items.map((s) => s.id), tgUser);
+        openTelegramLink(res.checkout_url);
+        setCheckoutState({ status: "success", url: res.checkout_url });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Checkout failed";
+        setCheckoutState({ status: "error", message });
+      }
+    },
+  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, cartOpen, searchOpen, view, checkoutState]);
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
