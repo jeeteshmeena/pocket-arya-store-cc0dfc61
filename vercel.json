@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/stories",
-      "destination": "http://158.101.4.188:8000/stories"
+      "destination": "http://158.101.4.188/api/stories"
     },
     {
       "source": "/api/checkout",
-      "destination": "http://158.101.4.188:8000/checkout"
+      "destination": "http://158.101.4.188/api/checkout"
     },
     {
       "source": "/(.*)",
