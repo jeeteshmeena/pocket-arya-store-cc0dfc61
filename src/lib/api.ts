@@ -1,7 +1,7 @@
 import type { Story } from "./data";
 
-const BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "";
+// Vercel proxy rewrites /api/* → VPS:8000/* — no env var or SSL needed
+const BASE_URL = "/api";
 
 export type TelegramIdentity = {
   telegram_id: number | null;

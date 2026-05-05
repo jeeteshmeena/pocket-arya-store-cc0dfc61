@@ -3,6 +3,17 @@
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/stories",
+      "destination": "http://158.101.4.188:8000/stories"
+    },
+    {
+      "source": "/api/checkout",
+      "destination": "http://158.101.4.188:8000/checkout"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
