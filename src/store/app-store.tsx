@@ -9,7 +9,14 @@ type View =
   | { name: "mystories" }
   | { name: "profile" }
   | { name: "detail"; storyId: string }
-  | { name: "settings" };
+  | { name: "settings" }
+  | { name: "checkout" };
+
+type CheckoutState =
+  | { status: "idle" }
+  | { status: "processing" }
+  | { status: "success"; url: string; order_id?: string }
+  | { status: "error"; message: string };
 
 type CheckoutState =
   | { status: "idle" }
