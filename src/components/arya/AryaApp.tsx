@@ -11,6 +11,7 @@ import { SettingsView } from "./views/SettingsView";
 import { DetailView } from "./views/DetailView";
 import { CheckoutView } from "./views/CheckoutView";
 import { TermsOnboarding } from "./TermsOnboarding";
+import { DeepLinkErrorDialog } from "./DeepLinkErrorDialog";
 
 function Shell() {
   const { view } = useApp();
