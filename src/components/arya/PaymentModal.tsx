@@ -10,24 +10,36 @@ export function PaymentModal() {
 
   if (successOpen) {
     return (
-      <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur grid place-items-center p-6 animate-fade-in">
-        <div className="text-center max-w-sm">
-          <div className="mx-auto h-16 w-16 rounded-full bg-primary/15 grid place-items-center">
-            <CheckCircle2 className="h-9 w-9 text-primary" />
+      <div className="fixed inset-0 z-[60] bg-background flex flex-col animate-fade-in">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <div className="h-20 w-20 rounded-full bg-primary/15 grid place-items-center animate-scale-in">
+            <CheckCircle2 className="h-11 w-11 text-primary" />
           </div>
-          <h2 className="mt-4 font-display font-bold text-xl">Payment successful</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Your story will be delivered via Telegram bot shortly.
+          <h2 className="mt-5 font-display font-bold text-2xl">Payment successful</h2>
+          <p className="mt-2 text-sm text-muted-foreground max-w-xs">
+            Thanks for your purchase. Your story is on its way.
           </p>
+
+          <div className="mt-6 w-full max-w-sm rounded-2xl bg-surface border border-border p-4 text-left">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+              <Send className="h-3.5 w-3.5" /> Telegram delivery
+            </div>
+            <p className="mt-2 text-sm leading-relaxed">
+              Open the Arya bot on Telegram to receive your audio files and start listening. Delivery usually takes a few seconds.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-5 pb-7 space-y-2 border-t border-border bg-background">
           <button
             onClick={() => setSuccessOpen(false)}
-            className="mt-6 inline-flex items-center gap-2 h-11 px-6 rounded-full bg-primary text-primary-foreground font-semibold"
+            className="w-full h-12 rounded-full bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
           >
             <Send className="h-4 w-4" /> Open Telegram Bot
           </button>
           <button
             onClick={() => setSuccessOpen(false)}
-            className="block mx-auto mt-3 text-xs text-muted-foreground"
+            className="w-full h-11 rounded-full text-sm text-muted-foreground hover:text-foreground transition"
           >
             Back to app
           </button>
