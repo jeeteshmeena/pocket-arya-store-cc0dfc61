@@ -32,6 +32,7 @@ function Shell() {
       <BottomNav />
       <CartPanel />
       <SearchOverlay />
+      <TermsOnboarding />
     </div>
   );
 }
