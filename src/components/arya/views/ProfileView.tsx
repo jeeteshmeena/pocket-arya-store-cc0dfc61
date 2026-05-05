@@ -1,27 +1,43 @@
+import { useEffect, useState } from "react";
 import { ChevronRight, Settings, LifeBuoy, FileText, LogOut, User } from "lucide-react";
 import { useApp } from "@/store/app-store";
 
-// NOTE: Replace with Telegram initData later.
-// Telegram WebApp exposes user info via: window.Telegram.WebApp.initDataUnsafe.user
-// Expected fields: { id, first_name, last_name, username, photo_url }
-type TelegramUser = { name: string; username: string; photoUrl: string | null };
-const tgUser: TelegramUser = {
-  name: "",
-  username: "",
-  photoUrl: null,
-};
+type TelegramUser = { name: string; username: string; photoUrl: string | null; id?: number };
+
+// Reads Telegram WebApp user from window.Telegram.WebApp.initDataUnsafe.user
+function readTelegramUser(): TelegramUser | null {
+  if (typeof window === "undefined") return null;
+  const tg = (window as any).Telegram?.WebApp;
+  const u = tg?.initDataUnsafe?.user;
+  if (!u) return null;
+  const name = [u.first_name, u.last_name].filter(Boolean).join(" ").trim();
+  return {
+    id: u.id,
+    name: name || u.username || "Telegram User",
+    username: u.username || "",
+    photoUrl: u.photo_url || null,
+  };
+}
 
 export function ProfileView() {
   const { navigate, purchased } = useApp();
-  const displayName = tgUser.name || "Guest";
-  const handle = tgUser.username ? `@${tgUser.username}` : "Sign in via Telegram";
+  const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
+
+  useEffect(() => {
+    const tg = (window as any).Telegram?.WebApp;
+    try { tg?.ready?.(); tg?.expand?.(); } catch {}
+    setTgUser(readTelegramUser());
+  }, []);
+
+  const displayName = tgUser?.name || "Guest";
+  const handle = tgUser?.username ? `@${tgUser.username}` : "Open inside Telegram to sign in";
 
   return (
     <div className="animate-fade-in px-4 pt-3">
       <h1 className="font-display font-bold text-xl pfm:text-2xl">Profile</h1>
       <div className="mt-4 flex items-center gap-3 p-4 rounded-2xl bg-surface">
         <div className="h-12 w-12 rounded-full bg-primary/20 grid place-items-center text-primary overflow-hidden">
-          {tgUser.photoUrl ? (
+          {tgUser?.photoUrl ? (
             <img src={tgUser.photoUrl} alt={displayName} className="h-full w-full object-cover" />
           ) : (
             <User className="h-6 w-6" />
