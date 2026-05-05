@@ -39,6 +39,7 @@ function getGenre(genre?: string) {
 }
 
 export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
+  console.log("Story status:", story);
   const { addToCart, cart, navigate } = useApp();
   const inCart = cart.some((x) => x.id === story.id);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -97,12 +98,14 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
         )}
 
         {/* Top-left status badge */}
-        <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/90 backdrop-blur-sm shadow-sm border border-border/50">
-          <span className={cn("h-1.5 w-1.5 rounded-full", story.isCompleted ? "bg-emerald-500" : "bg-orange-500")} />
-          <span className={cn("text-[9px] font-bold uppercase tracking-wider", story.isCompleted ? "text-emerald-700 dark:text-emerald-400" : "text-orange-700 dark:text-orange-400")}>
-            {story.isCompleted ? "Completed" : "Ongoing"}
-          </span>
-        </div>
+        {typeof story.isCompleted === "boolean" && (
+          <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/90 backdrop-blur-sm shadow-sm border border-border/50">
+            <span className={cn("h-1.5 w-1.5 rounded-full", story.isCompleted ? "bg-emerald-500" : "bg-orange-500")} />
+            <span className={cn("text-[9px] font-bold uppercase tracking-wider", story.isCompleted ? "text-emerald-700 dark:text-emerald-400" : "text-orange-700 dark:text-orange-400")}>
+              {story.isCompleted ? "Completed" : "Ongoing"}
+            </span>
+          </div>
+        )}
 
         {/* Add to cart button — black circle, bottom-right */}
         <button
