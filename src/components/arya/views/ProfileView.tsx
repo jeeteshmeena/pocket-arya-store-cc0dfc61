@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, Settings, LifeBuoy, FileText, LogOut, User } from "lucide-react";
 import { useApp } from "@/store/app-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type TelegramUser = {
   id?: number;
