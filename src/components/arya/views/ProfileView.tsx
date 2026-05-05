@@ -60,11 +60,18 @@ export function ProfileView() {
   const { navigate, purchased } = useApp();
   const [tgUser, setTgUser] = useState<TelegramUser | null>(null);
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const tg = (window as any).Telegram?.WebApp;
     try { tg?.ready?.(); tg?.expand?.(); } catch {}
-    setTgUser(readTelegramUser());
+    const t = setTimeout(() => {
+      if (cancelled) return;
+      setTgUser(readTelegramUser());
+      setLoading(false);
+    }, 350);
+    return () => { cancelled = true; clearTimeout(t); };
   }, []);
 
   const displayName = tgUser?.name || "Guest";
