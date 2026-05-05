@@ -5,31 +5,25 @@ import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 import { flyToCart } from "@/lib/fly-to-cart";
 
-// Genre-based gradient colors for story cards without images
-const GENRE_GRADIENTS: Record<string, string> = {
-  "Romance":          "from-pink-500 to-rose-600",
-  "Thriller":         "from-slate-700 to-zinc-900",
-  "Horror":           "from-red-900 to-zinc-950",
-  "Fantasy":          "from-violet-600 to-purple-900",
-  "Drama":            "from-amber-600 to-orange-700",
-  "Action":           "from-blue-600 to-indigo-800",
-  "Mystery":          "from-teal-600 to-cyan-800",
-  "Comedy":           "from-yellow-400 to-amber-500",
-  "default":          "from-emerald-600 to-green-800",
-};
-
-function getGradient(genre?: string): string {
-  if (!genre) return GENRE_GRADIENTS["default"];
-  // partial match — e.g. "Romance/Cheating" matches "Romance"
-  const found = Object.keys(GENRE_GRADIENTS).find((k) =>
-    k !== "default" && genre.toLowerCase().includes(k.toLowerCase())
-  );
-  return GENRE_GRADIENTS[found ?? "default"];
+function isDisplayableUrl(src?: string | null): boolean {
+  return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image/"));
 }
 
-// Is the src a real HTTP/HTTPS URL? Telegram file_ids are not URLs.
-function isValidUrl(src?: string): boolean {
-  return !!src && (src.startsWith("http://") || src.startsWith("https://"));
+const GENRE_COLORS: Record<string, string> = {
+  "Romance":  "#e11d48",
+  "Horror":   "#7c3aed",
+  "Thriller": "#0369a1",
+  "Fantasy":  "#6d28d9",
+  "Drama":    "#b45309",
+  "Action":   "#1d4ed8",
+  "Mystery":  "#0f766e",
+  "Comedy":   "#ca8a04",
+};
+
+function getGenreColor(genre?: string): string {
+  if (!genre) return "#166534";
+  const key = Object.keys(GENRE_COLORS).find(k => genre.toLowerCase().includes(k.toLowerCase()));
+  return key ? GENRE_COLORS[key] : "#166534";
 }
 
 export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
@@ -38,8 +32,9 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
   const imgRef = useRef<HTMLImageElement>(null);
   const [imgError, setImgError] = useState(false);
 
-  const hasImage = isValidUrl(story.poster) && !imgError;
-  const gradient = getGradient(story.genre);
+  const poster = story.poster;
+  const hasImage = isDisplayableUrl(poster) && !imgError;
+  const color = getGenreColor(story.genre);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -63,24 +58,24 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
         {hasImage ? (
           <img
             ref={imgRef}
-            src={story.poster}
+            src={poster!}
             alt={story.title}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
             onError={() => setImgError(true)}
           />
         ) : (
-          // Fallback: genre-coloured gradient with title text
+          /* Clean gradient fallback based on genre color */
           <div
-            ref={imgRef as React.RefObject<HTMLDivElement>}
-            className={cn("h-full w-full bg-gradient-to-br flex flex-col items-center justify-end p-3", gradient)}
+            style={{ background: `linear-gradient(135deg, ${color}cc 0%, ${color}66 100%)` }}
+            className="h-full w-full flex flex-col items-center justify-center p-3"
           >
-            <div className="text-white text-[11px] font-semibold text-center leading-tight line-clamp-3 drop-shadow">
+            <div className="text-white text-xs font-bold text-center leading-tight line-clamp-4 drop-shadow-md">
               {story.title}
             </div>
+            <div className="mt-2 text-white/70 text-[10px] text-center">{story.genre}</div>
           </div>
         )}
-
         <button
           onClick={handleAdd}
           className="absolute bottom-2 right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground grid place-items-center shadow-lg active:scale-90 transition"
@@ -92,7 +87,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
       <div className="mt-2 px-0.5">
         <div className={cn("font-semibold truncate", theme === "pfm" ? "text-sm" : "text-[13px]")}>{story.title}</div>
         {story.episodes && story.episodes !== "?" && (
-          <div className="text-[11px] text-muted-foreground mt-0.5">{story.episodes} episodes</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">{story.episodes} eps</div>
         )}
         <div className="text-sm font-bold mt-0.5">₹{story.price}</div>
       </div>

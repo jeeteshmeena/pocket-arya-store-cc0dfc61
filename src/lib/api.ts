@@ -1,9 +1,8 @@
 import type { Story } from "./data";
 
-// API base: always /api — Vercel proxies this to http://158.101.4.188/api/* server-side
-// This prevents Mixed Content (browser never makes HTTP requests directly)
 const BASE_URL = "/api";
-console.log("[Arya API] Using proxy BASE_URL:", BASE_URL);
+
+export const BOT_USERNAME = "UseAryaBot";
 
 export type TelegramIdentity = {
   telegram_id: number | null;
@@ -14,6 +13,17 @@ export type CheckoutResponse = {
   success: true;
   checkout_url: string;
   order_id?: string;
+  total?: number;
+};
+
+export type RazorpayOrderResponse = {
+  success: true;
+  razorpay_order_id: string;
+  amount: number;
+  currency: string;
+  key: string;
+  receipt: string;
+  story_names: string[];
 };
 
 export type StoriesResponse = {
@@ -56,15 +66,40 @@ export async function checkoutCart(
       story_ids: storyIds,
     }),
   });
-  if (!res.checkout_url || typeof res.checkout_url !== "string") {
-    throw new Error("Backend did not return a checkout_url");
-  }
+  if (!res.checkout_url) throw new Error("Backend did not return a checkout_url");
   return res;
+}
+
+export async function createRazorpayOrder(
+  storyIds: string[],
+  identity: TelegramIdentity,
+): Promise<RazorpayOrderResponse> {
+  return request<RazorpayOrderResponse>("/razorpay/order", {
+    method: "POST",
+    body: JSON.stringify({
+      story_ids: storyIds,
+      telegram_id: identity.telegram_id,
+    }),
+  });
+}
+
+export async function verifyRazorpayPayment(data: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  story_ids: string[];
+  telegram_id: number | null;
+  username: string | null;
+}): Promise<CheckoutResponse> {
+  return request<CheckoutResponse>("/razorpay/verify", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export function openTelegramLink(url: string) {
   try {
-    const tg = (window as unknown as { Telegram?: { WebApp?: { openTelegramLink?: (u: string) => void; openLink?: (u: string) => void } } }).Telegram?.WebApp;
+    const tg = (window as any).Telegram?.WebApp;
     if (tg?.openTelegramLink && /^https:\/\/t\.me\//i.test(url)) {
       tg.openTelegramLink(url);
       return;
@@ -73,8 +108,18 @@ export function openTelegramLink(url: string) {
       tg.openLink(url);
       return;
     }
-  } catch {
-    // fall through
-  }
+  } catch {}
   window.open(url, "_blank", "noopener,noreferrer");
+}
+
+// Load Razorpay script dynamically
+export function loadRazorpay(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) { resolve(true); return; }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
 }
