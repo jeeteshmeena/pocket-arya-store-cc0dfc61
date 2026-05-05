@@ -208,7 +208,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCheckoutState({ status: "error", message });
       }
     },
-  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, cartOpen, searchOpen, view, checkoutState]);
+    deepLinkError,
+    clearDeepLinkError: () => setDeepLinkError(null),
+  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
