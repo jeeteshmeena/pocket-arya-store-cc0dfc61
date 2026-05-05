@@ -84,6 +84,29 @@ export function ProfileView() {
     [tgUser?.photoUrl, photoFailed],
   );
 
+  if (loading) {
+    return (
+      <div className="animate-fade-in px-4 pt-3">
+        <h1 className="font-display font-bold text-xl pfm:text-2xl">Profile</h1>
+        <div className="mt-4 flex items-center gap-3 p-4 rounded-2xl bg-surface">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-44" />
+          </div>
+        </div>
+        <div className="mt-4 rounded-2xl bg-surface divide-y divide-border overflow-hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+              <Skeleton className="h-4 w-4 rounded" />
+              <Skeleton className="h-4 flex-1 max-w-[140px]" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in px-4 pt-3">
       <h1 className="font-display font-bold text-xl pfm:text-2xl">Profile</h1>
