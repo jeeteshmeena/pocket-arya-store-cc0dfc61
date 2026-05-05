@@ -11,8 +11,10 @@ export type Story = {
   poster: string;
   banner: string;
   status: "available" | "coming_soon";
+  storyStatus?: string;      // Raw DB status: "Completed" | "Ongoing" | "Upcoming"
   size?: string;
-  isCompleted?: boolean;   // true = Completed series, false/undefined = Ongoing
+  fileCount?: number | null; // Number of audio files (computed from start_id..end_id)
+  isCompleted?: boolean;     // Derived from storyStatus
 };
 
 // Static UI taxonomy (not story data). Real values still come from the API

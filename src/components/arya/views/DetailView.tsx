@@ -28,9 +28,17 @@ export function DetailView({ storyId }: { storyId: string }) {
     goToCheckout();
   };
 
+  // Completed/Ongoing from DB status field
+  const isCompleted = story.isCompleted;
+  const statusLabel = isCompleted ? "Completed" : "Ongoing";
+
+  // Files count (bot-computed from start_id..end_id range)
+  const fileCount = story.fileCount;
+  const filesLabel = fileCount != null ? `${fileCount} files` : null;
+
   return (
     <div className="animate-fade-in pb-28">
-      {/* Hero — image or neutral grey */}
+      {/* Hero */}
       <div className="relative h-64">
         {story.banner && !bannerErr ? (
           <img
@@ -41,10 +49,9 @@ export function DetailView({ storyId }: { storyId: string }) {
         ) : (
           <div className="absolute inset-0 bg-muted" />
         )}
-        {/* Light-to-white fade at bottom */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-background" />
 
-        {/* Back button */}
+        {/* Back */}
         <button
           onClick={back}
           className="absolute top-3 left-3 h-9 w-9 grid place-items-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-sm"
@@ -52,10 +59,9 @@ export function DetailView({ storyId }: { storyId: string }) {
           <ArrowLeft className="h-5 w-5 text-foreground" />
         </button>
 
-        {/* Poster + title row */}
+        {/* Poster + title */}
         <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-3 items-end">
-          {/* Poster thumbnail */}
-          <div className="h-28 w-20 rounded-xl overflow-hidden shrink-0 shadow-md bg-muted border border-border">
+          <div className="h-28 w-20 overflow-hidden shrink-0 shadow-md bg-muted border border-border">
             {story.poster && !posterErr ? (
               <img
                 src={story.poster} alt=""
@@ -73,24 +79,26 @@ export function DetailView({ storyId }: { storyId: string }) {
           <div className="flex-1 min-w-0">
             <h1 className="font-display font-bold text-xl leading-tight text-foreground">{story.title}</h1>
             <div className="text-xs text-muted-foreground mt-1">
-              {[story.genre, story.language, story.episodes && `${story.episodes} eps`].filter(Boolean).join(" · ")}
+              {[story.genre, story.language].filter(Boolean).join(" · ")}
             </div>
-            {/* Completed / Ongoing badge */}
-            <div className="mt-1.5 flex items-center gap-1.5">
+
+            {/* Completed / Ongoing — only here in detail */}
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               <span className={cn(
                 "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full border",
-                story.isCompleted
+                isCompleted
                   ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                   : "border-amber-300 bg-amber-50 text-amber-700"
               )}>
                 <span className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  story.isCompleted ? "bg-emerald-500" : "bg-amber-400"
+                  isCompleted ? "bg-emerald-500" : "bg-amber-400"
                 )} />
-                {story.isCompleted ? "Completed" : "Ongoing"}
+                {statusLabel}
               </span>
-              {story.size && (
-                <span className="text-[11px] text-muted-foreground">{story.size}</span>
+              {/* Episodes count — only in detail */}
+              {story.episodes && story.episodes !== "?" && (
+                <span className="text-[11px] text-muted-foreground">{story.episodes} eps</span>
               )}
             </div>
           </div>
@@ -99,22 +107,26 @@ export function DetailView({ storyId }: { storyId: string }) {
 
       {/* Body */}
       <div className="px-4 mt-4">
-        <p className={cn("text-sm text-muted-foreground leading-relaxed", !expanded && "line-clamp-3")}>
-          {story.description}
-        </p>
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-1 text-xs font-semibold text-foreground flex items-center gap-1"
-        >
-          {expanded ? "Show less" : "Read more"}
-          <ChevronDown className={cn("h-3 w-3 transition", expanded && "rotate-180")} />
-        </button>
+        {story.description && (
+          <>
+            <p className={cn("text-sm text-muted-foreground leading-relaxed", !expanded && "line-clamp-3")}>
+              {story.description}
+            </p>
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-1 text-xs font-semibold text-foreground flex items-center gap-1"
+            >
+              {expanded ? "Show less" : "Read more"}
+              <ChevronDown className={cn("h-3 w-3 transition", expanded && "rotate-180")} />
+            </button>
+          </>
+        )}
 
-        {/* Meta chips */}
+        {/* Meta chips — Episodes, Files (replaces Size), Platform */}
         <div className="mt-5 grid grid-cols-3 gap-2">
           <Meta label="Platform"  value={story.platform} />
-          <Meta label="Episodes"  value={String(story.episodes)} />
-          <Meta label="Size"      value={story.size ?? "—"} />
+          <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
+          <Meta label="Files"     value={filesLabel ?? (story.size ?? "—")} />
         </div>
       </div>
 

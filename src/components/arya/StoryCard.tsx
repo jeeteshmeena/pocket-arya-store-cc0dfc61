@@ -57,13 +57,13 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
   return (
     <div
       className={cn(
-        "shrink-0 cursor-pointer group transition-transform duration-200 active:scale-[0.98]",
-        wide ? "w-40" : "w-36"
+        "shrink-0 cursor-pointer transition-transform duration-200 active:scale-[0.98]",
+        wide ? "w-44" : "w-40"
       )}
       onClick={() => navigate({ name: "detail", storyId: story.id })}
     >
-      {/* Poster */}
-      <div className="relative overflow-hidden rounded-2xl bg-muted shadow-sm aspect-[3/4]">
+      {/* Poster — SQUARE, no rounded corners */}
+      <div className="relative overflow-hidden bg-muted shadow-sm aspect-square">
         {hasImage ? (
           <img
             ref={imgRef}
@@ -74,7 +74,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
             onError={() => setImgError(true)}
           />
         ) : (
-          /* Soft pastel fallback — genre tinted */
+          /* Soft pastel genre fallback */
           <div
             className="h-full w-full flex flex-col items-center justify-center p-3 gap-2"
             style={{ backgroundColor: bg }}
@@ -94,7 +94,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
           </div>
         )}
 
-        {/* Add button — black circle */}
+        {/* Add to cart button — black circle, bottom-right */}
         <button
           onClick={handleAdd}
           className={cn(
@@ -109,24 +109,10 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
         </button>
       </div>
 
-      {/* Info */}
+      {/* Info — only title + price (no Completed/Ongoing on home) */}
       <div className="mt-2 px-0.5">
-        <div className="text-[13px] font-semibold truncate text-foreground">{story.title}</div>
-        {/* Completed / Ongoing status */}
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold",
-            story.isCompleted ? "text-emerald-600" : "text-muted-foreground"
-          )}>
-            <span className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              story.isCompleted ? "bg-emerald-500" : "bg-amber-400"
-            )} />
-            {story.isCompleted ? "Completed" : "Ongoing"}
-          </span>
-          {story.episodes && story.episodes !== "?" && (
-            <span className="text-[10px] text-muted-foreground">· {story.episodes} eps</span>
-          )}
+        <div className="text-[13px] font-semibold truncate text-foreground leading-tight">
+          {story.title}
         </div>
         <div className="text-sm font-bold mt-0.5 text-foreground">₹{story.price}</div>
       </div>
