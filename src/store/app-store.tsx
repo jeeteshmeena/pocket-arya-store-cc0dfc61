@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Story } from "@/lib/data";
 import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
 
-type Theme = "default" | "pfm";
+type Theme = "default" | "pfm" | "night";
 type View =
   | { name: "home" }
   | { name: "explore" }
@@ -22,6 +22,7 @@ type CheckoutState =
 type Ctx = {
   theme: Theme;
   setTheme: (t: Theme) => void;
+  cycleTheme: () => void;
 
   // Data
   stories: Story[];
@@ -100,7 +101,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("theme-pfm", theme === "pfm");
+    root.classList.toggle("theme-pfm",   theme === "pfm");
+    root.classList.toggle("theme-night", theme === "night");
     localStorage.setItem("arya_theme", theme);
   }, [theme]);
 
@@ -176,6 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     theme,
     setTheme: setThemeState,
+    cycleTheme: () => setThemeState((t) => t === "default" ? "pfm" : t === "pfm" ? "night" : "default"),
     stories,
     storiesLoading,
     storiesError,

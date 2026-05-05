@@ -1,5 +1,5 @@
 /* Google Fonts — must be first */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss" source(none);
 @source "../src";
@@ -7,6 +7,7 @@
 
 @custom-variant dark (&:is(.dark *));
 @custom-variant pfm (&:is(.theme-pfm *));
+@custom-variant night (&:is(.theme-night *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -39,77 +40,102 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   DEFAULT THEME — Clean dark (Spotify-like)
+   1. DEFAULT THEME — Clean dark (Spotify-like, green accent)
    ══════════════════════════════════════════════════════════ */
 :root {
   --radius: 0.875rem;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans:    "Inter", system-ui, -apple-system, sans-serif;
   --font-display: "Inter", system-ui, sans-serif;
 
-  --background:          oklch(0.14 0 0);
-  --foreground:          oklch(0.97 0 0);
-  --surface:             oklch(0.20 0 0);
-  --card:                oklch(0.20 0 0);
-  --card-foreground:     oklch(0.97 0 0);
-  --popover:             oklch(0.20 0 0);
-  --popover-foreground:  oklch(0.97 0 0);
-  --primary:             oklch(0.78 0.18 145);    /* green */
-  --primary-foreground:  oklch(0.12 0 0);
-  --secondary:           oklch(0.26 0 0);
-  --secondary-foreground:oklch(0.97 0 0);
-  --muted:               oklch(0.22 0 0);
-  --muted-foreground:    oklch(0.68 0 0);
-  --accent:              oklch(0.28 0 0);
-  --accent-foreground:   oklch(0.97 0 0);
-  --destructive:         oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.97 0 0);
-  --border:              oklch(0.25 0 0);
-  --input:               oklch(0.25 0 0);
-  --ring:                oklch(0.78 0.18 145);
+  --background:           #111111;
+  --foreground:           #F5F5F5;
+  --surface:              #1C1C1C;
+  --card:                 #1C1C1C;
+  --card-foreground:      #F5F5F5;
+  --popover:              #1C1C1C;
+  --popover-foreground:   #F5F5F5;
+  --primary:              #1DB954;   /* Spotify green */
+  --primary-foreground:   #000000;
+  --secondary:            #282828;
+  --secondary-foreground: #F5F5F5;
+  --muted:                #232323;
+  --muted-foreground:     #A7A7A7;
+  --accent:               #282828;
+  --accent-foreground:    #F5F5F5;
+  --destructive:          #E53935;
+  --destructive-foreground: #FFFFFF;
+  --border:               #2A2A2A;
+  --input:                #2A2A2A;
+  --ring:                 #1DB954;
 }
 
 /* ══════════════════════════════════════════════════════════
-   POCKET FM THEME — Matches real Pocket FM app design
-   - Font: Nunito (rounded, friendly — same feel as PFM)
-   - BG: Very dark navy-black
-   - Primary: Pocket FM orange #FF6B00
-   - Cards: Slightly lighter dark
-   - Borders: subtle
+   2. POCKET FM THEME — Matches ACTUAL Pocket FM app
+   Primary: PURPLE (#7B3AED) — NOT orange, NOT green
+   Font: Nunito (rounded, close to PFM's custom font)
+   BG: Pure black #0A0A0A
    ══════════════════════════════════════════════════════════ */
 .theme-pfm {
   --radius: 1rem;
-  /* Nunito — same rounded sans-serif feel as Pocket FM uses */
   --font-sans:    "Nunito", "Inter", system-ui, sans-serif;
   --font-display: "Nunito", "Inter", system-ui, sans-serif;
 
-  /* Pocket FM's dark background — near black with subtle warm tint */
-  --background:          #0F0F0F;
-  --foreground:          #F5F5F5;
-  --surface:             #1A1A1A;
-  --card:                #1A1A1A;
-  --card-foreground:     #F5F5F5;
-  --popover:             #1A1A1A;
-  --popover-foreground:  #F5F5F5;
-
-  /* Pocket FM orange — their brand primary color */
-  --primary:             #FF6B00;
-  --primary-foreground:  #FFFFFF;
-
-  --secondary:           #262626;
-  --secondary-foreground:#F5F5F5;
-  --muted:               #222222;
-  --muted-foreground:    #888888;
-  --accent:              #2C2C2C;
-  --accent-foreground:   #F5F5F5;
-  --destructive:         #E53935;
+  --background:           #0A0A0A;
+  --foreground:           #FFFFFF;
+  --surface:              #181818;
+  --card:                 #181818;
+  --card-foreground:      #FFFFFF;
+  --popover:              #1E1E1E;
+  --popover-foreground:   #FFFFFF;
+  --primary:              #7B3AED;   /* Pocket FM PURPLE ✅ */
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #242424;
+  --secondary-foreground: #FFFFFF;
+  --muted:                #1F1F1F;
+  --muted-foreground:     #888888;
+  --accent:               #2A1F3D;   /* subtle purple tint */
+  --accent-foreground:    #FFFFFF;
+  --destructive:          #E53935;
   --destructive-foreground: #FFFFFF;
-  --border:              #2A2A2A;
-  --input:               #2A2A2A;
-  --ring:                #FF6B00;
+  --border:               #2C2C2C;
+  --input:                #2C2C2C;
+  --ring:                 #7B3AED;
 }
 
 /* ══════════════════════════════════════════════════════════
-   BASE STYLES
+   3. NIGHT THEME — AMOLED / Neon Dark (Space Grotesk)
+   Primary: Cyan-Blue neon #00C9FF
+   BG: Pure black #000000
+   ══════════════════════════════════════════════════════════ */
+.theme-night {
+  --radius: 0.75rem;
+  --font-sans:    "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+
+  --background:           #000000;
+  --foreground:           #E8F4FD;
+  --surface:              #0D1117;
+  --card:                 #0D1117;
+  --card-foreground:      #E8F4FD;
+  --popover:              #161B22;
+  --popover-foreground:   #E8F4FD;
+  --primary:              #00C9FF;   /* Neon cyan */
+  --primary-foreground:   #000000;
+  --secondary:            #161B22;
+  --secondary-foreground: #E8F4FD;
+  --muted:                #0D1117;
+  --muted-foreground:     #6E7681;
+  --accent:               #1C2128;
+  --accent-foreground:    #E8F4FD;
+  --destructive:          #F85149;
+  --destructive-foreground: #FFFFFF;
+  --border:               #1E2530;
+  --input:                #1E2530;
+  --ring:                 #00C9FF;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BASE
    ══════════════════════════════════════════════════════════ */
 @layer base {
   * { border-color: var(--color-border); }
@@ -127,10 +153,10 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   ANIMATIONS
+   ANIMATIONS — smooth, not ugly
    ══════════════════════════════════════════════════════════ */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
 @keyframes slide-in-right {
@@ -138,15 +164,21 @@
   to   { transform: translateX(0); }
 }
 @keyframes slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes slide-down {
-  from { transform: translateY(-100%); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+@keyframes sheet-up {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 32px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
 .animate-fade-in        { animation: fade-in 0.22s ease-out both; }
 .animate-slide-in-right { animation: slide-in-right 0.28s cubic-bezier(.2,.8,.2,1) both; }
 .animate-slide-up       { animation: slide-up 0.3s cubic-bezier(.2,.8,.2,1) both; }
-.animate-slide-down     { animation: slide-down 0.2s ease-out both; }
+.animate-sheet-up       { animation: sheet-up 0.28s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Override Radix dialog animations globally to remove ugly zoom */
+[data-radix-popper-content-wrapper],
+[data-state="open"][data-radix-dialog-content] {
+  animation: sheet-up 0.28s cubic-bezier(.2,.8,.2,1) both !important;
+}

@@ -1,6 +1,6 @@
 import type { Story } from "./data";
 
-const BASE_URL = "/api";
+export const BASE_URL = "/api";
 
 export const BOT_USERNAME = "UseAryaBot";
 
