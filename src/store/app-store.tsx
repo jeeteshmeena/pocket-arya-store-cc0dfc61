@@ -18,11 +18,6 @@ type CheckoutState =
   | { status: "success"; url: string; order_id?: string }
   | { status: "error"; message: string };
 
-type CheckoutState =
-  | { status: "idle" }
-  | { status: "processing" }
-  | { status: "success"; url: string }
-  | { status: "error"; message: string };
 
 type Ctx = {
   theme: Theme;
