@@ -95,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [history, setHistory] = useState<View[]>([{ name: "home" }]);
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({ status: "idle" });
+  const [deepLinkError, setDeepLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
