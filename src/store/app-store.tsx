@@ -174,10 +174,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     startCheckout: async (items) => {
       if (!items.length) return;
       setCheckoutState({ status: "processing" });
+      setHistory((h) => [...h, { name: "checkout" }]);
       try {
         const res = await checkoutCart(items.map((s) => s.id), tgUser);
-        openTelegramLink(res.checkout_url);
-        setCheckoutState({ status: "success", url: res.checkout_url });
+        setCheckoutState({ status: "success", url: res.checkout_url, order_id: res.order_id });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Checkout failed";
         setCheckoutState({ status: "error", message });
