@@ -1,8 +1,7 @@
 import type { Story } from "./data";
 
 const BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ||
-  "/api";
+  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "";
 
 export type TelegramIdentity = {
   telegram_id: number | null;
