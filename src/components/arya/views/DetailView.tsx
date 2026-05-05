@@ -1,13 +1,24 @@
 import { useState } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { STORIES } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export function DetailView({ storyId }: { storyId: string }) {
-  const story = STORIES.find((s) => s.id === storyId)!;
-  const { back, addToCart, startCheckout, cart, theme } = useApp();
+  const { back, addToCart, startCheckout, cart, theme, stories } = useApp();
+  const story = stories.find((s) => s.id === storyId);
   const [expanded, setExpanded] = useState(false);
+
+  if (!story) {
+    return (
+      <div className="animate-fade-in px-6 pt-24 text-center">
+        <p className="text-sm text-muted-foreground">Story not found.</p>
+        <button onClick={back} className="mt-4 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+          Go back
+        </button>
+      </div>
+    );
+  }
+
   const inCart = cart.some((x) => x.id === story.id);
 
   return (
@@ -31,7 +42,7 @@ export function DetailView({ storyId }: { storyId: string }) {
 
       <div className="px-4 mt-4">
         <p className={cn("text-sm text-muted-foreground leading-relaxed", !expanded && "line-clamp-3")}>
-          {story.description} {expanded && "Dive deeper into the world the author has crafted, filled with twists, characters, and unforgettable moments. Each episode is carefully produced for the audio experience."}
+          {story.description}
         </p>
         <button onClick={() => setExpanded((v) => !v)} className="mt-1 text-xs text-primary font-semibold flex items-center gap-1">
           {expanded ? "Show less" : "Read more"} <ChevronDown className={cn("h-3 w-3 transition", expanded && "rotate-180")} />
