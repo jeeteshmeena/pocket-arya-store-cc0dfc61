@@ -55,6 +55,10 @@ type Ctx = {
   checkoutState: CheckoutState;
   resetCheckout: () => void;
   startCheckout: (items: Story[]) => Promise<void>;
+
+  // Deep link
+  deepLinkError: string | null;
+  clearDeepLinkError: () => void;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -91,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [history, setHistory] = useState<View[]>([{ name: "home" }]);
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({ status: "idle" });
+  const [deepLinkError, setDeepLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -144,8 +149,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const usp = new URLSearchParams(window.location.search);
             target = usp.get("story");
           }
-          if (target && list.find((s) => s.id === target)) {
-            setHistory((h) => [...h, { name: "detail", storyId: target! }]);
+          if (target) {
+            if (list.find((s) => s.id === target)) {
+              setHistory((h) => [...h, { name: "detail", storyId: target! }]);
+            } else {
+              setDeepLinkError(target);
+            }
           }
         } catch {}
       })
@@ -199,7 +208,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCheckoutState({ status: "error", message });
       }
     },
-  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, cartOpen, searchOpen, view, checkoutState]);
+    deepLinkError,
+    clearDeepLinkError: () => setDeepLinkError(null),
+  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
