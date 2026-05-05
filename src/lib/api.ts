@@ -1,12 +1,9 @@
 import type { Story } from "./data";
 
-// BASE_URL: use VITE_API_BASE_URL if set, else fall back to Vercel proxy (/api)
-// VITE_API_BASE_URL should be set to: http://158.101.4.188/api (in Vercel dashboard)
-const BASE_URL = (
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "")
-  ?? "/api"
-);
-console.log("[Arya API] BASE_URL:", BASE_URL);
+// API base: always /api — Vercel proxies this to http://158.101.4.188/api/* server-side
+// This prevents Mixed Content (browser never makes HTTP requests directly)
+const BASE_URL = "/api";
+console.log("[Arya API] Using proxy BASE_URL:", BASE_URL);
 
 export type TelegramIdentity = {
   telegram_id: number | null;
