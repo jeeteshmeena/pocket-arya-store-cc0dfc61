@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/checkout")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: corsHeaders }),
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           const body = await request.json().catch(() => ({}));
           const storyIds: unknown = body?.story_ids;
