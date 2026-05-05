@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { GENRES, STORIES } from "@/lib/data";
+import { GENRES } from "@/lib/data";
 import { StoryCard } from "../StoryCard";
+import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
 export function ExploreView() {
+  const { stories } = useApp();
   const [genre, setGenre] = useState<string | null>(null);
-  const list = genre ? STORIES.filter((s) => s.genre === genre) : STORIES;
+  const list = genre ? stories.filter((s) => s.genre === genre) : stories;
   return (
     <div className="animate-fade-in px-4 pt-3">
       <h1 className="font-display font-bold text-xl pfm:text-2xl">Explore</h1>

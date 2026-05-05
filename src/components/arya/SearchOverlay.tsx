@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Search, X, Zap } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { STORIES, GENRES, PLATFORMS } from "@/lib/data";
+import { GENRES, PLATFORMS } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 const PRICES = [
@@ -12,21 +12,21 @@ const PRICES = [
 ];
 
 export function SearchOverlay() {
-  const { searchOpen, setSearchOpen, navigate, startCheckout } = useApp();
+  const { searchOpen, setSearchOpen, navigate, startCheckout, stories } = useApp();
   const [q, setQ] = useState("");
   const [genre, setGenre] = useState<string | null>(null);
   const [platform, setPlatform] = useState<string | null>(null);
   const [price, setPrice] = useState(PRICES[0]);
 
   const results = useMemo(() => {
-    return STORIES.filter((s) => {
+    return stories.filter((s) => {
       if (q && !s.title.toLowerCase().includes(q.toLowerCase())) return false;
       if (genre && s.genre !== genre) return false;
       if (platform && s.platform !== platform) return false;
       if (s.price < price.min || s.price > price.max) return false;
       return true;
     });
-  }, [q, genre, platform, price]);
+  }, [stories, q, genre, platform, price]);
 
   if (!searchOpen) return null;
 

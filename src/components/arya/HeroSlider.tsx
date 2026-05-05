@@ -1,26 +1,28 @@
 import { useEffect, useState } from "react";
-import { HERO_SLIDES } from "@/lib/data";
 import { useApp } from "@/store/app-store";
-
 import { cn } from "@/lib/utils";
 
 export function HeroSlider() {
   const [i, setI] = useState(0);
-  const { addToCart, startCheckout, theme } = useApp();
+  const { addToCart, startCheckout, theme, stories } = useApp();
+
+  const slides = stories.slice(0, 3);
 
   useEffect(() => {
-    const t = setInterval(() => setI((x) => (x + 1) % HERO_SLIDES.length), 4500);
+    if (slides.length <= 1) return;
+    const t = setInterval(() => setI((x) => (x + 1) % slides.length), 4500);
     return () => clearInterval(t);
-  }, []);
+  }, [slides.length]);
 
-  const slide = HERO_SLIDES[i];
+  if (slides.length === 0) return null;
+  const slide = slides[Math.min(i, slides.length - 1)];
 
   return (
     <div className={cn(
       "relative overflow-hidden mx-4 mt-3 shadow-xl",
       theme === "pfm" ? "rounded-3xl aspect-[1264/700]" : "rounded-2xl aspect-[1264/590]"
     )}>
-      {HERO_SLIDES.map((s, idx) => (
+      {slides.map((s, idx) => (
         <img
           key={s.id}
           src={s.banner}
@@ -53,7 +55,7 @@ export function HeroSlider() {
         </div>
       </div>
       <div className="absolute bottom-2 right-3 z-10 flex gap-1">
-        {HERO_SLIDES.map((_, idx) => (
+        {slides.map((_, idx) => (
           <span key={idx} className={cn(
             "h-1 rounded-full transition-all",
             idx === i ? "w-5 bg-white" : "w-1.5 bg-white/40"
