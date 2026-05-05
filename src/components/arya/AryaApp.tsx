@@ -26,11 +26,11 @@ function Shell() {
         {view.name === "profile" && <ProfileView />}
         {view.name === "settings" && <SettingsView />}
         {view.name === "detail" && <DetailView storyId={view.storyId} />}
+        {view.name === "checkout" && <CheckoutView />}
       </main>
       <BottomNav />
       <CartPanel />
       <SearchOverlay />
-      <PaymentModal />
     </div>
   );
 }
