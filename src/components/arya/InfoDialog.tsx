@@ -51,7 +51,7 @@ export function InfoDialog({
 
       {/* Sheet — slides up from bottom */}
       <div
-        className="relative w-full max-w-2xl bg-background rounded-t-3xl border-t border-border animate-slide-up"
+        className="relative w-full max-w-2xl bg-surface text-foreground rounded-t-3xl border-t border-border shadow-2xl animate-slide-up"
         style={{ maxHeight: "85vh", display: "flex", flexDirection: "column" }}
       >
         {/* Handle */}
@@ -109,7 +109,7 @@ export function InfoDialog({
         <div className="shrink-0 px-5 pt-3 pb-5 border-t border-border">
           <button
             onClick={() => onOpenChange(false)}
-            className="w-full h-11 rounded-full bg-foreground text-background font-semibold text-sm active:scale-[0.98] transition"
+            className="w-full h-11 rounded-full bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition"
           >
             Close
           </button>

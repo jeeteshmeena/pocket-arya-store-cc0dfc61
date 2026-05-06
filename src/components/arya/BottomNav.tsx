@@ -101,11 +101,49 @@ function PfmNav({ current, onNav }: { current: string; onNav: (id: string) => vo
   );
 }
 
+// ── PILL — Floating glass pill nav (Teal & Cream themes) ──────
+function PillNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  return (
+    <nav
+      className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
+      style={{ bottom: "max(env(safe-area-inset-bottom), 12px)" }}
+    >
+      <div className="pointer-events-auto mx-4 flex items-center gap-1 rounded-full bg-surface/90 backdrop-blur-xl px-2 py-2 border border-border shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)]">
+        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+          const active = current === id;
+          return (
+            <button
+              key={id}
+              onClick={() => onNav(id)}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "h-11 flex items-center gap-2 rounded-full transition-all duration-200 active:scale-95",
+                active
+                  ? "bg-primary text-primary-foreground px-4 shadow-md"
+                  : "w-11 justify-center text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="h-[20px] w-[20px] shrink-0" strokeWidth={active ? 2.4 : 1.9} />
+              {active && (
+                <span className="text-[12px] font-semibold tracking-tight whitespace-nowrap">
+                  {label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export function BottomNav() {
   const { view, navigate, theme } = useApp();
   const current = view.name;
   const onNav = (id: string) => navigate({ name: id as any });
 
   if (theme === "pfm") return <PfmNav current={current} onNav={onNav} />;
+  if (theme === "teal" || theme === "cream") return <PillNav current={current} onNav={onNav} />;
   return <DefaultNav current={current} onNav={onNav} />;
 }

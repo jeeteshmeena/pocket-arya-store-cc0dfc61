@@ -45,7 +45,7 @@ export function TermsOnboarding() {
 
       {/* Sheet — slides up from bottom */}
       <div
-        className="relative w-full max-w-2xl bg-background rounded-t-3xl border-t border-border"
+        className="relative w-full max-w-2xl bg-surface text-foreground rounded-t-3xl border-t border-border shadow-2xl"
         style={{
           maxHeight: "88vh",
           display: "flex",
@@ -83,7 +83,7 @@ export function TermsOnboarding() {
         <div className="shrink-0 px-5 pt-3 pb-6 border-t border-border">
           <button
             onClick={accept}
-            className="w-full h-12 rounded-full bg-foreground text-background font-bold text-sm active:scale-[0.98] transition"
+            className="w-full h-12 rounded-full bg-primary text-primary-foreground font-bold text-sm active:scale-[0.98] transition"
           >
             Accept & Continue
           </button>
