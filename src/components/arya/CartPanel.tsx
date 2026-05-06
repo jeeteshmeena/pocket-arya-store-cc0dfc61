@@ -1,5 +1,6 @@
 import { X, Trash2 } from "lucide-react";
 import { useApp } from "@/store/app-store";
+import { cn } from "@/lib/utils";
 
 export function CartPanel() {
   const {
