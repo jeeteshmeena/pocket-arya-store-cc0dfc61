@@ -146,10 +146,15 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
   );
 }
 
+import { haptics } from "@/lib/haptics";
+
 export function BottomNav() {
   const { view, navigate, theme } = useApp();
   const current = view.name;
-  const onNav = (id: string) => navigate({ name: id as any });
+  const onNav = (id: string) => {
+    if (id !== current) haptics.light();
+    navigate({ name: id as any });
+  };
 
   if (theme === "pfm") return <PfmNav current={current} onNav={onNav} />;
   if (theme === "teal" || theme === "cream") return <PillNav current={current} onNav={onNav} />;

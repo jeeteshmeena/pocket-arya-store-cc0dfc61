@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { FAQ_ITEMS, ABOUT_TEXT } from "./legal-content";
+import { useApp } from "@/store/app-store";
+import { cn } from "@/lib/utils";
 
-type Kind = "terms" | "refund" | "faq" | "about" | null;
+export type InfoDialogKind = "terms" | "refund" | "faq" | "about" | null;
 
-const TITLES: Record<NonNullable<Kind>, string> = {
+const TITLES: Record<NonNullable<InfoDialogKind>, string> = {
   terms:  "Terms & Conditions",
   refund: "Refund Policy",
   faq:    "FAQ",
@@ -18,13 +20,14 @@ export function InfoDialog({
   termsText,
   refundText,
 }: {
-  kind: Kind;
+  kind: InfoDialogKind;
   onOpenChange: (open: boolean) => void;
   termsText: string;
   refundText: string;
 }) {
   const open = kind !== null;
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { theme } = useApp();
 
   // Reset scroll when kind changes
   useEffect(() => {
@@ -51,65 +54,75 @@ export function InfoDialog({
 
       {/* Sheet — slides up from bottom */}
       <div
-        className="relative w-full max-w-2xl bg-surface text-foreground rounded-t-3xl border-t border-border shadow-2xl animate-slide-up"
+        className={cn(
+          "relative w-full max-w-2xl text-foreground animate-slide-up flex flex-col transition-all",
+          theme === "cream" ? "bg-white border-t-4 border-black rounded-t-3xl" : "bg-surface rounded-t-3xl border-t border-border shadow-2xl"
+        )}
         style={{ maxHeight: "85vh", display: "flex", flexDirection: "column" }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
-          <div className="h-1 w-10 rounded-full bg-border" />
+          <div className={cn("h-1.5 w-12 rounded-full", theme === "cream" ? "bg-black/20" : "bg-border")} />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pb-3 shrink-0 border-b border-border">
-          <h2 className="font-display font-bold text-lg">{title}</h2>
+        <div className={cn("flex items-center justify-between px-5 pb-3 shrink-0 border-b", theme === "cream" ? "border-black border-b-2" : "border-border")}>
+          <h2 className={cn("font-display", theme === "cream" ? "font-extrabold text-2xl text-black" : "font-bold text-lg")}>{title}</h2>
           <button
             onClick={() => onOpenChange(false)}
-            className="h-8 w-8 grid place-items-center rounded-full hover:bg-muted transition"
+            className={cn("h-8 w-8 grid place-items-center transition active:scale-95", theme === "cream" ? "neo-button bg-white text-black !h-9 !w-9" : "rounded-full hover:bg-muted")}
             aria-label="Close"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Scrollable content */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto px-5 py-4"
+          className={cn("flex-1 overflow-y-auto px-5 py-4", theme === "cream" ? "bg-muted/30" : "")}
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {kind === "faq" ? (
-            <div className="space-y-5 pb-6">
+            <div className="space-y-4 pb-6">
               {FAQ_ITEMS.map((item, i) => (
-                <div key={i} className="border-b border-border pb-4 last:border-0 last:pb-0">
-                  <div className="text-sm font-semibold text-foreground">{item.q}</div>
-                  <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.a}</div>
+                <div key={i} className={cn("p-4", theme === "cream" ? "neo-card bg-white" : "border-b border-border pb-4 last:border-0 last:pb-0 bg-surface rounded-xl")}>
+                  <div className={cn("text-sm", theme === "cream" ? "font-extrabold text-black text-[15px]" : "font-semibold text-foreground")}>{item.q}</div>
+                  <div className={cn("text-sm mt-1.5 leading-relaxed", theme === "cream" ? "font-medium text-black/70" : "text-muted-foreground")}>{item.a}</div>
                 </div>
               ))}
             </div>
           ) : kind === "about" ? (
             /* About — styled with section headers */
             <div className="pb-6">
-              <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                {ABOUT_TEXT}
-              </p>
-              <div className="mt-5 rounded-xl bg-muted p-3 space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Quick Contact</div>
-                <div className="text-sm font-semibold">@UseAryaBot</div>
-                <div className="text-xs text-muted-foreground">Telegram · Instant delivery</div>
+              <div className={cn("p-5", theme === "cream" ? "neo-card bg-white" : "bg-surface rounded-xl")}>
+                <p className={cn("text-sm whitespace-pre-line leading-relaxed", theme === "cream" ? "font-medium text-black/80" : "text-muted-foreground")}>
+                  {ABOUT_TEXT}
+                </p>
+                <div className={cn("mt-5 p-4 space-y-1", theme === "cream" ? "neo-card bg-[#FFE066]" : "rounded-xl bg-muted")}>
+                  <div className={cn("text-[10px] uppercase tracking-wider", theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>Quick Contact</div>
+                  <div className={cn("text-sm", theme === "cream" ? "font-extrabold text-black" : "font-semibold")}>@UseAryaBot</div>
+                  <div className={cn("text-xs", theme === "cream" ? "font-semibold text-black/60" : "text-muted-foreground")}>Telegram · Instant delivery</div>
+                </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed pb-6">
-              {kind === "terms" ? termsText : kind === "refund" ? refundText : ""}
-            </p>
+            <div className={cn("pb-6", theme === "cream" ? "p-5 neo-card bg-white" : "")}>
+              <p className={cn("text-sm whitespace-pre-line leading-relaxed", theme === "cream" ? "font-medium text-black/80" : "text-muted-foreground")}>
+                {kind === "terms" ? termsText : kind === "refund" ? refundText : ""}
+              </p>
+            </div>
           )}
         </div>
 
         {/* Footer close button */}
-        <div className="shrink-0 px-5 pt-3 pb-5 border-t border-border">
+        <div className={cn("shrink-0 px-5 pt-3 pb-5 border-t", theme === "cream" ? "border-black border-t-2" : "border-border")}>
           <button
             onClick={() => onOpenChange(false)}
-            className="w-full h-11 rounded-full bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition"
+            className={cn(
+              "w-full h-11 text-sm active:scale-[0.98] transition flex items-center justify-center gap-2",
+              theme === "cream" ? "neo-button bg-primary text-primary-foreground font-bold text-base" : "rounded-full bg-primary text-primary-foreground font-semibold"
+            )}
           >
             Close
           </button>
@@ -118,5 +131,3 @@ export function InfoDialog({
     </div>
   );
 }
-
-export type { Kind as InfoDialogKind };

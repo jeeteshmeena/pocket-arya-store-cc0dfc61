@@ -149,31 +149,22 @@ export function DetailView({ storyId }: { storyId: string }) {
           </>
         )}
 
+        {/* Meta chips — Episodes, Files, Platform (Visible in all themes) */}
+        <div className={cn("mt-5 grid gap-2", (filesLabel || story.size) ? "grid-cols-3" : "grid-cols-2")}>
+          <Meta label="Platform"  value={story.platform} />
+          <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
+          {(filesLabel || story.size) && (
+            <Meta label={filesLabel ? "Files" : "Size"} value={(filesLabel ?? story.size) as string} />
+          )}
+        </div>
+
         {/* Available In / Tags section (Theme Cream specific from image) */}
-        {useApp().theme === "cream" ? (
+        {useApp().theme === "cream" && story.language && (
           <div className="mt-8 mb-4">
             <h3 className="font-display font-bold text-foreground mb-3">Available In :</h3>
             <div className="flex flex-wrap gap-2">
-              {story.language && (
-                <span className="neo-tag-active px-4 py-1.5 text-sm">{story.language}</span>
-              )}
-              {story.genre && (
-                <span className="neo-tag-inactive px-4 py-1.5 text-sm">{story.genre}</span>
-              )}
-              {/* Dummy tag just to match the visual if there's only 1 real tag */}
-              {!story.genre && !story.language && (
-                <span className="neo-tag-active px-4 py-1.5 text-sm">English</span>
-              )}
+              <span className="neo-tag-active px-4 py-1.5 text-sm">{story.language}</span>
             </div>
-          </div>
-        ) : (
-          /* Meta chips — Episodes, Files (replaces Size), Platform */
-          <div className={cn("mt-5 grid gap-2", (filesLabel || story.size) ? "grid-cols-3" : "grid-cols-2")}>
-            <Meta label="Platform"  value={story.platform} />
-            <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
-            {(filesLabel || story.size) && (
-              <Meta label={filesLabel ? "Files" : "Size"} value={(filesLabel ?? story.size) as string} />
-            )}
           </div>
         )}
       </div>
@@ -187,17 +178,10 @@ export function DetailView({ storyId }: { storyId: string }) {
           {useApp().theme === "cream" ? (
             <>
               {/* Neo-brutalist buttons */}
-              <button
-                onClick={handleBuyNow}
-                className="neo-button flex-1 h-12 bg-primary text-primary-foreground text-base flex items-center justify-center gap-2"
-              >
-                <div className="bg-white text-primary rounded-full p-0.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="ml-0.5">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </div>
-                Play Book
-              </button>
+              <div className="flex-1">
+                <div className="text-[11px] text-black/60 font-bold uppercase tracking-wider">Price</div>
+                <div className="font-display font-extrabold text-xl text-black">₹{story.price}</div>
+              </div>
               <button
                 onClick={() => {
                   if (!inCart) {
@@ -206,13 +190,17 @@ export function DetailView({ storyId }: { storyId: string }) {
                   }
                 }}
                 className={cn(
-                  "h-12 w-12 shrink-0 grid place-items-center bg-white border-2 border-black rounded-xl shadow-[2px_2px_0px_#000] active:shadow-[0px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] transition-all",
-                  inCart && "bg-secondary"
+                  "neo-button h-11 px-4 text-sm bg-white text-black",
+                  inCart && "bg-secondary text-black"
                 )}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill={inCart ? "black" : "none"} stroke="currentColor" strokeWidth="2.5" className={inCart ? "text-black" : "text-[#FF4D4D]"}>
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
+                {inCart ? "In Cart ✓" : "+ Cart"}
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="neo-button h-11 px-5 bg-primary text-primary-foreground text-sm flex items-center justify-center gap-2"
+              >
+                Buy Now
               </button>
             </>
           ) : (

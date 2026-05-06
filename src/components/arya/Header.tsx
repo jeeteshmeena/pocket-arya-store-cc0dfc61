@@ -185,9 +185,15 @@ export function Header() {
                   <div 
                     key={s.id}
                     onClick={() => goToDetail(s.id, s.title)}
-                    className="flex items-center gap-3 p-3 rounded-2xl active:bg-muted transition cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-2xl active:bg-muted transition cursor-pointer"
                   >
-                    <Search className="h-[18px] w-[18px] text-muted-foreground" />
+                    <div className="h-12 w-12 rounded-lg overflow-hidden shrink-0 bg-muted border border-border flex items-center justify-center">
+                      {s.poster ? (
+                        <img src={s.poster} alt={s.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[8px] font-bold text-muted-foreground uppercase">{s.genre || "N/A"}</span>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[15px] font-medium truncate text-foreground">{s.title}</div>
                       <div className="text-[13px] text-muted-foreground truncate">{s.genre}</div>

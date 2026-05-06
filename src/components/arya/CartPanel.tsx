@@ -23,38 +23,38 @@ export function CartPanel() {
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={() => setCartOpen(false)} />
-      <aside className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-surface text-foreground border-l border-border flex flex-col animate-slide-in-right shadow-2xl">
-        <div className="h-14 px-4 flex items-center justify-between border-b border-border">
-          <div className="font-display font-bold">Your Cart</div>
-          <button onClick={() => setCartOpen(false)} className="h-9 w-9 grid place-items-center rounded-full hover:bg-surface">
+      <aside className={cn("absolute right-0 top-0 h-full w-[88%] max-w-sm flex flex-col animate-slide-in-right shadow-2xl", useApp().theme === "cream" ? "bg-white border-l-4 border-black" : "bg-surface text-foreground border-l border-border")}>
+        <div className={cn("h-14 px-4 flex items-center justify-between", useApp().theme === "cream" ? "border-b-4 border-black bg-[#FFE066]" : "border-b border-border")}>
+          <div className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-black text-xl" : "font-bold")}>Your Cart</div>
+          <button onClick={() => setCartOpen(false)} className={cn("h-9 w-9 grid place-items-center transition active:scale-95", useApp().theme === "cream" ? "neo-button bg-white text-black" : "rounded-full hover:bg-surface")}>
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
           {cart.length === 0 && (
-            <div className="text-center text-muted-foreground text-sm pt-20">Your cart is empty</div>
+            <div className={cn("text-center text-sm pt-20 font-semibold", useApp().theme === "cream" ? "text-black/60" : "text-muted-foreground")}>Your cart is empty</div>
           )}
           {cart.map((s) => (
-            <div key={s.id} className="flex gap-3 p-2 rounded-xl bg-surface">
+            <div key={s.id} className={cn("flex gap-3 p-2 relative", useApp().theme === "cream" ? "neo-card bg-white" : "rounded-xl bg-surface")}>
               <button
                 onClick={() => openDetail(s.id)}
                 className="flex flex-1 min-w-0 gap-3 text-left active:scale-[0.99] transition"
                 aria-label={`Open ${s.title}`}
               >
-                <div className="h-16 w-16 rounded-lg overflow-hidden shrink-0 bg-muted">
+                <div className={cn("h-16 w-16 overflow-hidden shrink-0", useApp().theme === "cream" ? "border-2 border-black rounded-lg shadow-sm" : "rounded-lg bg-muted")}>
                   {s.poster ? (
                     <img src={s.poster} alt={s.title} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   ) : null}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate">{s.title}</div>
-                  <div className="text-xs text-muted-foreground">{s.platform} · {s.genre}</div>
-                  <div className="text-sm font-semibold mt-1">₹{s.price}</div>
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className={cn("text-sm truncate", useApp().theme === "cream" ? "font-bold text-black" : "font-semibold")}>{s.title}</div>
+                  <div className={cn("text-xs", useApp().theme === "cream" ? "text-black/60 font-semibold" : "text-muted-foreground")}>{s.platform} · {s.genre}</div>
+                  <div className={cn("text-sm mt-1", useApp().theme === "cream" ? "font-extrabold text-black" : "font-semibold")}>₹{s.price}</div>
                 </div>
               </button>
               <button
                 onClick={() => removeFromCart(s.id)}
-                className="h-9 w-9 grid place-items-center rounded-full hover:bg-background text-muted-foreground self-center"
+                className={cn("h-9 w-9 grid place-items-center self-center transition active:scale-95", useApp().theme === "cream" ? "border-2 border-black bg-[#FF4D4D] text-white rounded-lg shadow-[2px_2px_0px_#000]" : "rounded-full hover:bg-background text-muted-foreground")}
                 aria-label="Remove"
               >
                 <Trash2 className="h-4 w-4" />
@@ -63,14 +63,17 @@ export function CartPanel() {
           ))}
         </div>
         {cart.length > 0 && (
-          <div className="border-t border-border p-4 space-y-3">
+          <div className={cn("p-4 space-y-4", useApp().theme === "cream" ? "bg-[#CCE5FF] border-t-4 border-black" : "border-t border-border")}>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="font-display font-bold text-lg">₹{total}</span>
+              <span className={cn("text-sm uppercase tracking-wider", useApp().theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>Total</span>
+              <span className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-2xl text-black" : "font-bold text-lg")}>₹{total}</span>
             </div>
             <button
               onClick={handleCheckout}
-              className="w-full h-11 rounded-full bg-primary text-primary-foreground font-semibold active:scale-[0.98] transition"
+              className={cn(
+                "w-full h-12 font-bold transition active:scale-[0.98] flex items-center justify-center gap-2",
+                useApp().theme === "cream" ? "neo-button bg-primary text-primary-foreground text-lg" : "rounded-full bg-primary text-primary-foreground font-semibold"
+              )}
             >
               Checkout →
             </button>
