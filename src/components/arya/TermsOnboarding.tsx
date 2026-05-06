@@ -45,7 +45,7 @@ export function TermsOnboarding() {
 
       {/* Sheet — slides up from bottom */}
       <div
-        className="relative w-full max-w-2xl bg-background rounded-t-3xl border-t border-border"
+        className="relative w-full max-w-2xl bg-surface text-foreground rounded-t-3xl border-t border-border shadow-2xl"
         style={{
           maxHeight: "88vh",
           display: "flex",
