@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Story } from "@/lib/data";
 import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
 
-type Theme = "default" | "pfm";
+type Theme = "default" | "pfm" | "dark" | "teal" | "cream";
 type View =
   | { name: "home" }
   | { name: "explore" }
