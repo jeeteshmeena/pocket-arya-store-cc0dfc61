@@ -1,4 +1,4 @@
-export function vibrate(ms: number = 10) {
+export function vibrate(ms: number | number[] = 10) {
   if (typeof navigator !== "undefined" && navigator.vibrate) {
     try {
       navigator.vibrate(ms);
