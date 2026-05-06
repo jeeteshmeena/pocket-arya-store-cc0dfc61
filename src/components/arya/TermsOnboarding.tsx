@@ -83,7 +83,7 @@ export function TermsOnboarding() {
         <div className="shrink-0 px-5 pt-3 pb-6 border-t border-border">
           <button
             onClick={accept}
-            className="w-full h-12 rounded-full bg-foreground text-background font-bold text-sm active:scale-[0.98] transition"
+            className="w-full h-12 rounded-full bg-primary text-primary-foreground font-bold text-sm active:scale-[0.98] transition"
           >
             Accept & Continue
           </button>
