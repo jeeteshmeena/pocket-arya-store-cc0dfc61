@@ -111,7 +111,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.toggle("theme-pfm", theme === "pfm");
+    root.classList.remove("theme-pfm", "theme-dark", "theme-teal", "theme-cream");
+    if (theme !== "default") root.classList.add(`theme-${theme}`);
     localStorage.setItem("arya_theme", theme);
   }, [theme]);
 
