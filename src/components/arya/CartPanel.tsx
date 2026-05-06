@@ -23,7 +23,7 @@ export function CartPanel() {
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={() => setCartOpen(false)} />
-      <aside className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-background border-l border-border flex flex-col animate-slide-in-right">
+      <aside className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-surface text-foreground border-l border-border flex flex-col animate-slide-in-right shadow-2xl">
         <div className="h-14 px-4 flex items-center justify-between border-b border-border">
           <div className="font-display font-bold">Your Cart</div>
           <button onClick={() => setCartOpen(false)} className="h-9 w-9 grid place-items-center rounded-full hover:bg-surface">
