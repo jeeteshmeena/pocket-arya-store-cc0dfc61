@@ -8,10 +8,10 @@ export function Row({ title, stories, wide }: { title: string; stories: Story[];
   if (!stories.length) return null;
   return (
     <section className="mt-5">
-      <div className="px-4 mb-2 flex items-center justify-between">
+      <div className="px-4 mb-3 flex items-center justify-between">
         <h2 className={cn(
-          "font-display font-bold tracking-tight",
-          theme === "pfm" ? "text-lg" : "text-base"
+          "font-display tracking-tight text-foreground",
+          theme === "cream" ? "text-xl font-extrabold" : theme === "pfm" ? "text-lg font-bold" : "text-base font-bold"
         )}>{title}</h2>
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1">

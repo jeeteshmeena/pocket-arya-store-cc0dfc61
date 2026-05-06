@@ -103,12 +103,20 @@ function PfmNav({ current, onNav }: { current: string; onNav: (id: string) => vo
 
 // ── PILL — Floating glass pill nav (Teal & Cream themes) ──────
 function PillNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  const { theme } = useApp();
+  const isCream = theme === "cream";
+  
   return (
     <nav
       className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
       style={{ bottom: "max(env(safe-area-inset-bottom), 12px)" }}
     >
-      <div className="pointer-events-auto mx-4 flex items-center gap-1 rounded-full bg-surface/90 backdrop-blur-xl px-2 py-2 border border-border shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)]">
+      <div className={cn(
+        "pointer-events-auto mx-4 flex items-center gap-1 px-2 py-2",
+        isCream 
+          ? "neo-card bg-surface shadow-[4px_4px_0px_#000] border-2 border-black"
+          : "rounded-full bg-surface/90 backdrop-blur-xl border border-border shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)]"
+      )}>
         {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
           const active = current === id;
           return (
@@ -118,10 +126,10 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
               aria-label={label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "h-11 flex items-center gap-2 rounded-full transition-all duration-200 active:scale-95",
+                "h-11 flex items-center gap-2 transition-all duration-200 active:scale-95",
                 active
-                  ? "bg-primary text-primary-foreground px-4 shadow-md"
-                  : "w-11 justify-center text-muted-foreground hover:text-foreground"
+                  ? (isCream ? "neo-button bg-secondary text-secondary-foreground px-4 shadow-[2px_2px_0px_#000]" : "rounded-full bg-primary text-primary-foreground px-4 shadow-md")
+                  : (isCream ? "rounded-full w-11 justify-center text-foreground hover:bg-muted" : "rounded-full w-11 justify-center text-muted-foreground hover:text-foreground")
               )}
             >
               <Icon className="h-[20px] w-[20px] shrink-0" strokeWidth={active ? 2.4 : 1.9} />

@@ -65,8 +65,11 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
       )}
       onClick={() => navigate({ name: "detail", storyId: story.id })}
     >
-      {/* Poster — SQUARE, no rounded corners */}
-      <div className="relative overflow-hidden bg-muted shadow-sm aspect-square">
+      {/* Poster */}
+      <div className={cn(
+        "relative overflow-hidden bg-muted",
+        useApp().theme === "cream" ? "neo-card aspect-square" : "aspect-square shadow-sm"
+      )}>
         {hasImage ? (
           <img
             ref={imgRef}
