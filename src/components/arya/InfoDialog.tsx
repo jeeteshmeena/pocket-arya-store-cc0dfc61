@@ -109,7 +109,7 @@ export function InfoDialog({
         <div className="shrink-0 px-5 pt-3 pb-5 border-t border-border">
           <button
             onClick={() => onOpenChange(false)}
-            className="w-full h-11 rounded-full bg-foreground text-background font-semibold text-sm active:scale-[0.98] transition"
+            className="w-full h-11 rounded-full bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition"
           >
             Close
           </button>
