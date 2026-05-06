@@ -114,7 +114,10 @@ export function HeroSlider() {
   return (
     <div
       ref={trackRef}
-      className="relative overflow-hidden mx-4 mt-3 rounded-2xl shadow-sm select-none cursor-grab active:cursor-grabbing bg-muted"
+      className={cn(
+        "relative overflow-hidden mx-4 mt-3 select-none cursor-grab active:cursor-grabbing bg-muted",
+        theme === "cream" ? "neo-card" : "rounded-2xl shadow-sm"
+      )}
       style={{ aspectRatio: `${1184}/${556}` }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
@@ -132,8 +135,8 @@ export function HeroSlider() {
       {/* Badge — Premium styling for TRENDING and NEW */}
       {slide.badge && (
         <div className={cn(
-          "absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide z-10",
-          slide.badge === "TRENDING" ? "bg-red-500 text-white" : "bg-white text-black"
+          "absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 tracking-wide z-10",
+          theme === "cream" ? "border-2 border-black bg-white text-black neo-card !rounded-md" : "rounded-full " + (slide.badge === "TRENDING" ? "bg-red-500 text-white" : "bg-white text-black")
         )}>
           {slide.badge}
         </div>
@@ -145,8 +148,8 @@ export function HeroSlider() {
           <p className="text-white/70 text-[11px] font-medium mb-1">{slide.subtitle}</p>
         )}
         <div className={cn(
-          "font-display font-bold leading-tight text-white",
-          theme === "pfm" ? "text-xl" : "text-lg"
+          "font-display leading-tight text-white",
+          theme === "pfm" ? "text-xl font-bold" : theme === "cream" ? "text-2xl font-extrabold tracking-tight" : "text-lg font-bold"
         )}>
           {slide.title}
         </div>
@@ -154,7 +157,10 @@ export function HeroSlider() {
           <div className="flex items-center gap-2 mt-3">
             <button
               onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
-              className="h-9 px-5 rounded-full bg-white text-foreground text-xs font-bold active:scale-95 transition"
+              className={cn(
+                "h-9 px-5 text-xs font-bold active:scale-95 transition",
+                theme === "cream" ? "neo-button bg-white text-black" : "rounded-full bg-white text-foreground"
+              )}
             >
               Buy Now · ₹{story.price}
             </button>
@@ -165,7 +171,10 @@ export function HeroSlider() {
                 flyToCart(e.currentTarget);
                 setTimeout(() => addToCart(story), 200);
               }}
-              className="h-9 px-4 rounded-full bg-white/15 border border-white/30 text-white text-xs font-semibold active:scale-95 transition"
+              className={cn(
+                "h-9 px-4 text-xs font-semibold active:scale-95 transition",
+                theme === "cream" ? "neo-button bg-black text-white" : "rounded-full bg-white/15 border border-white/30 text-white"
+              )}
             >
               + Cart
             </button>

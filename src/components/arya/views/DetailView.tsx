@@ -48,34 +48,30 @@ export function DetailView({ storyId }: { storyId: string }) {
               <button onClick={back} className="h-8 w-8 grid place-items-center">
                 <ArrowLeft className="h-6 w-6 text-foreground" />
               </button>
-              <div className="h-1 w-5 rounded bg-foreground"></div>
             </div>
             
             <div className="neo-card bg-[#8CC6E6] aspect-[4/5] p-6 flex flex-col relative overflow-hidden">
-              <div className="text-center mt-4">
-                <h2 className="text-sm tracking-widest text-white/90 font-bold uppercase mb-2">
+              {story.banner && !bannerErr ? (
+                <img
+                  src={story.banner} alt={story.title}
+                  onError={() => setBannerErr(true)}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-muted" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              
+              <div className="absolute bottom-6 inset-x-6 z-10 text-center">
+                <h2 className="text-[10px] tracking-widest text-white/90 font-bold uppercase mb-2">
                   {story.genre || "Book"}
                 </h2>
-                <h1 className="text-4xl font-display font-extrabold text-[#11314B] leading-none mb-3">
+                <h1 className="text-3xl font-display font-extrabold text-white leading-tight mb-2">
                   {story.title}
                 </h1>
                 <p className="text-[10px] text-white/90 tracking-widest uppercase font-bold">
-                  {story.language || "English"}
+                  {[story.language, story.episodes ? `${story.episodes} eps` : null].filter(Boolean).join(" · ")}
                 </p>
-              </div>
-
-              {/* Fake Audio Waveform for Neo-brutalism visual */}
-              <div className="absolute bottom-6 inset-x-6">
-                <p className="text-center text-xs font-semibold text-white/90 mb-3">{story.title}</p>
-                <div className="flex items-end justify-center gap-1 h-8 opacity-80 mb-2">
-                  {[4, 8, 5, 12, 6, 9, 3, 7, 10, 4, 8, 12, 6, 8, 4, 10, 5, 8, 3].map((h, i) => (
-                    <div key={i} className="w-1 bg-white rounded-t-sm" style={{ height: `${h * 2.5}px` }}></div>
-                  ))}
-                </div>
-                <div className="flex justify-between text-[10px] text-white font-semibold">
-                  <span>03:23</span>
-                  <span>{story.episodes || 0} eps</span>
-                </div>
               </div>
             </div>
           </div>
@@ -137,7 +133,7 @@ export function DetailView({ storyId }: { storyId: string }) {
       </div>
 
       {/* Body */}
-      <div className="px-4 mt-4">
+      <div className={cn("px-4", useApp().theme === "cream" ? "mt-6" : "mt-4")}>
         {story.description && (
           <>
             <p className={cn("text-sm text-muted-foreground leading-relaxed", !expanded && "line-clamp-3")}>
@@ -153,28 +149,35 @@ export function DetailView({ storyId }: { storyId: string }) {
           </>
         )}
 
-        {/* Meta chips — Episodes, Files (replaces Size), Platform */}
-        <div className={cn("mt-5 grid gap-2", (filesLabel || story.size) ? "grid-cols-3" : "grid-cols-2")}>
-          <Meta label="Platform"  value={story.platform} />
-          <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
-          {(filesLabel || story.size) && (
-            <Meta label={filesLabel ? "Files" : "Size"} value={(filesLabel ?? story.size) as string} />
-          )}
-        </div>
-      </div>
-
-        {/* Available In section (Theme Cream specific from image) */}
-        {useApp().theme === "cream" && (
-          <div className="mt-8 mb-4 px-4">
+        {/* Available In / Tags section (Theme Cream specific from image) */}
+        {useApp().theme === "cream" ? (
+          <div className="mt-8 mb-4">
             <h3 className="font-display font-bold text-foreground mb-3">Available In :</h3>
             <div className="flex flex-wrap gap-2">
-              <span className="neo-tag-active px-4 py-1.5 text-sm">English</span>
-              {["Hindi", "Marathi", "Tamil"].map((lang) => (
-                <span key={lang} className="neo-tag-inactive px-4 py-1.5 text-sm">{lang}</span>
-              ))}
+              {story.language && (
+                <span className="neo-tag-active px-4 py-1.5 text-sm">{story.language}</span>
+              )}
+              {story.genre && (
+                <span className="neo-tag-inactive px-4 py-1.5 text-sm">{story.genre}</span>
+              )}
+              {/* Dummy tag just to match the visual if there's only 1 real tag */}
+              {!story.genre && !story.language && (
+                <span className="neo-tag-active px-4 py-1.5 text-sm">English</span>
+              )}
             </div>
           </div>
+        ) : (
+          /* Meta chips — Episodes, Files (replaces Size), Platform */
+          <div className={cn("mt-5 grid gap-2", (filesLabel || story.size) ? "grid-cols-3" : "grid-cols-2")}>
+            <Meta label="Platform"  value={story.platform} />
+            <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
+            {(filesLabel || story.size) && (
+              <Meta label={filesLabel ? "Files" : "Size"} value={(filesLabel ?? story.size) as string} />
+            )}
+          </div>
         )}
+      </div>
+
       {/* Sticky bottom bar */}
       <div className={cn(
         "fixed bottom-0 inset-x-0 z-30 pb-[env(safe-area-inset-bottom)]",
