@@ -181,11 +181,13 @@ export function ProfileView() {
         <Item icon={HelpCircle} label="FAQ" onClick={() => setDialog("faq")} isCream={useApp().theme === "cream"} />
         <Item
           icon={LifeBuoy}
-          label="Admin Support"
-          onClick={() => openTelegramLink(SUPPORT_URL)}
+          label="Contact Us"
+          onClick={() => setDialog("contact")}
           isCream={useApp().theme === "cream"}
         />
         <Item icon={ScrollText} label="Terms & Conditions" onClick={() => setDialog("terms")} isCream={useApp().theme === "cream"} />
+        <Item icon={FileText} label="Privacy Policy" onClick={() => setDialog("privacy")} isCream={useApp().theme === "cream"} />
+        <Item icon={FileText} label="Delivery Policy" onClick={() => setDialog("delivery")} isCream={useApp().theme === "cream"} />
         <Item icon={Receipt} label="Refund Policy" onClick={() => setDialog("refund")} isCream={useApp().theme === "cream"} />
         <Item icon={Settings} label="Settings" onClick={() => navigate({ name: "settings" })} isCream={useApp().theme === "cream"} />
         <Item icon={FileText} label="About" onClick={() => setDialog("about")} isCream={useApp().theme === "cream"} />
@@ -197,8 +199,6 @@ export function ProfileView() {
       <InfoDialog
         kind={dialog}
         onOpenChange={(o) => !o && setDialog(null)}
-        termsText={TERMS_TEXT}
-        refundText={REFUND_TEXT}
       />
     </div>
   );
