@@ -6,7 +6,7 @@ import { haptics } from "@/lib/haptics";
 
 function ThemeCycle() {
   const { theme, setTheme } = useApp();
-  const THEMES = ["default", "pfm", "dark"];
+  const THEMES = ["default", "pfm", "dark", "teal", "cream"];
   
   const handleCycle = () => {
     haptics.light();

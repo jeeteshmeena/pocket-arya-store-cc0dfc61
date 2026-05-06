@@ -1,12 +1,14 @@
 /* Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Fraunces:wght@500;600;700;800&family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.theme-dark *));
 @custom-variant pfm (&:is(.theme-pfm *));
+@custom-variant teal (&:is(.theme-teal *));
+@custom-variant cream (&:is(.theme-cream *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -122,6 +124,68 @@
   --border:               #27272A;
   --input:                #27272A;
   --ring:                 #FAFAFA;
+}
+
+/* ══════════════════════════════════════════════════
+   TEAL — Audiobook teal (image #1 inspiration)
+   Trending Books / Lisa Lutz reference
+   ══════════════════════════════════════════════════ */
+.theme-teal {
+  --radius: 1.25rem;
+  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Fraunces", "Plus Jakarta Sans", serif;
+
+  --background:           #1FA9A0;   /* teal canvas behind sheets */
+  --foreground:           #0E2A2A;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #0E2A2A;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #0E2A2A;
+  --primary:              #1FA9A0;   /* teal CTA */
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #E6F7F5;
+  --secondary-foreground: #0E2A2A;
+  --muted:                #E6F7F5;
+  --muted-foreground:     #4B7B79;
+  --accent:               #CDEEEA;
+  --accent-foreground:    #0E2A2A;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #D7EFEC;
+  --input:                #F1FAF8;
+  --ring:                 #1FA9A0;
+}
+
+/* ══════════════════════════════════════════════════
+   CREAM — Soft pink/cream audiobook (image #2)
+   "Hello, Jenny" / Copenhagen reference
+   ══════════════════════════════════════════════════ */
+.theme-cream {
+  --radius: 1.25rem;
+  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "DM Serif Display", "Fraunces", serif;
+
+  --background:           #F5D5C8;   /* warm pink canvas */
+  --foreground:           #1B1B1F;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #1B1B1F;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #1B1B1F;
+  --primary:              #2D6CDF;   /* blue CTA like Play Book */
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #FFF3D6;   /* soft cream highlight */
+  --secondary-foreground: #1B1B1F;
+  --muted:                #F4EFE8;
+  --muted-foreground:     #6B6760;
+  --accent:               #DCE9FF;
+  --accent-foreground:    #1B1B1F;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #ECE3DA;
+  --input:                #F7F2EC;
+  --ring:                 #2D6CDF;
 }
 
 /* ══════════════════════════════════════════════════

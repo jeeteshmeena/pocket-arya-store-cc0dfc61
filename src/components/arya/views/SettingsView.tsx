@@ -13,6 +13,21 @@ const THEMES = [
     title: "Pocket FM Style",
     desc: "White · Nunito font · Flat navigation",
   },
+  {
+    id: "dark" as const,
+    title: "Midnight Dark",
+    desc: "Deep black · High contrast · Inter",
+  },
+  {
+    id: "teal" as const,
+    title: "Audiobook Teal",
+    desc: "Teal canvas · Fraunces serif · Glass cards",
+  },
+  {
+    id: "cream" as const,
+    title: "Soft Cream",
+    desc: "Warm pink · DM Serif · Blue CTA",
+  },
 ] as const;
 
 export function SettingsView() {
