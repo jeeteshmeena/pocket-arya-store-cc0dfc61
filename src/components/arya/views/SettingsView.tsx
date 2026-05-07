@@ -2,7 +2,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
-type ThemeId = "default" | "pfm" | "dark" | "teal" | "cream" | "mint";
+type ThemeId = "default" | "dark" | "teal" | "cream" | "mint";
 
 type ThemePreset = {
   id: ThemeId;
@@ -22,13 +22,6 @@ const THEMES: ThemePreset[] = [
     title: "Default",
     desc: "Clean white · Black accent",
     font: "Inter",
-    canvas: "#F8F8F8", card: "#FFFFFF", ink: "#111111", accent: "#111111",
-  },
-  {
-    id: "pfm",
-    title: "Pocket FM",
-    desc: "Flat white · Nunito",
-    font: "Nunito",
     canvas: "#F8F8F8", card: "#FFFFFF", ink: "#111111", accent: "#111111",
   },
   {

@@ -6,7 +6,6 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.theme-dark *));
-@custom-variant pfm (&:is(.theme-pfm *));
 @custom-variant teal (&:is(.theme-teal *));
 @custom-variant cream (&:is(.theme-cream *));
 @custom-variant mint (&:is(.theme-mint *));
@@ -57,35 +56,6 @@
   --popover:              #FFFFFF;
   --popover-foreground:   #111111;
   --primary:              #111111;   /* Black — premium CTA */
-  --primary-foreground:   #FFFFFF;
-  --secondary:            #F3F4F6;
-  --secondary-foreground: #111111;
-  --muted:                #F3F4F6;
-  --muted-foreground:     #6B7280;
-  --accent:               #F3F4F6;
-  --accent-foreground:    #111111;
-  --destructive:          #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border:               #E5E7EB;
-  --input:                #F3F4F6;
-  --ring:                 #111111;
-}
-
-/* ══════════════════════════════════════════════════
-   POCKET FM — Same light base, PFM-specific layout
-   ══════════════════════════════════════════════════ */
-.theme-pfm {
-  --radius: 1rem;
-  --font-sans:    "Nunito", "Inter", system-ui, sans-serif;
-  --font-display: "Nunito", "Inter", system-ui, sans-serif;
-  --background:           #F8F8F8;
-  --foreground:           #111111;
-  --surface:              #FFFFFF;
-  --card:                 #FFFFFF;
-  --card-foreground:      #111111;
-  --popover:              #FFFFFF;
-  --popover-foreground:   #111111;
-  --primary:              #111111;
   --primary-foreground:   #FFFFFF;
   --secondary:            #F3F4F6;
   --secondary-foreground: #111111;

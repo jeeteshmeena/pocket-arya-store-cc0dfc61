@@ -157,7 +157,7 @@ export function HeroSlider() {
         )}
         <div className={cn(
           "font-display leading-tight text-white drop-shadow-md line-clamp-2",
-          theme === "pfm" ? "text-2xl font-extrabold" : theme === "cream" ? "text-2xl font-extrabold tracking-tight" : "text-xl font-bold"
+          theme === "cream" ? "text-2xl font-extrabold tracking-tight" : "text-xl font-bold"
         )}>
           {slide.title}
         </div>
