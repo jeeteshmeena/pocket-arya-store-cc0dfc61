@@ -2,7 +2,7 @@ import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
 import { Plus, Check, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
 import { StatusBadge } from "./StatusBadge";
