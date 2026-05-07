@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "../StatusBadge";
 
 export function DetailView({ storyId }: { storyId: string }) {
   const { back, addToCart, goToCheckout, cart, stories } = useApp();
