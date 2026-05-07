@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { ArrowLeft, Mail, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Mail, Send, Check } from "lucide-react";
 import { FAQ_ITEMS, ABOUT_TEXT, TERMS_TEXT, REFUND_TEXT, PRIVACY_TEXT, DELIVERY_TEXT } from "./legal-content";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,16 @@ export function InfoDialog({
   const open = kind !== null;
   const scrollRef = useRef<HTMLDivElement>(null);
   const { theme } = useApp();
+  const [copied, setCopied] = useState(false);
+
+  const copyEmail = () => {
+    try {
+      navigator.clipboard.writeText("Support.AaryaPremium@gmail.com");
+      setCopied(true);
+      import("@/lib/haptics").then(m => m.haptics.light());
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
 
   // Reset scroll when kind changes
   useEffect(() => {
@@ -100,21 +110,25 @@ export function InfoDialog({
                   <div className={cn("text-xs mt-0.5", theme === "cream" ? "text-black/70 font-semibold" : "text-muted-foreground")}>@ItsNewtonPlanet</div>
                 </div>
               </a>
-              <a
-                href="mailto:Support.AaryaPremium@gmail.com"
+              <button
+                onClick={copyEmail}
                 className={cn(
                   "flex items-center gap-4 p-4 w-full text-left transition active:scale-[0.98]",
                   theme === "cream" ? "neo-card bg-white hover:bg-gray-50" : "bg-surface border border-border rounded-xl hover:bg-muted"
                 )}
               >
-                <div className={cn("h-10 w-10 shrink-0 grid place-items-center rounded-full", theme === "cream" ? "bg-[#FFE066] border-2 border-black" : "bg-primary/10 text-primary")}>
-                  <Mail className={cn("h-5 w-5", theme === "cream" ? "text-black" : "")} />
+                <div className={cn("h-10 w-10 shrink-0 grid place-items-center rounded-full transition-colors", 
+                  copied ? "bg-emerald-100 text-emerald-600 border-emerald-600" :
+                  theme === "cream" ? "bg-[#FFE066] border-2 border-black" : "bg-primary/10 text-primary")}>
+                  {copied ? <Check className="h-5 w-5" /> : <Mail className={cn("h-5 w-5", theme === "cream" ? "text-black" : "")} />}
                 </div>
                 <div>
-                  <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>Email Support</div>
+                  <div className={cn("font-bold", copied ? "text-emerald-600" : theme === "cream" ? "text-black" : "")}>
+                    {copied ? "Copied to Clipboard!" : "Email Support"}
+                  </div>
                   <div className={cn("text-xs mt-0.5", theme === "cream" ? "text-black/70 font-semibold" : "text-muted-foreground")}>Support.AaryaPremium@gmail.com</div>
                 </div>
-              </a>
+              </button>
             </div>
           ) : (
             <div className={cn("pb-6", theme === "cream" ? "p-5 neo-card bg-white" : "")}>
