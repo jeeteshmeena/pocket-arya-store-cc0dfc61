@@ -115,50 +115,58 @@ export function HeroSlider() {
     <div
       ref={trackRef}
       className={cn(
-        "relative overflow-hidden mx-4 mt-3 select-none cursor-grab active:cursor-grabbing bg-muted",
-        theme === "cream" ? "neo-card" : "rounded-2xl shadow-sm"
+        "relative overflow-hidden mx-4 mt-4 select-none cursor-grab active:cursor-grabbing bg-muted",
+        theme === "cream" ? "neo-card" : "rounded-3xl shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)] ring-1 ring-border/60"
       )}
-      style={{ aspectRatio: `${1184}/${556}` }}
+      style={{ aspectRatio: "16/10" }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onMouseDown={onMouseDown}
       onMouseUp={onMouseUp}
     >
-      {/* Image slides */}
       {slides.map((s, i) => (
         <SlideImage key={s.id} src={s.image} title={s.title} active={i === idx} />
       ))}
 
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_0%,transparent_55%,rgba(0,0,0,0.25)_100%)] pointer-events-none" />
 
-      {/* Badge — Premium styling for TRENDING and NEW */}
       {slide.badge && (
         <div className={cn(
-          "absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 tracking-wide z-10",
-          theme === "cream" ? "border-2 border-black bg-white text-black neo-card !rounded-md" : "rounded-full " + (slide.badge === "TRENDING" ? "bg-red-500 text-white" : "bg-white text-black")
+          "absolute top-3.5 left-3.5 text-[10px] font-bold px-2.5 py-1 tracking-wider z-10 uppercase",
+          theme === "cream"
+            ? "border-2 border-black bg-white text-black neo-card !rounded-md"
+            : "rounded-full backdrop-blur-md " + (slide.badge === "TRENDING" ? "bg-red-500/95 text-white shadow-lg" : "bg-white/90 text-black")
         )}>
           {slide.badge}
         </div>
       )}
 
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 z-10" onClick={handleDetail}>
+      <div className="absolute top-3.5 right-3.5 z-10 flex gap-1.5">
+        {slides.map((_, i) => (
+          <button key={i} onClick={() => setIdx(i)}
+            className={cn("h-1.5 rounded-full transition-all duration-300",
+              i === idx ? "w-6 bg-white" : "w-1.5 bg-white/40")}
+            aria-label={`Go to slide ${i + 1}`} />
+        ))}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 z-10" onClick={handleDetail}>
         {slide.subtitle && !slide.subtitle.includes("New Release") && (
-          <p className="text-white/70 text-[11px] font-medium mb-1">{slide.subtitle}</p>
+          <p className="text-white/75 text-[11px] font-semibold uppercase tracking-wider mb-1.5">{slide.subtitle}</p>
         )}
         <div className={cn(
-          "font-display leading-tight text-white",
-          theme === "pfm" ? "text-xl font-bold" : theme === "cream" ? "text-2xl font-extrabold tracking-tight" : "text-lg font-bold"
+          "font-display leading-tight text-white drop-shadow-md line-clamp-2",
+          theme === "pfm" ? "text-2xl font-extrabold" : theme === "cream" ? "text-2xl font-extrabold tracking-tight" : "text-xl font-bold"
         )}>
           {slide.title}
         </div>
         {story && (
-          <div className="flex items-center gap-2 mt-3">
+          <div className="flex items-center gap-2 mt-3.5">
             <button
               onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
               className={cn(
-                "h-9 px-5 text-xs font-bold active:scale-95 transition",
+                "h-10 px-5 text-[13px] font-bold active:scale-95 transition shadow-lg",
                 theme === "cream" ? "neo-button bg-white text-black" : "rounded-full bg-white text-foreground"
               )}
             >
@@ -172,28 +180,15 @@ export function HeroSlider() {
                 setTimeout(() => addToCart(story), 200);
               }}
               className={cn(
-                "h-9 px-4 text-xs font-semibold active:scale-95 transition",
-                theme === "cream" ? "neo-button bg-black text-white" : "rounded-full bg-white/15 border border-white/30 text-white"
+                "h-10 w-10 grid place-items-center text-base font-semibold active:scale-95 transition",
+                theme === "cream" ? "neo-button bg-black text-white" : "rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white hover:bg-white/25"
               )}
+              aria-label="Add to cart"
             >
-              + Cart
+              +
             </button>
           </div>
         )}
-      </div>
-
-      {/* Dot indicators */}
-      <div className="absolute bottom-2 right-3 z-10 flex gap-1">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setIdx(i)}
-            className={cn(
-              "h-1.5 rounded-full transition-all duration-300",
-              i === idx ? "w-5 bg-white" : "w-1.5 bg-white/35"
-            )}
-          />
-        ))}
       </div>
     </div>
   );
