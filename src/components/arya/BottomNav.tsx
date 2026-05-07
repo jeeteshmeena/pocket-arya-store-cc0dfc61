@@ -157,6 +157,6 @@ export function BottomNav() {
   };
 
   if (theme === "pfm") return <PfmNav current={current} onNav={onNav} />;
-  if (theme === "teal" || theme === "cream") return <PillNav current={current} onNav={onNav} />;
+  if (theme === "teal" || theme === "cream" || theme === "mint") return <PillNav current={current} onNav={onNav} />;
   return <DefaultNav current={current} onNav={onNav} />;
 }
