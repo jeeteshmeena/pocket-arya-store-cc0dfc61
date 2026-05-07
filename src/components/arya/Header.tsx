@@ -1,29 +1,87 @@
-import { Search, ShoppingCart, Palette, ArrowLeft, Clock, X } from "lucide-react";
+import { Search, ShoppingCart, ArrowLeft, Clock, X, Check } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { haptics } from "@/lib/haptics";
+import aryaLogo from "@/assets/arya-logo.jpg";
 
-function ThemeCycle() {
+const THEME_PRESETS: { id: "default" | "pfm" | "dark" | "teal" | "cream" | "mint"; label: string; canvas: string; accent: string }[] = [
+  { id: "default", label: "Mono",   canvas: "#F8F8F8", accent: "#111111" },
+  { id: "pfm",     label: "Pocket", canvas: "#F8F8F8", accent: "#111111" },
+  { id: "dark",    label: "Dark",   canvas: "#09090B", accent: "#FAFAFA" },
+  { id: "teal",    label: "Teal",   canvas: "#1FA9A0", accent: "#FFFFFF" },
+  { id: "cream",   label: "Cream",  canvas: "#F5D5C8", accent: "#2D6CDF" },
+  { id: "mint",    label: "Mint",   canvas: "#DCE7F2", accent: "#4FE3A1" },
+];
+
+function ThemePicker() {
   const { theme, setTheme } = useApp();
-  const THEMES = ["default", "pfm", "dark", "teal", "cream"];
-  
-  const handleCycle = () => {
-    haptics.light();
-    const idx = THEMES.indexOf(theme);
-    setTheme(THEMES[(idx + 1) % THEMES.length] as any);
-  };
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = THEME_PRESETS.find((t) => t.id === theme) ?? THEME_PRESETS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
 
   return (
-    <button
-      onClick={handleCycle}
-      className="relative h-9 w-9 grid place-items-center rounded-full bg-muted transition-all shrink-0 hover:bg-border/50 active:scale-95"
-      aria-label="Cycle Theme"
-    >
-      <Palette className="h-4 w-4 text-foreground" />
-    </button>
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => { haptics.light(); setOpen((v) => !v); }}
+        aria-label="Theme"
+        className="relative h-9 w-9 grid place-items-center rounded-full bg-surface border border-border shadow-sm shrink-0 active:scale-95 transition overflow-hidden"
+      >
+        <span
+          className="absolute inset-1 rounded-full"
+          style={{ background: `conic-gradient(${current.accent}, ${current.canvas}, ${current.accent})` }}
+        />
+        <span className="relative h-3 w-3 rounded-full ring-2 ring-surface" style={{ backgroundColor: current.accent }} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-11 z-50 w-[260px] rounded-2xl bg-surface border border-border shadow-[0_20px_48px_-12px_rgba(0,0,0,0.25)] p-3 animate-popup-enter"
+        >
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1 mb-2">
+            App Theme
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_PRESETS.map((t) => {
+              const active = theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => { haptics.light(); setTheme(t.id); setOpen(false); }}
+                  className={cn(
+                    "group relative rounded-xl overflow-hidden border transition-all active:scale-95 text-left",
+                    active ? "border-primary ring-2 ring-primary/25" : "border-border hover:border-muted-foreground/40"
+                  )}
+                >
+                  <div className="h-12 w-full relative" style={{ backgroundColor: t.canvas }}>
+                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-white/80" />
+                    <span className="absolute inset-x-2 bottom-2 h-3 rounded-full" style={{ backgroundColor: t.accent }} />
+                    {active && (
+                      <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-primary grid place-items-center">
+                        <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
+                      </span>
+                    )}
+                  </div>
+                  <div className="px-2 py-1 text-[10px] font-semibold text-foreground bg-surface">{t.label}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
+
 
 export function Header() {
   const { cart, setCartOpen, stories, navigate } = useApp();
@@ -75,13 +133,20 @@ export function Header() {
           
           {/* Default State */}
           <div className={cn("flex items-center w-full justify-between gap-3 transition-opacity duration-200", searchOpen ? "opacity-0 pointer-events-none" : "opacity-100")}>
-            <div className={cn(
-              "h-9 w-9 grid place-items-center font-display font-extrabold text-sm tracking-tight shrink-0 shadow-sm",
-              useApp().theme === "cream" ? "rounded-xl border-2 border-black bg-white text-black shadow-[2px_2px_0px_#000]" : "rounded-xl bg-foreground text-background"
-            )}>
-              AP
-            </div>
-            
+            <button
+              onClick={() => navigate({ name: "home" })}
+              className={cn(
+                "h-9 flex items-center gap-1.5 pl-0.5 pr-2.5 rounded-full shrink-0 active:scale-95 transition",
+                useApp().theme === "cream" ? "border-2 border-black bg-white shadow-[2px_2px_0px_#000]" : "bg-surface border border-border shadow-sm"
+              )}
+              aria-label="Arya Premium"
+            >
+              <span className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-border bg-muted shrink-0">
+                <img src={aryaLogo} alt="Arya" className="h-full w-full object-cover" />
+              </span>
+              <span className="font-display font-bold text-[12px] tracking-tight text-foreground">Arya</span>
+            </button>
+
             <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleOpen}
@@ -96,7 +161,7 @@ export function Header() {
                 <span className={cn("text-sm truncate", useApp().theme === "cream" ? "text-black font-semibold" : "text-muted-foreground")}>Search...</span>
               </button>
 
-              <ThemeCycle />
+              <ThemePicker />
 
               <button
                 id="arya-cart-target"

@@ -10,11 +10,13 @@ export function flyToCart(sourceEl: HTMLElement) {
   clone.style.top = `${s.top}px`;
   clone.style.width = `${s.width}px`;
   clone.style.height = `${s.height}px`;
-  clone.style.borderRadius = "12px";
+  clone.style.borderRadius = "16px";
   clone.style.objectFit = "cover";
   clone.style.zIndex = "60";
   clone.style.pointerEvents = "none";
-  clone.style.transition = "transform 600ms cubic-bezier(.6,-0.05,.4,1.05), opacity 600ms ease-out";
+  clone.style.boxShadow = "0 12px 30px -8px rgba(0,0,0,0.35)";
+  clone.style.transition =
+    "transform 700ms cubic-bezier(0.5, -0.2, 0.2, 1.1), opacity 700ms cubic-bezier(0.4, 0, 0.6, 1), border-radius 700ms ease-out";
   clone.style.willChange = "transform, opacity";
   document.body.appendChild(clone);
 
@@ -22,15 +24,14 @@ export function flyToCart(sourceEl: HTMLElement) {
   const dy = t.top + t.height / 2 - (s.top + s.height / 2);
 
   requestAnimationFrame(() => {
-    clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.1) rotate(20deg)`;
-    clone.style.opacity = "0.2";
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.08) rotate(15deg)`;
+    clone.style.opacity = "0";
+    clone.style.borderRadius = "9999px";
   });
 
   setTimeout(() => {
     clone.remove();
-    target.animate(
-      [{ transform: "scale(1)" }, { transform: "scale(1.25)" }, { transform: "scale(1)" }],
-      { duration: 280, easing: "ease-out" }
-    );
-  }, 620);
+    target.classList.add("animate-cart-bounce");
+    setTimeout(() => target.classList.remove("animate-cart-bounce"), 550);
+  }, 720);
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "../StatusBadge";
 
 export function DetailView({ storyId }: { storyId: string }) {
   const { back, addToCart, goToCheckout, cart, stories } = useApp();
@@ -121,7 +122,9 @@ export function DetailView({ storyId }: { storyId: string }) {
                 </div>
 
                 <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                  {/* Episodes count — only in detail */}
+                  {typeof story.isCompleted === "boolean" && (
+                    <StatusBadge isCompleted={!!story.isCompleted} expanded />
+                  )}
                   {story.episodes && story.episodes !== "?" && (
                     <span className="text-[11px] font-semibold text-muted-foreground">{story.episodes} eps</span>
                   )}

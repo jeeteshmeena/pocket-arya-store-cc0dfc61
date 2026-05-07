@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Story } from "@/lib/data";
 import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
 
-type Theme = "default" | "pfm" | "dark" | "teal" | "cream";
+type Theme = "default" | "pfm" | "dark" | "teal" | "cream" | "mint";
 type View =
   | { name: "home" }
   | { name: "explore" }
@@ -111,7 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("theme-pfm", "theme-dark", "theme-teal", "theme-cream");
+    root.classList.remove("theme-pfm", "theme-dark", "theme-teal", "theme-cream", "theme-mint");
     if (theme !== "default") root.classList.add(`theme-${theme}`);
     localStorage.setItem("arya_theme", theme);
   }, [theme]);

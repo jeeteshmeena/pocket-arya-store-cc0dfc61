@@ -9,6 +9,7 @@
 @custom-variant pfm (&:is(.theme-pfm *));
 @custom-variant teal (&:is(.theme-teal *));
 @custom-variant cream (&:is(.theme-cream *));
+@custom-variant mint (&:is(.theme-mint *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -188,6 +189,37 @@
   --ring:                 #000000;
 }
 
+/* ══════════════════════════════════════════════════
+   MINT — Plant/Greener inspiration (image #1)
+   Soft pale-blue canvas, white cards, mint-green accents
+   ══════════════════════════════════════════════════ */
+.theme-mint {
+  --radius: 1.5rem;
+  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+
+  --background:           #DCE7F2;   /* Soft sky-blue canvas */
+  --foreground:           #0B1220;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #0B1220;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #0B1220;
+  --primary:              #4FE3A1;   /* Vibrant mint green CTA */
+  --primary-foreground:   #062014;
+  --secondary:            #EAF3FF;
+  --secondary-foreground: #0B1220;
+  --muted:                #F1F5F9;
+  --muted-foreground:     #64748B;
+  --accent:               #C6F5DD;
+  --accent-foreground:    #062014;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #E2E8F0;
+  --input:                #F1F5F9;
+  --ring:                 #4FE3A1;
+}
+
 /* Neo-Brutalism Global Overrides for Cream Theme */
 .theme-cream .neo-card {
   border: 2px solid #000;
@@ -272,4 +304,43 @@
 .animate-slide-in-right { animation: slide-in-right 0.25s cubic-bezier(.2,.8,.2,1) both; }
 .animate-slide-up       { animation: slide-up 0.25s ease-out both; }
 .animate-slide-up-full  { animation: slide-up-full 0.28s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Status dot pulse */
+@keyframes status-pulse-ring {
+  0%   { transform: scale(0.9); opacity: 0.7; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.status-pulse::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: status-pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+
+/* Status label expand on detail */
+@keyframes status-label-expand {
+  from { max-width: 14px; opacity: 0; padding-left: 0; padding-right: 0; }
+  to   { max-width: 140px; opacity: 1; padding-left: 8px; padding-right: 10px; }
+}
+.animate-status-expand { animation: status-label-expand 0.6s 0.3s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Premium long-press popup */
+@keyframes popup-enter {
+  0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-popup-enter { animation: popup-enter 0.32s cubic-bezier(.2,1.2,.3,1) both; }
+
+/* Cart fly bounce */
+@keyframes cart-bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35) rotate(-6deg); }
+  60%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+.animate-cart-bounce { animation: cart-bounce 0.5s cubic-bezier(.2,1.5,.3,1) both; }
 
