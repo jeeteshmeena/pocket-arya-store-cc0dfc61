@@ -133,13 +133,20 @@ export function Header() {
           
           {/* Default State */}
           <div className={cn("flex items-center w-full justify-between gap-3 transition-opacity duration-200", searchOpen ? "opacity-0 pointer-events-none" : "opacity-100")}>
-            <div className={cn(
-              "h-9 w-9 grid place-items-center font-display font-extrabold text-sm tracking-tight shrink-0 shadow-sm",
-              useApp().theme === "cream" ? "rounded-xl border-2 border-black bg-white text-black shadow-[2px_2px_0px_#000]" : "rounded-xl bg-foreground text-background"
-            )}>
-              AP
-            </div>
-            
+            <button
+              onClick={() => navigate({ name: "home" })}
+              className={cn(
+                "h-9 flex items-center gap-1.5 pl-0.5 pr-2.5 rounded-full shrink-0 active:scale-95 transition",
+                useApp().theme === "cream" ? "border-2 border-black bg-white shadow-[2px_2px_0px_#000]" : "bg-surface border border-border shadow-sm"
+              )}
+              aria-label="Arya Premium"
+            >
+              <span className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-border bg-muted shrink-0">
+                <img src={aryaLogo} alt="Arya" className="h-full w-full object-cover" />
+              </span>
+              <span className="font-display font-bold text-[12px] tracking-tight text-foreground">Arya</span>
+            </button>
+
             <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleOpen}
@@ -154,7 +161,7 @@ export function Header() {
                 <span className={cn("text-sm truncate", useApp().theme === "cream" ? "text-black font-semibold" : "text-muted-foreground")}>Search...</span>
               </button>
 
-              <ThemeCycle />
+              <ThemePicker />
 
               <button
                 id="arya-cart-target"
