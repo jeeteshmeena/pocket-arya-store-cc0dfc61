@@ -89,8 +89,8 @@ export function HeroSlider() {
   if (loading || slides.length === 0) {
     return (
       <div
-        className="mx-4 mt-3 rounded-2xl bg-muted animate-pulse"
-        style={{ aspectRatio: `${1184}/${556}` }}
+        className="mx-4 mt-4 rounded-3xl bg-muted animate-pulse"
+        style={{ aspectRatio: "16/10" }}
       />
     );
   }
