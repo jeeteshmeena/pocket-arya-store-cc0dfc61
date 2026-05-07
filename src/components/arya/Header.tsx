@@ -5,11 +5,10 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { haptics } from "@/lib/haptics";
 import aryaLogo from "@/assets/arya-logo.jpg";
 
-const THEME_PRESETS: { id: "default" | "pfm" | "dark" | "teal" | "cream" | "mint"; label: string; canvas: string; accent: string }[] = [
+const THEME_PRESETS: { id: "default" | "dark" | "teal" | "cream" | "mint"; label: string; canvas: string; accent: string }[] = [
   { id: "default", label: "Mono",   canvas: "#F8F8F8", accent: "#111111" },
-  { id: "pfm",     label: "Pocket", canvas: "#F8F8F8", accent: "#111111" },
   { id: "dark",    label: "Dark",   canvas: "#09090B", accent: "#FAFAFA" },
-  { id: "teal",    label: "Teal",   canvas: "#1FA9A0", accent: "#FFFFFF" },
+  { id: "teal",    label: "Teal",   canvas: "#061E1E", accent: "#17A2B8" },
   { id: "cream",   label: "Cream",  canvas: "#F5D5C8", accent: "#2D6CDF" },
   { id: "mint",    label: "Mint",   canvas: "#DCE7F2", accent: "#4FE3A1" },
 ];

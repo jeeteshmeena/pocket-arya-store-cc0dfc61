@@ -47,7 +47,7 @@ export function HomeView() {
   const { theme } = useApp();
 
   return (
-    <div className="animate-fade-in pb-24">
+    <div className="animate-fade-in pb-20">
       <HeroSlider />
       {purchased.length > 0 && <Row title="Continue" stories={purchased} />}
       <Row title="Trending Now" stories={stories.slice(0, 6)} wide />

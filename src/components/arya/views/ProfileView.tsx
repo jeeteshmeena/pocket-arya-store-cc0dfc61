@@ -113,7 +113,7 @@ export function ProfileView() {
   if (loading) {
     return (
       <div className="animate-fade-in px-4 pt-3">
-        <h1 className="font-display font-bold text-xl pfm:text-2xl">Profile</h1>
+        <h1 className="font-display font-bold text-xl">Profile</h1>
         <div className="mt-4 p-4 rounded-2xl bg-surface space-y-3">
           <div className="flex items-center gap-3">
             <Skeleton className="h-14 w-14 rounded-full" />
@@ -130,7 +130,7 @@ export function ProfileView() {
 
   return (
     <div className="animate-fade-in px-4 pt-3 pb-6">
-      <h1 className={cn("font-display font-bold", useApp().theme === "cream" ? "text-2xl font-extrabold" : "text-xl pfm:text-2xl")}>Profile</h1>
+      <h1 className={cn("font-display font-bold", useApp().theme === "cream" ? "text-2xl font-extrabold" : "text-xl")}>Profile</h1>
 
       {/* Identity card */}
       <div className={cn("mt-4 p-4", useApp().theme === "cream" ? "neo-card bg-[#FFE066]" : "rounded-2xl bg-surface")}>

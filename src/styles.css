@@ -98,34 +98,33 @@
 }
 
 /* ══════════════════════════════════════════════════
-   TEAL — Audiobook teal (image #1 inspiration)
-   Trending Books / Lisa Lutz reference
+   TEAL — Dark Premium Audiobook Teal
    ══════════════════════════════════════════════════ */
 .theme-teal {
   --radius: 1.25rem;
   --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --font-display: "Fraunces", "Plus Jakarta Sans", serif;
 
-  --background:           #1FA9A0;   /* teal canvas behind sheets */
-  --foreground:           #0E2A2A;
-  --surface:              #FFFFFF;
-  --card:                 #FFFFFF;
-  --card-foreground:      #0E2A2A;
-  --popover:              #FFFFFF;
-  --popover-foreground:   #0E2A2A;
-  --primary:              #1FA9A0;   /* teal CTA */
+  --background:           #061E1E;   /* Very deep rich teal */
+  --foreground:           #F1FAF8;   /* Off-white mint text */
+  --surface:              #0A2A2A;   /* Slightly lighter dark teal for cards */
+  --card:                 #0A2A2A;
+  --card-foreground:      #F1FAF8;
+  --popover:              #0A2A2A;
+  --popover-foreground:   #F1FAF8;
+  --primary:              #17A2B8;   /* Bright vibrant teal for CTA */
   --primary-foreground:   #FFFFFF;
-  --secondary:            #E6F7F5;
-  --secondary-foreground: #0E2A2A;
-  --muted:                #E6F7F5;
-  --muted-foreground:     #4B7B79;
-  --accent:               #CDEEEA;
-  --accent-foreground:    #0E2A2A;
+  --secondary:            #084040;   /* Muted teal */
+  --secondary-foreground: #F1FAF8;
+  --muted:                #123A3A;
+  --muted-foreground:     #84B2B2;
+  --accent:               #17A2B8;
+  --accent-foreground:    #FFFFFF;
   --destructive:          #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border:               #D7EFEC;
-  --input:                #F1FAF8;
-  --ring:                 #1FA9A0;
+  --border:               #144242;   /* Subtle border */
+  --input:                #0A2A2A;
+  --ring:                 #17A2B8;
 }
 
 /* ══════════════════════════════════════════════════

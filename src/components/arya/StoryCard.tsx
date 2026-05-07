@@ -66,7 +66,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
         ref={cardRef}
         className={cn(
           "shrink-0 cursor-pointer transition-transform duration-200 active:scale-[0.98] select-none",
-          wide ? "w-full" : "w-40"
+          wide ? "w-44" : "w-40" // Make wide just slightly wider than normal
         )}
         style={{ WebkitTouchCallout: "none" }}
         onContextMenu={(e) => e.preventDefault()}
@@ -83,7 +83,8 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
       >
         <div className={cn(
           "relative overflow-hidden bg-muted",
-          theme === "cream" ? "neo-card aspect-square" : "aspect-square shadow-sm rounded-2xl"
+          theme === "cream" ? "neo-card" : "shadow-sm rounded-2xl",
+          wide ? "aspect-[4/5]" : "aspect-square" // Taller aspect ratio for wide/trending cards
         )}>
           {hasImage ? (
             <img ref={imgRef} src={poster!} alt={story.title}

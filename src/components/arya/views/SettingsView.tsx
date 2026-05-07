@@ -33,10 +33,10 @@ const THEMES: ThemePreset[] = [
   },
   {
     id: "teal",
-    title: "Audiobook Teal",
-    desc: "Teal canvas · Glass cards",
+    title: "Premium Teal",
+    desc: "Deep teal · Bright accents",
     font: "Fraunces",
-    canvas: "#1FA9A0", card: "#FFFFFF", ink: "#0E2A2A", accent: "#1FA9A0",
+    canvas: "#061E1E", card: "#0A2A2A", ink: "#F1FAF8", accent: "#17A2B8",
   },
   {
     id: "cream",

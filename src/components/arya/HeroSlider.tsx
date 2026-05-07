@@ -167,7 +167,7 @@ export function HeroSlider() {
               onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
               className={cn(
                 "h-10 px-5 text-[13px] font-bold active:scale-95 transition shadow-lg",
-                theme === "cream" ? "neo-button bg-white text-black" : "rounded-full bg-white text-foreground"
+                theme === "cream" ? "neo-button bg-white text-black" : "rounded-full bg-white text-black"
               )}
             >
               Buy Now · ₹{story.price}
