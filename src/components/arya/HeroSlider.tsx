@@ -328,11 +328,7 @@ export function HeroSlider() {
         {/* ── Content overlay ── */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
           <div className="hero-content-reveal">
-            {slide.subtitle && (
-              <p className="text-white/60 text-[9px] font-semibold uppercase tracking-[0.22em] mb-1.5 line-clamp-1">
-                {slide.subtitle}
-              </p>
-            )}
+
             <p
               className={cn(
                 "font-display text-white drop-shadow-lg line-clamp-2 leading-tight",
