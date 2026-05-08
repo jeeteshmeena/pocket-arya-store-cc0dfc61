@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
 import { StatusBadge } from "./StatusBadge";
+import { trackEvent } from "@/lib/api";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isDisplayableUrl(src?: string | null): boolean {
@@ -188,7 +189,8 @@ export const StoryCard = memo(function StoryCard({
   wide?: boolean;
   square?: boolean;
 }) {
-  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist } = useApp();
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser } = useApp();
+
   const liked   = inWishlist(story.id);
   const inCart  = cart.some(x => x.id === story.id);
   const imgRef  = useRef<HTMLDivElement>(null);
@@ -249,6 +251,8 @@ export const StoryCard = memo(function StoryCard({
         onMouseLeave={cancelPress}
         onClick={() => {
           if (longPressed.current) return;
+          // Track engagement for live trending
+          trackEvent(story.id, "open", tgUser?.telegram_id);
           navigate({ name: "detail", storyId: story.id });
         }}
       >

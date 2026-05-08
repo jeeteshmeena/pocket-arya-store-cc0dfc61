@@ -136,3 +136,31 @@ export function loadRazorpay(): Promise<boolean> {
     document.head.appendChild(script);
   });
 }
+
+/**
+ * Track user engagement — fire-and-forget, never throws.
+ * Powers the /api/trending live engine.
+ * event: "open" | "search" | "view" | "purchase"
+ */
+export function trackEvent(
+  storyId: string,
+  event: "open" | "search" | "view" | "purchase",
+  telegramId?: number | null,
+) {
+  if (!storyId) return;
+  try {
+    const body = JSON.stringify({ story_id: storyId, event, telegram_id: telegramId ?? 0 });
+    // sendBeacon won't block navigation; falls back to fetch for older browsers
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon(`${BASE_URL}/track`, blob);
+    } else {
+      fetch(`${BASE_URL}/track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch {}
+}
