@@ -154,26 +154,48 @@ const CartBtn = memo(function CartBtn({
   );
 });
 
-// ─── Lazy image with shimmer ───────────────────────────────────────────────────
-function LazyImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+// ─── Smart image loader with IntersectionObserver + priority support ───────────
+function LazyImage({
+  src, alt, priority = false,
+}: {
+  src: string; alt: string; priority?: boolean;
+}) {
   const [loaded, setLoaded] = useState(false);
-  const [err, setErr] = useState(false);
+  const [err,    setErr]    = useState(false);
+  const [active, setActive] = useState(priority); // Priority images load immediately
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Only start loading when image enters viewport (unless priority)
+  useLayoutEffect(() => {
+    if (priority || active) return;
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setActive(true); obs.disconnect(); } },
+      { rootMargin: "200px" }  // Start loading 200px before visible
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [priority]);
 
   return (
-    <div className={cn("relative h-full w-full", className)}>
+    <div ref={ref} className="relative h-full w-full overflow-hidden">
+      {/* Shimmer while loading */}
       {!loaded && <div className="absolute inset-0 shimmer-bg" />}
-      {!err && (
+      {active && !err && (
         <img
           src={src}
           alt={alt}
-          loading="lazy"
-          decoding="async"
+          // fetchpriority tells browser to load high-priority images first
+          fetchPriority={priority ? "high" : "low"}
+          decoding={priority ? "sync" : "async"}
           onLoad={() => setLoaded(true)}
           onError={() => { setErr(true); setLoaded(true); }}
-          className="h-full w-full object-cover pointer-events-none"
+          className="h-full w-full object-cover pointer-events-none select-none"
           style={{
-            opacity: loaded ? 1 : 0,
-            transition: "opacity 300ms ease",
+            opacity:    loaded ? 1 : 0,
+            transition: "opacity 250ms ease",
+            willChange: "opacity",
           }}
         />
       )}
@@ -181,14 +203,17 @@ function LazyImage({ src, alt, className }: { src: string; alt: string; classNam
   );
 }
 
+
 // ─── Main StoryCard ────────────────────────────────────────────────────────────
 export const StoryCard = memo(function StoryCard({
-  story, wide, square,
+  story, wide, square, priority = false,
 }: {
   story: Story;
   wide?: boolean;
   square?: boolean;
+  priority?: boolean;
 }) {
+
   const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser } = useApp();
 
   const liked   = inWishlist(story.id);
@@ -270,7 +295,8 @@ export const StoryCard = memo(function StoryCard({
           style={{ willChange: "transform" }}
         >
           {hasImage ? (
-            <LazyImage src={poster!} alt={story.title} />
+            <LazyImage src={poster!} alt={story.title} priority={priority} />
+
           ) : (
             <div
               className="h-full w-full flex flex-col items-center justify-center p-3 gap-2 pointer-events-none"

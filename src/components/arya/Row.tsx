@@ -100,9 +100,11 @@ export const Row = memo(function Row({
                            transform 280ms ${Math.min(i * 35, 280)}ms ease`,
             }}
           >
-            <StoryCard story={s} wide={wide} />
+            {/* First 3 cards: priority load — already in viewport */}
+            <StoryCard story={s} wide={wide} priority={i < 3} />
           </div>
         ))}
+
       </div>
     </section>
   );
