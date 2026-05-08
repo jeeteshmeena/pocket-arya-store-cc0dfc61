@@ -6,13 +6,14 @@
   "trailingSlash": false,
   "routes": [
     { "src": "/api/(.*)", "dest": "http://158.101.4.188/api/$1" },
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/aryaPremium(.*)", "dest": "/index.html" },
     { "src": "/terms",    "dest": "/terms.html" },
     { "src": "/privacy",  "dest": "/privacy.html" },
     { "src": "/refund",   "dest": "/refund.html" },
     { "src": "/shipping", "dest": "/shipping.html" },
     { "src": "/contact",  "dest": "/contact.html" },
-    { "handle": "filesystem" },
-    { "src": "/",         "dest": "/landing.html" }
+    { "src": "/(.*)\\.(.+)", "dest": "/$1.$2" },
+    { "src": "/", "dest": "/landing.html" }
   ]
 }
