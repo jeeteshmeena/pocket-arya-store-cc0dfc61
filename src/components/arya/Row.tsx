@@ -1,7 +1,7 @@
 /**
- * Row — Premium horizontal scroll row
- * Features: intersection-observer enter animation, stagger children,
- *           "See All" button, smooth 60fps scroll
+ * Row — Horizontal scroll section
+ * Fixes: IntersectionObserver now starts visible=true immediately
+ *        to avoid blank rows when already in viewport on mount.
  */
 import { useRef, useEffect, useState, memo } from "react";
 import type { Story } from "@/lib/data";
@@ -20,27 +20,40 @@ export const Row = memo(function Row({
 }) {
   const { theme } = useApp();
   const ref = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
+  // Start visible=true — avoids blank rows that are already in viewport
+  const [visible, setVisible] = useState(true);
 
-  // Intersection observer — animate in when row enters viewport
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Only animate in if NOT already visible (below fold)
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) {
+      setVisible(true);
+      return; // Already in viewport — skip observer
+    }
+    setVisible(false); // Will animate in when scrolled to
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.05 }  // No negative rootMargin — was cutting off nearby rows
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  if (!stories.length) return null;
+  // Never render empty rows
+  if (!stories || stories.length === 0) return null;
 
   const titleClass = cn(
     "font-display tracking-tight text-foreground",
-    theme === "cream"     && "text-[19px] font-extrabold",
-    theme === "teal"      && "text-[18px] font-bold tracking-tight",
-    theme === "romantic"  && "text-[18px] font-bold italic",
+    theme === "cream"    && "text-[19px] font-extrabold",
+    theme === "teal"     && "text-[18px] font-bold tracking-tight",
+    theme === "romantic" && "text-[18px] font-bold italic",
     !["cream","teal","romantic"].includes(theme) && "text-[15px] font-bold"
   );
 
@@ -50,11 +63,12 @@ export const Row = memo(function Row({
       className="mt-5"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(14px)",
-        transition: "opacity 380ms cubic-bezier(0.16,1,0.3,1), transform 380ms cubic-bezier(0.16,1,0.3,1)",
+        transform: visible ? "translateY(0)" : "translateY(12px)",
+        transition: "opacity 340ms ease, transform 340ms ease",
+        willChange: "opacity, transform",
       }}
     >
-      {/* Header row */}
+      {/* Header */}
       <div className="px-4 mb-3 flex items-center justify-between">
         <h2 className={titleClass}>{title}</h2>
         {onSeeAll && (
@@ -67,19 +81,23 @@ export const Row = memo(function Row({
         )}
       </div>
 
-      {/* Scroll row */}
+      {/* Horizontal scroll */}
       <div
-        className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        className="flex gap-3 overflow-x-auto px-4 pb-1"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
       >
         {stories.map((s, i) => (
           <div
             key={s.id}
             style={{
-              // Stagger entry for each card
               opacity: visible ? 1 : 0,
-              transform: visible ? "translateX(0)" : "translateX(12px)",
-              transition: `opacity 320ms ${i * 40}ms ease, transform 320ms ${i * 40}ms ease`,
+              transform: visible ? "translateX(0)" : "translateX(10px)",
+              transition: `opacity 280ms ${Math.min(i * 35, 280)}ms ease,
+                           transform 280ms ${Math.min(i * 35, 280)}ms ease`,
             }}
           >
             <StoryCard story={s} wide={wide} />

@@ -61,7 +61,7 @@ const CINEMATIC_OVERLAYS = [
 // ─── Data hook ────────────────────────────────────────────────────────────────
 function useBanners(fallbackStories: ReturnType<typeof useApp>["stories"]) {
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded]   = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -78,38 +78,41 @@ function useBanners(fallbackStories: ReturnType<typeof useApp>["stories"]) {
     return () => { alive = false; };
   }, []);
 
-  // Fallback: 2 trending (sorted by purchase_count) + 2 newest
-  const slides: Banner[] = banners.length > 0
-    ? banners
-    : loaded && fallbackStories.length > 0
-      ? (() => {
-          const sorted = [...fallbackStories].sort((a, b) => {
-            const ca = (a as any).purchase_count ?? (a as any).downloads ?? 0;
-            const cb = (b as any).purchase_count ?? (b as any).downloads ?? 0;
-            return cb - ca;
-          });
-          const newest = [...fallbackStories].sort((a, b) => {
-            const da = (a as any).created_at ?? (a as any).uploaded_at ?? "";
-            const db = (b as any).created_at ?? (b as any).uploaded_at ?? "";
-            return db > da ? 1 : db < da ? -1 : 0;
-          });
-          const trending = sorted.slice(0, 2).map(s => ({
-            id: `t-${s.id}`, type: "trending" as const,
+  // Build fallback slides from stories (available immediately)
+  const fallbackSlides: Banner[] = fallbackStories.length > 0
+    ? (() => {
+        const hasCounts = fallbackStories.some(s => (s as any).purchase_count > 0);
+        const sorted = [...fallbackStories].sort((a, b) =>
+          hasCounts ? ((b as any).purchase_count ?? 0) - ((a as any).purchase_count ?? 0) : 0
+        );
+        const newest = [...fallbackStories].sort((a, b) => {
+          const da = (a as any).created_at ?? (a as any).uploaded_at ?? "";
+          const db = (b as any).created_at ?? (b as any).uploaded_at ?? "";
+          return db > da ? 1 : db < da ? -1 : 0;
+        });
+        const trending = sorted.slice(0, 2).map(s => ({
+          id: `t-${s.id}`, type: "trending" as const,
+          story_id: s.id, image: s.poster || s.banner,
+          title: s.title, badge: "TRENDING",
+        }));
+        const newItems = newest.slice(0, 2)
+          .filter(s => !trending.find(t => t.story_id === s.id))
+          .map(s => ({
+            id: `n-${s.id}`, type: "new" as const,
             story_id: s.id, image: s.poster || s.banner,
-            title: s.title, subtitle: s.genre, badge: "TRENDING",
+            title: s.title, badge: "NEW",
           }));
-          const newItems = newest.slice(0, 2)
-            .filter(s => !trending.find(t => t.story_id === s.id))
-            .map(s => ({
-              id: `n-${s.id}`, type: "new" as const,
-              story_id: s.id, image: s.poster || s.banner,
-              title: s.title, subtitle: s.genre, badge: "NEW",
-            }));
-          return [...trending, ...newItems];
-        })()
-      : [];
+        return [...trending, ...newItems];
+      })()
+    : [];
 
-  return { slides, ready: loaded || banners.length > 0 };
+  // Priority: manual banners → fallback from stories → empty
+  const slides: Banner[] = banners.length > 0 ? banners : fallbackSlides;
+
+  // ready=true as soon as we have ANY slides — don't wait for API if stories exist
+  const ready = slides.length > 0 || loaded;
+
+  return { slides, ready };
 }
 
 // ─── Preloader: load all images before showing ───────────────────────────────
@@ -228,7 +231,7 @@ export function HeroSlider() {
       <div className="mx-3 mt-3">
         <div
           className="relative w-full rounded-2xl shimmer-bg overflow-hidden"
-          style={{ paddingBottom: `${ASPECT_PERCENT}%` }}
+          style={{ aspectRatio: "1184/556" }}
         />
       </div>
     );
@@ -262,7 +265,8 @@ export function HeroSlider() {
           "relative w-full overflow-hidden select-none cursor-grab active:cursor-grabbing",
           isCreamed ? "neo-card" : "rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.55)]"
         )}
-        style={{ paddingBottom: `${ASPECT_PERCENT}%`, height: 0 }}
+        style={{ aspectRatio: "1184/556" }}
+
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
