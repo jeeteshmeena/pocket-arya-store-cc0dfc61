@@ -356,3 +356,30 @@
 }
 .animate-cart-bounce { animation: cart-bounce 0.5s cubic-bezier(.2,1.5,.3,1) both; }
 
+
+/* Splash logo animation */
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--color-primary); }
+  50%      { transform: scale(1.06); box-shadow: 0 0 0 18px rgba(0,0,0,0); }
+}
+@keyframes splash-ring {
+  0%   { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.animate-splash-pulse { animation: splash-pulse 1.6s ease-in-out infinite; }
+.animate-splash-ring  { animation: splash-ring 1.6s ease-out infinite; }
+
+/* Cart item enter */
+@keyframes cart-item-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-cart-item-in { animation: cart-item-in 0.3s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Heart pop */
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+.animate-heart-pop { animation: heart-pop 0.4s cubic-bezier(.2,1.5,.3,1) both; }
