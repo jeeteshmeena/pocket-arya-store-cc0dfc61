@@ -160,12 +160,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    setStoriesLoading(true);
-    setStoriesError(null);
+
+    // ── Stale-while-revalidate: show cached stories instantly ──────────
+    const CACHE_KEY = "arya_stories_cache";
+    const CACHE_TS  = "arya_stories_ts";
+    const MAX_AGE   = 5 * 60 * 1000; // 5 minutes
+
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      const ts     = Number(localStorage.getItem(CACHE_TS) || 0);
+      if (cached && Date.now() - ts < MAX_AGE) {
+        const parsed = JSON.parse(cached) as Story[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setStories(parsed);
+          setStoriesLoading(false); // show immediately
+        }
+      }
+    } catch {}
+
+    // Always refresh from network in background
     fetchStories()
       .then((list) => {
         if (cancelled) return;
         setStories(list);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(list));
+          localStorage.setItem(CACHE_TS, String(Date.now()));
+        } catch {}
         // Deep link: open a specific story if requested via Telegram start_param or ?story=
         try {
           let target: string | null = null;
@@ -189,7 +210,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
       .catch((err: Error) => {
         if (cancelled) return;
-        setStoriesError(err.message || "Failed to load stories");
+        // Only show error if we have no cached data
+        setStories((prev) => {
+          if (prev.length === 0) setStoriesError(err.message || "Failed to load stories");
+          return prev;
+        });
       })
       .finally(() => {
         if (!cancelled) setStoriesLoading(false);
@@ -198,6 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [reloadKey]);
+
 
   const view = history[history.length - 1];
 
