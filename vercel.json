@@ -8,8 +8,16 @@
       "destination": "http://158.101.4.188/api/:path*"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/aryaPremium/:path*",
+      "destination": "/aryaPremium/index.html"
+    },
+    {
+      "source": "/aryaPremium",
+      "destination": "/aryaPremium/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/landing.html"
     }
   ]
 }
