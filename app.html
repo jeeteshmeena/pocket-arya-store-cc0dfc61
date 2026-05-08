@@ -2,15 +2,43 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Arya Premium — Audiobook Stories</title>
     <meta name="description" content="Browse and purchase premium audiobook stories. Delivered via Telegram bot." />
     <meta property="og:title" content="Arya Premium" />
     <meta property="og:description" content="Premium audiobook stories marketplace." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
+
+    <!-- Prevent white flash in Telegram WebView -->
+    <meta name="theme-color" content="#09090B" />
+    <style>
+      html, body { background: #09090B; margin: 0; padding: 0; }
+    </style>
+
+    <!--
+      Performance: preconnect to all external origins before JS fires.
+      This reduces DNS + TLS handshake time for images and APIs.
+    -->
+    <!-- Our own API backend -->
+    <link rel="preconnect" href="https://aryapremium.store" />
+    <!-- Telegram CDN (images proxied via our VPS which fetches from here) -->
+    <link rel="preconnect" href="https://api.telegram.org" crossorigin />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--
+      Telegram Web App SDK — must load synchronously before app JS
+      so initData/user is available immediately on first render.
+    -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!--
+      Razorpay — load async/deferred so it doesn't block render.
+      App will load it on-demand anyway via loadRazorpay() in api.ts.
+    -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
   </head>
   <body>
     <div id="root"></div>
