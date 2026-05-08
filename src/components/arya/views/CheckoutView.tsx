@@ -79,8 +79,8 @@ export function CheckoutView() {
           key:         order.key,
           amount:      order.amount,
           currency:    order.currency,
-          name:        "Arya Premium",
-          description: cartSnap.current.map((s) => s.title).join(", ") || "Premium Stories",
+          name:        "SliceURL",
+          description: cartSnap.current.map((s) => s.title).join(", ") || "Digital Access",
           order_id:    order.razorpay_order_id,
           prefill:     { name: tgUser.username || "" },
           theme:       { color: "#111111" },   // black — no blue/green
@@ -183,7 +183,7 @@ export function CheckoutView() {
               </div>
               <h2 className="font-display font-bold text-xl text-foreground">Payment Successful!</h2>
               <p className="mt-2 text-sm text-muted-foreground max-w-xs">
-                Your purchase is confirmed. Open the bot to receive your stories.
+                Your purchase is confirmed and added to your Library.
               </p>
             </div>
 
@@ -205,18 +205,21 @@ export function CheckoutView() {
 
             <div className="mt-6 space-y-3">
               <button
-                onClick={() => openTelegramLink(phase.bot_url)}
+                onClick={() => {
+                  setPhase({ name: "idle" });
+                  navigate({ name: "my_stories" });
+                }}
                 className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md"
               >
-                <Send className="h-4 w-4" />
-                Open @{BOT_USERNAME}
+                <Library className="h-5 w-5" />
+                Go to Library
               </button>
               <button
-                onClick={goHome}
+                onClick={() => openTelegramLink(phase.bot_url)}
                 className="w-full h-[52px] rounded-2xl bg-surface border border-border text-sm font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
               >
-                <ShoppingBag className="h-4 w-4" />
-                Continue browsing
+                <Send className="h-4 w-4" />
+                Open in Bot
               </button>
             </div>
           </div>

@@ -65,7 +65,7 @@ export function MyStoriesView() {
   const merged = [...dbStories, ...localAsPurchased.filter((s) => !allIds.has(s.story_id))];
 
   const openInBot = (storyId: string) => {
-    openTelegramLink(`https://t.me/${BOT_USERNAME}?start=story_${storyId}`);
+    openTelegramLink(`https://t.me/${BOT_USERNAME}?start=buy_${storyId}`);
   };
 
   return (
