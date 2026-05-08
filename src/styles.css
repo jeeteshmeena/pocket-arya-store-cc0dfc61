@@ -176,63 +176,84 @@
 }
 
 /* ══════════════════════════════════════════════════
-   MINT
+   MINT — Sky canvas · soft mint accents · airy plant feel
    ══════════════════════════════════════════════════ */
 .theme-mint {
   --radius: 1.5rem;
   --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Fraunces", "Plus Jakarta Sans", serif;
 
   --background:           #DCE7F2;
-  --foreground:           #0B1220;
+  --foreground:           #0B1F2A;
   --surface:              #FFFFFF;
   --card:                 #FFFFFF;
-  --card-foreground:      #0B1220;
+  --card-foreground:      #0B1F2A;
   --popover:              #FFFFFF;
-  --popover-foreground:   #0B1220;
-  --primary:              #4FE3A1;
-  --primary-foreground:   #062014;
-  --secondary:            #EAF3FF;
-  --secondary-foreground: #0B1220;
-  --muted:                #F1F5F9;
-  --muted-foreground:     #64748B;
-  --accent:               #C6F5DD;
+  --popover-foreground:   #0B1F2A;
+  --primary:              #1FBF7A;
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #E6F7EE;
+  --secondary-foreground: #0B1F2A;
+  --muted:                #ECF2F8;
+  --muted-foreground:     #5A6B7B;
+  --accent:               #B6EFD3;
   --accent-foreground:    #062014;
   --destructive:          #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border:               #E2E8F0;
-  --input:                #F1F5F9;
-  --ring:                 #4FE3A1;
+  --border:               #D5E1EE;
+  --input:                #ECF2F8;
+  --ring:                 #1FBF7A;
+}
+.theme-mint .surface-mint {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F4FBF8 100%);
+  border: 1px solid #DCEEE5;
+  box-shadow: 0 8px 24px -16px rgba(31,191,122,0.35);
+}
+.theme-mint .mint-glow {
+  box-shadow: 0 10px 30px -12px rgba(31,191,122,0.45), 0 0 0 1px rgba(31,191,122,0.18);
 }
 
 /* ══════════════════════════════════════════════════
-   ROMANTIC
+   ROMANTIC — Dark romance · burgundy · candle-lit serif
    ══════════════════════════════════════════════════ */
 .theme-romantic {
-  --radius: 1.5rem;
-  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  --font-display: "Fraunces", "DM Serif Display", serif;
+  --radius: 1.25rem;
+  --font-sans:    "Fraunces", "DM Serif Display", serif;
+  --font-display: "DM Serif Display", "Fraunces", serif;
 
-  --background:           #FFF1F2;
-  --foreground:           #4A1D2C;
-  --surface:              #FFFFFF;
-  --card:                 #FFFFFF;
-  --card-foreground:      #4A1D2C;
-  --popover:              #FFFFFF;
-  --popover-foreground:   #4A1D2C;
-  --primary:              #D6336C;
-  --primary-foreground:   #FFFFFF;
-  --secondary:            #FCE4EC;
-  --secondary-foreground: #4A1D2C;
-  --muted:                #FBE8EE;
-  --muted-foreground:     #8A4A60;
-  --accent:               #F472B6;
-  --accent-foreground:    #FFFFFF;
-  --destructive:          #EF4444;
+  --background:           #1A0810;
+  --foreground:           #FBE9EE;
+  --surface:              #2A0E1A;
+  --card:                 #2A0E1A;
+  --card-foreground:      #FBE9EE;
+  --popover:              #2A0E1A;
+  --popover-foreground:   #FBE9EE;
+  --primary:              #E85D8A;
+  --primary-foreground:   #1A0810;
+  --secondary:            #3A1424;
+  --secondary-foreground: #FBE9EE;
+  --muted:                #3A1424;
+  --muted-foreground:     #C99AAB;
+  --accent:               #F4A6BD;
+  --accent-foreground:    #1A0810;
+  --destructive:          #FF5470;
   --destructive-foreground: #FFFFFF;
-  --border:               #F4D3DD;
-  --input:                #FBE8EE;
-  --ring:                 #D6336C;
+  --border:               #4A1B2E;
+  --input:                #3A1424;
+  --ring:                 #E85D8A;
+}
+.theme-romantic .romantic-card {
+  background: linear-gradient(160deg, #3A1424 0%, #2A0E1A 60%, #1F0913 100%);
+  border: 1px solid rgba(232,93,138,0.22);
+  box-shadow: 0 14px 40px -16px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04), 0 0 60px -30px rgba(232,93,138,0.4);
+}
+.theme-romantic .romantic-glow {
+  box-shadow: 0 0 24px -4px rgba(232,93,138,0.55), 0 0 0 1px rgba(232,93,138,0.4);
+}
+.theme-romantic body {
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(232,93,138,0.18) 0%, transparent 45%),
+    radial-gradient(circle at 80% 100%, rgba(244,166,189,0.12) 0%, transparent 50%);
 }
 
 /* ── Neo-Brutalism overrides ──────────────────── */

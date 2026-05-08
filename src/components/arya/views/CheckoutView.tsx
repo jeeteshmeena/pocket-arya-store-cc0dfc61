@@ -1,4 +1,4 @@
-import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Copy, Check, CreditCard, Send } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Copy, Check, CreditCard, Send, Library } from "lucide-react";
 import { useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment } from "@/lib/api";
@@ -229,7 +229,7 @@ export function CheckoutView() {
               <button
                 onClick={() => {
                   setPhase({ name: "idle" });
-                  navigate({ name: "my_stories" });
+                  navigate({ name: "mystories" });
                 }}
                 className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md"
               >
