@@ -18,11 +18,9 @@ export type CheckoutResponse = {
 
 export type RazorpayOrderResponse = {
   success: true;
-  razorpay_order_id: string;
-  amount: number;
-  currency: string;
-  key: string;
+  payment_link_url: string;
   receipt: string;
+  amount: number;
   story_names: string[];
 };
 

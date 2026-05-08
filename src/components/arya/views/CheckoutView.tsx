@@ -1,4 +1,4 @@
-import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Copy, Check, ShoppingBag, CreditCard, Send } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Copy, Check, CreditCard, Send, Clock } from "lucide-react";
 import { useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment } from "@/lib/api";
@@ -33,6 +33,7 @@ function Thumb({ poster, title }: { poster?: string | null; title: string }) {
 type Phase =
   | { name: "idle" }
   | { name: "loading" }
+  | { name: "awaiting_confirm"; receipt: string; payment_link_url: string }
   | { name: "success"; order_id: string; bot_url: string }
   | { name: "error"; message: string };
 
@@ -63,85 +64,62 @@ export function CheckoutView() {
     setPhase({ name: "loading" });
 
     try {
-      // 1. Load Razorpay JS
-      const loaded = await loadRazorpay();
-      if (!loaded) throw new Error("Razorpay could not load. Check your internet connection.");
-
-      // 2. Create order on our server
+      // 1. Create payment link on server
       const order = await createRazorpayOrder(
         cartSnap.current.map((s) => s.id),
         tgUser,
       );
 
-      // 3. Open Razorpay modal
-      await new Promise<void>((resolve, reject) => {
-        try {
-          if (!order.razorpay_order_id || !order.key) {
-            throw new Error("Invalid order received from server.");
-          }
+      if (!order.payment_link_url) {
+        throw new Error("No payment link received from server.");
+      }
 
-          const descRaw = cartSnap.current.map((s) => s.title).join(", ");
-          const descStr = descRaw.length > 200 ? descRaw.substring(0, 197) + "..." : descRaw;
+      // 2. Open payment URL in Telegram browser (works in Mini App)
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg?.openLink) {
+        tg.openLink(order.payment_link_url);
+      } else {
+        window.open(order.payment_link_url, "_blank");
+      }
 
-          const rzp = new (window as any).Razorpay({
-            key:         order.key,
-            amount:      order.amount,
-            currency:    order.currency,
-            name:        "SliceURL",
-            description: descStr || "Digital Access",
-            order_id:    order.razorpay_order_id,
-            prefill:     { name: tgUser.username || "" },
-            theme:       { color: "#111111" },   // black — no blue/green
-
-            handler: async (resp: any) => {
-              try {
-                // 4. Verify payment on server
-                const verified = await verifyRazorpayPayment({
-                  razorpay_order_id:  resp.razorpay_order_id,
-                  razorpay_payment_id: resp.razorpay_payment_id,
-                  razorpay_signature: resp.razorpay_signature,
-                  story_ids:  cartSnap.current.map((s) => s.id),
-                  telegram_id: tgUser.telegram_id,
-                  username:   tgUser.username,
-                });
-
-                // 5. Update local + clear cart
-                purchase(cartSnap.current);
-                clearCart();
-                setPhase({
-                  name:     "success",
-                  order_id: verified.order_id ?? order.receipt,
-                  bot_url:  verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
-                });
-                resolve();
-              } catch (e: any) {
-                reject(new Error(e.message || "Payment verification failed"));
-              }
-            },
-
-            modal: {
-              ondismiss: () => {
-                setPhase({ name: "idle" }); // user closed modal
-                resolve();
-              },
-            },
-          });
-
-          rzp.on("payment.failed", (resp: any) => {
-            reject(new Error(resp?.error?.description || "Payment failed"));
-          });
-
-          rzp.open();
-        } catch (err: any) {
-          reject(err);
-        }
-      });
+      // 3. Show "I have paid" confirmation screen
+      setPhase({
+        name: "awaiting_confirm",
+        receipt: order.receipt,
+        payment_link_url: order.payment_link_url,
+      } as any);
 
     } catch (e: any) {
       const raw = e.message || "Something went wrong. Please try again.";
-      // Sanitize: don't show raw JSON to user
       const msg = raw.includes("{") ? "Something went wrong. Please try again." : raw;
       setPhase({ name: "error", message: msg });
+    }
+  };
+
+  // ── Confirm payment after user returns ─────────────────────────
+  const handleConfirmPaid = async (receipt: string) => {
+    setPhase({ name: "loading" });
+    try {
+      const verified = await verifyRazorpayPayment({
+        razorpay_order_id:   "",
+        razorpay_payment_id: "",
+        razorpay_signature:  "",
+        story_ids:  cartSnap.current.map((s) => s.id),
+        telegram_id: tgUser.telegram_id,
+        username:   tgUser.username,
+        receipt,
+      } as any);
+
+      purchase(cartSnap.current);
+      clearCart();
+      setPhase({
+        name:     "success",
+        order_id: verified.order_id ?? receipt,
+        bot_url:  verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
+      });
+    } catch (e: any) {
+      const raw = e.message || "Could not verify payment. Please contact support.";
+      setPhase({ name: "error", message: raw });
     }
   };
 
@@ -180,8 +158,47 @@ export function CheckoutView() {
         {phase.name === "loading" && (
           <div className="rounded-2xl bg-surface border border-border p-10 flex flex-col items-center text-center shadow-sm">
             <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-            <h2 className="mt-4 font-display font-bold text-lg text-foreground">Opening payment…</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Please wait, do not close this screen</p>
+            <h2 className="mt-4 font-display font-bold text-lg text-foreground">Please wait…</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Creating your payment link</p>
+          </div>
+        )}
+
+        {/* ── AWAITING CONFIRM ─────────────────────────────────── */}
+        {phase.name === "awaiting_confirm" && (
+          <div className="rounded-2xl bg-surface border border-border p-6 flex flex-col items-center text-center shadow-sm">
+            <div className="h-16 w-16 rounded-full bg-amber-50 grid place-items-center mb-4">
+              <Clock className="h-9 w-9 text-amber-500" />
+            </div>
+            <h2 className="font-display font-bold text-xl text-foreground">Complete Payment</h2>
+            <p className="mt-2 text-sm text-muted-foreground max-w-xs">
+              Your payment page has opened. Complete the payment and then tap the button below.
+            </p>
+            <div className="mt-6 w-full space-y-3">
+              <button
+                onClick={() => handleConfirmPaid(phase.receipt)}
+                className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md"
+              >
+                <CheckCircle2 className="h-5 w-5" />
+                I Have Paid ✓
+              </button>
+              <button
+                onClick={() => {
+                  const tg = (window as any).Telegram?.WebApp;
+                  if (tg?.openLink) tg.openLink(phase.payment_link_url);
+                  else window.open(phase.payment_link_url, "_blank");
+                }}
+                className="w-full h-[52px] rounded-2xl bg-surface border border-border text-sm font-semibold text-foreground inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
+              >
+                <Send className="h-4 w-4" />
+                Re-open Payment Page
+              </button>
+              <button
+                onClick={() => setPhase({ name: "idle" })}
+                className="w-full text-sm text-muted-foreground py-2 hover:text-foreground transition"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 
