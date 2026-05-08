@@ -11,7 +11,10 @@ export function Row({ title, stories, wide }: { title: string; stories: Story[];
       <div className="px-4 mb-3 flex items-center justify-between">
         <h2 className={cn(
           "font-display tracking-tight text-foreground",
-          theme === "cream" ? "text-xl font-extrabold" : theme === "pfm" ? "text-lg font-bold" : "text-base font-bold"
+          theme === "cream" ? "text-xl font-extrabold" :
+          theme === "teal" ? "text-[19px] font-bold tracking-tight" :
+          theme === "romantic" ? "text-xl font-bold italic" :
+          "text-base font-bold"
         )}>{title}</h2>
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1">
