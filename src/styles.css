@@ -9,6 +9,7 @@
 @custom-variant teal (&:is(.theme-teal *));
 @custom-variant cream (&:is(.theme-cream *));
 @custom-variant mint (&:is(.theme-mint *));
+@custom-variant romantic (&:is(.theme-romantic *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
