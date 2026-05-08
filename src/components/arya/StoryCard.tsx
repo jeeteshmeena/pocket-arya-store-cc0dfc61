@@ -1,12 +1,18 @@
+/**
+ * StoryCard — Premium memoized card
+ * Features: Instagram heart burst, hover cart tooltip, magnetic desktop hover,
+ *           tactile press, layered shadows, intersection-observer lazy images
+ */
+import { memo, useRef, useState, useCallback, useLayoutEffect } from "react";
 import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
 import { Check, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRef, useState, useLayoutEffect } from "react";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
 import { StatusBadge } from "./StatusBadge";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function isDisplayableUrl(src?: string | null): boolean {
   return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image/"));
 }
@@ -20,82 +26,101 @@ const GENRE_TEXT: Record<string, string> = {
   Drama: "#92400E", Action: "#1E40AF", Mystery: "#134E4A", Comedy: "#713F12",
 };
 function getGenre(genre?: string) {
-  const key = Object.keys(GENRE_COLORS).find((k) => (genre || "").toLowerCase().includes(k.toLowerCase()));
-  return { bg: key ? GENRE_COLORS[key] : "#F3F4F6", text: key ? GENRE_TEXT[key] : "#374151" };
+  const key = Object.keys(GENRE_COLORS).find(
+    k => (genre || "").toLowerCase().includes(k.toLowerCase())
+  );
+  return {
+    bg:   key ? GENRE_COLORS[key] : "#F3F4F6",
+    text: key ? GENRE_TEXT[key]   : "#374151",
+  };
 }
 
-// ── Instagram-style Heart ────────────────────────────────────────────────
-function HeartBtn({ liked, onToggle }: { liked: boolean; onToggle: (e: React.MouseEvent) => void }) {
+// ─── Instagram-style Heart ────────────────────────────────────────────────────
+const HeartBtn = memo(function HeartBtn({
+  liked, onToggle,
+}: {
+  liked: boolean;
+  onToggle: (e: React.MouseEvent) => void;
+}) {
   const [burst, setBurst] = useState(false);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
     onToggle(e);
     if (!liked) {
       setBurst(true);
-      setTimeout(() => setBurst(false), 600);
+      setTimeout(() => setBurst(false), 650);
     }
-  };
+  }, [liked, onToggle]);
 
   return (
     <button
       onClick={handleClick}
       aria-label={liked ? "Unlike" : "Like"}
-      className="absolute top-2 left-2 h-8 w-8 grid place-items-center z-10 active:scale-90 transition-transform"
+      className="absolute top-2 left-2 z-10 h-8 w-8 grid place-items-center"
       style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* Burst circles (Instagram-style) */}
+      {/* Burst ring */}
       {burst && (
-        <span className="absolute inset-0 rounded-full animate-ping bg-rose-400/40 pointer-events-none" />
+        <span
+          className="absolute inset-[-4px] rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, rgba(244,63,94,0.35) 0%, transparent 70%)",
+            animation: "heart-burst 0.55s ease-out both",
+          }}
+        />
+      )}
+      {/* Ping ring */}
+      {burst && (
+        <span className="absolute inset-0 rounded-full bg-rose-400/30 animate-ping pointer-events-none" />
       )}
       <svg
         viewBox="0 0 24 24"
-        className={cn(
-          "h-5 w-5 transition-all duration-200 drop-shadow-sm",
-          liked ? "scale-110" : "scale-100"
-        )}
+        className="h-[18px] w-[18px] drop-shadow-sm"
         style={{
-          filter: liked ? "drop-shadow(0 0 4px rgba(244,63,94,0.6))" : undefined,
+          transition: "transform 200ms cubic-bezier(0.34,1.56,0.64,1), filter 200ms ease",
+          transform: liked ? "scale(1.15)" : "scale(1)",
+          filter: liked ? "drop-shadow(0 0 5px rgba(244,63,94,0.7))" : "none",
+          willChange: "transform",
         }}
       >
         <path
           d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
           fill={liked ? "#f43f5e" : "none"}
-          stroke={liked ? "#f43f5e" : "white"}
+          stroke={liked ? "#f43f5e" : "rgba(255,255,255,0.9)"}
           strokeWidth={liked ? 0 : 2}
-          className={cn(
-            "transition-all duration-300",
-            burst && "animate-heart-pop"
-          )}
+          style={{ transition: "all 300ms ease" }}
         />
       </svg>
     </button>
   );
-}
+});
 
-// ── Add-to-cart button with hover tooltip ───────────────────────────────
-function CartBtn({
+// ─── Cart button with hover tooltip ───────────────────────────────────────────
+const CartBtn = memo(function CartBtn({
   inCart, onAdd, theme,
 }: {
   inCart: boolean;
   onAdd: (e: React.MouseEvent) => void;
   theme: string;
 }) {
-  const [hover, setHover] = useState(false);
+  const [show, setShow] = useState(false);
 
   return (
     <div
-      className="absolute bottom-2 right-2 flex items-center gap-1.5 z-10"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      onTouchStart={() => { if (!inCart) setHover(true); }}
-      onTouchEnd={() => setTimeout(() => setHover(false), 800)}
+      className="absolute bottom-2 right-2 z-10 flex items-center gap-1"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onTouchStart={() => { if (!inCart) setShow(true); }}
+      onTouchEnd={() => setTimeout(() => setShow(false), 900)}
     >
-      {/* "Add to Cart" label — fades in on hover/touch */}
+      {/* Tooltip label — fade+slide only when shown */}
       <span
-        className={cn(
-          "text-[10px] font-semibold text-white/70 pointer-events-none select-none transition-all duration-200 whitespace-nowrap",
-          hover && !inCart ? "opacity-100 translate-x-0" : "opacity-0 translate-x-1"
-        )}
+        className="text-[9px] font-semibold text-white/65 pointer-events-none select-none whitespace-nowrap"
+        style={{
+          opacity: show && !inCart ? 1 : 0,
+          transform: show && !inCart ? "translateX(0)" : "translateX(4px)",
+          transition: "opacity 180ms ease, transform 180ms ease",
+        }}
       >
         Add to Cart
       </span>
@@ -104,31 +129,69 @@ function CartBtn({
         onClick={onAdd}
         disabled={inCart}
         className={cn(
-          "h-[30px] w-[30px] rounded-lg grid place-items-center shadow-md transition-all duration-200 active:scale-[0.85]",
+          "h-[28px] w-[28px] rounded-lg grid place-items-center shadow-md",
+          "transition-transform duration-75 active:scale-[0.85]",
           inCart
-            ? "bg-emerald-500/90 text-white cursor-default"
+            ? "bg-emerald-500 text-white cursor-default"
             : theme === "teal"
               ? "bg-primary text-primary-foreground hover:scale-110"
-              : "bg-foreground/90 text-background hover:scale-110 backdrop-blur-sm"
+              : "bg-foreground/88 text-background hover:scale-110"
         )}
         aria-label={inCart ? "In cart" : "Add to cart"}
+        style={{ willChange: "transform" }}
       >
-        {inCart
-          ? <Check className="h-3.5 w-3.5" />
-          : <svg viewBox="0 0 24 24" className="h-[14px] w-[14px]" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-        }
+        {inCart ? (
+          <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+        ) : (
+          <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+            <line x1="8" y1="2" x2="8" y2="14" />
+            <line x1="2" y1="8" x2="14" y2="8" />
+          </svg>
+        )}
       </button>
+    </div>
+  );
+});
+
+// ─── Lazy image with shimmer ───────────────────────────────────────────────────
+function LazyImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [err, setErr] = useState(false);
+
+  return (
+    <div className={cn("relative h-full w-full", className)}>
+      {!loaded && <div className="absolute inset-0 shimmer-bg" />}
+      {!err && (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={() => { setErr(true); setLoaded(true); }}
+          className="h-full w-full object-cover pointer-events-none"
+          style={{
+            opacity: loaded ? 1 : 0,
+            transition: "opacity 300ms ease",
+          }}
+        />
+      )}
     </div>
   );
 }
 
-export function StoryCard({ story, wide, square }: { story: Story; wide?: boolean; square?: boolean }) {
+// ─── Main StoryCard ────────────────────────────────────────────────────────────
+export const StoryCard = memo(function StoryCard({
+  story, wide, square,
+}: {
+  story: Story;
+  wide?: boolean;
+  square?: boolean;
+}) {
   const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist } = useApp();
-  const liked = inWishlist(story.id);
-  const inCart = cart.some((x) => x.id === story.id);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const liked   = inWishlist(story.id);
+  const inCart  = cart.some(x => x.id === story.id);
+  const imgRef  = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [imgError, setImgError] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -136,19 +199,25 @@ export function StoryCard({ story, wide, square }: { story: Story; wide?: boolea
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressed = useRef(false);
 
-  const poster = story.poster;
+  const poster   = story.poster;
   const hasImage = isDisplayableUrl(poster) && !imgError;
   const { bg, text } = getGenre(story.genre);
 
-  const handleAdd = (e: React.MouseEvent) => {
+  const handleAdd = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     if (inCart) return;
     haptics.light();
     if (imgRef.current) flyToCart(imgRef.current);
-    setTimeout(() => addToCart(story), 200);
-  };
+    setTimeout(() => addToCart(story), 180);
+  }, [inCart, addToCart, story]);
 
-  const startPress = () => {
+  const handleHeart = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    haptics.light();
+    toggleWishlist(story);
+  }, [toggleWishlist, story]);
+
+  const startPress = useCallback(() => {
     longPressed.current = false;
     timerRef.current = setTimeout(() => {
       haptics.medium();
@@ -156,21 +225,22 @@ export function StoryCard({ story, wide, square }: { story: Story; wide?: boolea
       if (cardRef.current) setAnchor(cardRef.current.getBoundingClientRect());
       setShowPreview(true);
     }, 380);
-  };
-  const cancelPress = () => {
+  }, []);
+
+  const cancelPress = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-  };
+  }, []);
 
   return (
     <>
       <div
         ref={cardRef}
         className={cn(
-          "shrink-0 cursor-pointer transition-transform duration-200 active:scale-[0.97] select-none",
+          "shrink-0 cursor-pointer select-none card-magnetic",
           square ? "w-full" : wide ? "w-44" : "w-40"
         )}
         style={{ WebkitTouchCallout: "none" }}
-        onContextMenu={(e) => e.preventDefault()}
+        onContextMenu={e => e.preventDefault()}
         onTouchStart={startPress}
         onTouchEnd={cancelPress}
         onTouchMove={cancelPress}
@@ -182,60 +252,62 @@ export function StoryCard({ story, wide, square }: { story: Story; wide?: boolea
           navigate({ name: "detail", storyId: story.id });
         }}
       >
-        {/* Image container — less rounded (rounded-xl instead of rounded-2xl) */}
-        <div className={cn(
-          "relative overflow-hidden bg-muted",
-          theme === "cream"
-            ? "neo-card"
+        {/* ── Image container ── */}
+        <div
+          ref={imgRef}
+          className={cn(
+            "relative overflow-hidden bg-muted",
+            theme === "cream" ? "neo-card"
             : theme === "teal"
-              ? "rounded-xl ring-1 ring-white/8 shadow-[0_8px_24px_-10px_rgba(0,0,0,0.6)]"
-              : "rounded-xl shadow-[0_4px_16px_-8px_rgba(0,0,0,0.5)]",
-          square ? "aspect-square" : wide ? "aspect-[4/5]" : "aspect-square"
-        )}>
+              ? "rounded-[14px] ring-1 ring-white/6 shadow-[0_8px_28px_-10px_rgba(0,0,0,0.65)]"
+              : "rounded-[14px] shadow-[0_4px_20px_-8px_rgba(0,0,0,0.45)]",
+            square ? "aspect-square" : wide ? "aspect-[4/5]" : "aspect-square"
+          )}
+          style={{ willChange: "transform" }}
+        >
           {hasImage ? (
-            <img
-              ref={imgRef}
-              src={poster!}
-              alt={story.title}
-              className="h-full w-full object-cover pointer-events-none"
-              loading="lazy"
-              decoding="async"
-              onError={() => setImgError(true)}
-            />
+            <LazyImage src={poster!} alt={story.title} />
           ) : (
             <div
               className="h-full w-full flex flex-col items-center justify-center p-3 gap-2 pointer-events-none"
               style={{ backgroundColor: bg }}
+              onError={() => setImgError(true)}
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: text }}>
+              <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: text }}>
                 {story.genre}
               </span>
-              <span className="text-xs font-semibold text-center leading-tight line-clamp-4" style={{ color: text }}>
+              <span className="text-[11px] font-semibold text-center leading-tight line-clamp-4" style={{ color: text }}>
                 {story.title}
               </span>
             </div>
           )}
 
-          {/* subtle premium shimmer on top */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
-
-          {/* Instagram-style heart */}
-          <HeartBtn
-            liked={liked}
-            onToggle={(e) => {
-              e.stopPropagation();
-              haptics.light();
-              toggleWishlist(story);
+          {/* Premium highlight overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none rounded-inherit"
+            style={{
+              background: "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%)",
             }}
           />
 
-          {/* Add-to-cart with hover tooltip */}
+          {/* Bottom gradient for readability */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+            style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.25) 0%, transparent 100%)" }}
+          />
+
+          <HeartBtn liked={liked} onToggle={handleHeart} />
           <CartBtn inCart={inCart} onAdd={handleAdd} theme={theme} />
         </div>
 
+        {/* ── Label ── */}
         <div className="mt-1.5 px-0.5">
-          <div className="text-[13px] font-semibold truncate text-foreground leading-tight">{story.title}</div>
-          <div className="text-[12px] font-bold mt-0.5 text-foreground/80">₹{story.price}</div>
+          <div className="text-[12.5px] font-semibold truncate text-foreground leading-tight">
+            {story.title}
+          </div>
+          <div className="text-[11.5px] font-bold mt-0.5 text-foreground/75">
+            ₹{story.price}
+          </div>
         </div>
       </div>
 
@@ -259,8 +331,9 @@ export function StoryCard({ story, wide, square }: { story: Story; wide?: boolea
       )}
     </>
   );
-}
+});
 
+// ─── Preview Popup ─────────────────────────────────────────────────────────────
 function PreviewPopup({
   story, anchor, inCart, onClose, onAdd, onOpen,
 }: {
@@ -279,19 +352,16 @@ function PreviewPopup({
 
   useLayoutEffect(() => {
     if (!anchor || !popRef.current) return;
-    const PAD = 12;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const w = Math.min(310, vw - PAD * 2);
-    const h = popRef.current.offsetHeight || 370;
+    const PAD = 12, vw = window.innerWidth, vh = window.innerHeight;
+    const w = Math.min(305, vw - PAD * 2);
+    const h = popRef.current.offsetHeight || 360;
 
     let left = anchor.left + anchor.width / 2 - w / 2;
     left = Math.max(PAD, Math.min(left, vw - w - PAD));
 
     const spaceBelow = vh - anchor.bottom - PAD;
     const spaceAbove = anchor.top - PAD;
-    let top: number;
-    let originY: string;
+    let top: number, originY: string;
     if (spaceBelow >= h + 8 || spaceBelow >= spaceAbove) {
       top = Math.min(anchor.bottom + 8, vh - h - PAD);
       originY = "top";
@@ -299,31 +369,32 @@ function PreviewPopup({
       top = Math.max(PAD, anchor.top - h - 8);
       originY = "bottom";
     }
-    const anchorCenterX = anchor.left + anchor.width / 2;
-    const originX = `${Math.max(0, Math.min(w, anchorCenterX - left))}px`;
-    setPos({ left, top, origin: `${originX} ${originY}` });
+    const cx = anchor.left + anchor.width / 2;
+    setPos({ left, top, origin: `${Math.max(0, Math.min(w, cx - left))}px ${originY}` });
   }, [anchor]);
 
   return (
-    <div className="fixed inset-0 z-[100]" onClick={onClose} onContextMenu={(e) => e.preventDefault()}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-[6px] animate-fade-in" />
+    <div className="fixed inset-0 z-[100]" onClick={onClose} onContextMenu={e => e.preventDefault()}>
+      <div className="absolute inset-0 bg-black/55 backdrop-blur-[7px] animate-fade-in-fast" />
       <div
         ref={popRef}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         className={cn(
-          "absolute overflow-hidden animate-popup-enter",
+          "absolute w-[305px] max-w-[calc(100vw-24px)] overflow-hidden animate-popup-enter",
           theme === "cream"
-            ? "w-[310px] max-w-[calc(100vw-24px)] rounded-2xl bg-white border-4 border-black shadow-[6px_6px_0px_#000]"
-            : "w-[310px] max-w-[calc(100vw-24px)] rounded-2xl bg-surface border border-border shadow-[0_28px_64px_-16px_rgba(0,0,0,0.5)]"
+            ? "rounded-[20px] bg-white border-[3px] border-black shadow-[5px_5px_0px_#000]"
+            : "rounded-[20px] bg-surface border border-border shadow-[0_28px_72px_-16px_rgba(0,0,0,0.55)]"
         )}
         style={pos ? { left: pos.left, top: pos.top, transformOrigin: pos.origin } : { visibility: "hidden" }}
       >
         <div className="aspect-[4/3] w-full bg-muted relative">
           {hasImage ? (
-            <img src={story.poster!} alt={story.title} className="h-full w-full object-cover pointer-events-none" />
+            <LazyImage src={story.poster!} alt={story.title} />
           ) : (
             <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: bg }}>
-              <span className="text-sm font-bold uppercase tracking-wider" style={{ color: text }}>{story.genre}</span>
+              <span className="text-sm font-bold uppercase tracking-wider" style={{ color: text }}>
+                {story.genre}
+              </span>
             </div>
           )}
           {typeof story.isCompleted === "boolean" && (
@@ -331,38 +402,40 @@ function PreviewPopup({
               <StatusBadge isCompleted={!!story.isCompleted} expanded size="md" />
             </div>
           )}
-          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/35 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
         </div>
 
         <div className="p-4">
-          <h3 className={cn("text-[16px] font-bold leading-tight line-clamp-2 text-foreground", theme === "cream" && "font-display")}>
+          <h3 className={cn(
+            "text-[15px] font-bold leading-tight line-clamp-2 text-foreground",
+            theme === "cream" && "font-display"
+          )}>
             {story.title}
           </h3>
           {story.description && (
-            <p className="mt-1.5 text-[12px] text-muted-foreground line-clamp-2 leading-snug">
+            <p className="mt-1 text-[12px] text-muted-foreground line-clamp-2 leading-snug">
               {story.description}
             </p>
           )}
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-muted text-foreground">{story.genre}</span>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-foreground">{story.genre}</span>
             {story.language && (
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-muted text-foreground uppercase tracking-wider">{story.language}</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-foreground uppercase tracking-wide">{story.language}</span>
             )}
             {story.episodes && story.episodes !== "?" && (
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-muted text-foreground">{story.episodes} eps</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-foreground">{story.episodes} eps</span>
             )}
           </div>
-
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-3.5 flex items-center gap-2">
             <div className="flex-1">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Price</div>
-              <div className="text-lg font-display font-extrabold text-foreground">₹{story.price}</div>
+              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Price</div>
+              <div className="text-[17px] font-display font-extrabold text-foreground">₹{story.price}</div>
             </div>
             <button
               onClick={onAdd}
               disabled={inCart}
               className={cn(
-                "h-9 px-3 rounded-lg text-[12px] font-bold inline-flex items-center gap-1.5 active:scale-95 transition",
+                "h-9 px-3 rounded-[10px] text-[11px] font-bold inline-flex items-center gap-1.5 active:scale-95 transition-transform duration-75",
                 inCart ? "bg-muted text-muted-foreground" : "bg-surface border border-border text-foreground hover:bg-muted"
               )}
             >
@@ -371,7 +444,7 @@ function PreviewPopup({
             <button
               onClick={onOpen}
               className={cn(
-                "h-9 px-4 rounded-lg text-[12px] font-bold active:scale-95 transition",
+                "h-9 px-4 rounded-[10px] text-[11px] font-bold active:scale-95 transition-transform duration-75",
                 theme === "cream" ? "neo-button bg-primary text-primary-foreground" : "bg-primary text-primary-foreground shadow-md"
               )}
             >

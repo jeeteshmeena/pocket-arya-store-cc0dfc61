@@ -1,11 +1,21 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+/**
+ * HeroSlider — OTT-grade cinematic banner
+ * Aspect ratio: 1184×556 (enforced via paddingBottom trick — zero CLS)
+ * Features: preloaded images, GPU transitions, momentum swipe, blur skeleton,
+ *           auto-scroll with pause/resume, per-theme overlays, live data
+ */
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 
+// Exact 1184:556 = 46.96... %
+const ASPECT_PERCENT = (556 / 1184) * 100; // = 46.959...%
 const BASE_URL = "/api";
-const ASPECT = 1184 / 556; // enforced 1184×556
+const AUTO_INTERVAL = 4500;
+const SWIPE_THRESHOLD = 40;
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 type Banner = {
   id: string;
   type: "trending" | "new" | "manual";
@@ -16,300 +26,408 @@ type Banner = {
   badge?: string;
 };
 
-// ─── Theme configs for each slide ──────────────────────────────────────────
-const THEME_OVERLAYS = [
-  // 0: Deep cinematic (default dark)
-  { from: "from-black/90", via: "via-black/45", badge: "bg-rose-500 text-white" },
-  // 1: Warm amber
-  { from: "from-amber-950/90", via: "via-amber-900/30", badge: "bg-amber-400 text-black" },
-  // 2: Cool indigo
-  { from: "from-indigo-950/90", via: "via-indigo-900/30", badge: "bg-indigo-400 text-white" },
-  // 3: Emerald
-  { from: "from-emerald-950/90", via: "via-emerald-900/30", badge: "bg-emerald-400 text-black" },
+// ─── Per-slide cinematic overlays ─────────────────────────────────────────────
+const CINEMATIC_OVERLAYS = [
+  // 0 — Deep noir
+  {
+    gradient: "linear-gradient(0deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 40%, rgba(0,0,0,0.12) 100%)",
+    badgeBg:  "rgba(239,68,68,0.95)",
+    badgeText:"#fff",
+    accent:   "#ef4444",
+  },
+  // 1 — Warm cinematic amber
+  {
+    gradient: "linear-gradient(0deg, rgba(40,14,0,0.92) 0%, rgba(90,40,0,0.45) 40%, rgba(0,0,0,0.12) 100%)",
+    badgeBg:  "rgba(251,191,36,0.95)",
+    badgeText:"#000",
+    accent:   "#fbbf24",
+  },
+  // 2 — Cool indigo
+  {
+    gradient: "linear-gradient(0deg, rgba(10,10,60,0.92) 0%, rgba(30,30,100,0.45) 40%, rgba(0,0,0,0.12) 100%)",
+    badgeBg:  "rgba(129,140,248,0.95)",
+    badgeText:"#000",
+    accent:   "#818cf8",
+  },
+  // 3 — Emerald forest
+  {
+    gradient: "linear-gradient(0deg, rgba(0,30,15,0.92) 0%, rgba(0,60,30,0.45) 40%, rgba(0,0,0,0.12) 100%)",
+    badgeBg:  "rgba(52,211,153,0.95)",
+    badgeText:"#000",
+    accent:   "#34d399",
+  },
 ];
 
-function useBanners() {
+// ─── Data hook ────────────────────────────────────────────────────────────────
+function useBanners(fallbackStories: ReturnType<typeof useApp>["stories"]) {
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let alive = true;
     fetch(`${BASE_URL}/banners`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => { if (!cancelled && j.success) setBanners(j.data); })
+      .then(r => r.json())
+      .then(j => {
+        if (!alive) return;
+        if (j.success && Array.isArray(j.data) && j.data.length) {
+          setBanners(j.data);
+        }
+      })
       .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .finally(() => { if (alive) setLoaded(true); });
+    return () => { alive = false; };
   }, []);
 
-  return { banners, loading };
-}
-
-export function HeroSlider() {
-  const { addToCart, goToCheckout, navigate, theme, stories } = useApp();
-  const { banners, loading } = useBanners();
-  const [idx, setIdx] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const autoRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startX = useRef(0);
-  const startY = useRef(0);
-  const isDragging = useRef(false);
-  const dragDelta = useRef(0);
-
-  // Build slides: banners from API or story fallback (2 trending + 2 new)
+  // Fallback: 2 trending (sorted by purchase_count) + 2 newest
   const slides: Banner[] = banners.length > 0
     ? banners
-    : (() => {
-        const trending = stories.slice(0, 2).map((s) => ({
-          id: s.id + "-t",
-          type: "trending" as const,
-          story_id: s.id,
-          image: s.poster || s.banner,
-          title: s.title,
-          subtitle: s.genre,
-          badge: "TRENDING",
-        }));
-        const newest = [...stories].reverse().slice(0, 2).map((s) => ({
-          id: s.id + "-n",
-          type: "new" as const,
-          story_id: s.id,
-          image: s.poster || s.banner,
-          title: s.title,
-          subtitle: s.genre,
-          badge: "NEW",
-        }));
-        return [...trending, ...newest];
-      })();
+    : loaded && fallbackStories.length > 0
+      ? (() => {
+          const sorted = [...fallbackStories].sort((a, b) => {
+            const ca = (a as any).purchase_count ?? (a as any).downloads ?? 0;
+            const cb = (b as any).purchase_count ?? (b as any).downloads ?? 0;
+            return cb - ca;
+          });
+          const newest = [...fallbackStories].sort((a, b) => {
+            const da = (a as any).created_at ?? (a as any).uploaded_at ?? "";
+            const db = (b as any).created_at ?? (b as any).uploaded_at ?? "";
+            return db > da ? 1 : db < da ? -1 : 0;
+          });
+          const trending = sorted.slice(0, 2).map(s => ({
+            id: `t-${s.id}`, type: "trending" as const,
+            story_id: s.id, image: s.poster || s.banner,
+            title: s.title, subtitle: s.genre, badge: "TRENDING",
+          }));
+          const newItems = newest.slice(0, 2)
+            .filter(s => !trending.find(t => t.story_id === s.id))
+            .map(s => ({
+              id: `n-${s.id}`, type: "new" as const,
+              story_id: s.id, image: s.poster || s.banner,
+              title: s.title, subtitle: s.genre, badge: "NEW",
+            }));
+          return [...trending, ...newItems];
+        })()
+      : [];
 
-  // ─── Auto-scroll (pause on interaction, resume after 3s) ───────────────
-  const startAuto = useCallback(() => {
-    if (autoRef.current) clearInterval(autoRef.current);
-    autoRef.current = setInterval(() => {
-      setIdx((x) => (x + 1) % slides.length);
-    }, 4500);
-  }, [slides.length]);
+  return { slides, ready: loaded || banners.length > 0 };
+}
+
+// ─── Preloader: load all images before showing ───────────────────────────────
+function usePreloadImages(slides: Banner[]) {
+  const [loadedSet, setLoadedSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (slides.length <= 1) return;
-    startAuto();
+    slides.forEach((s, i) => {
+      if (!s.image) return;
+      const img = new Image();
+      img.fetchPriority = i === 0 ? "high" : "low";
+      img.src = s.image;
+      img.onload = () =>
+        setLoadedSet(prev => new Set([...prev, s.id]));
+    });
+  }, [slides.map(s => s.id).join(",")]);
+
+  return loadedSet;
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+export function HeroSlider() {
+  const { addToCart, goToCheckout, navigate, theme, stories } = useApp();
+  const { slides, ready } = useBanners(stories);
+  const loadedImages = usePreloadImages(slides);
+
+  const [idx, setIdx] = useState(0);
+  const autoRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchX    = useRef(0);
+  const touchY    = useRef(0);
+  const dragDelta = useRef(0);
+  const isDrag    = useRef(false);
+  const isScrolling = useRef<boolean | null>(null);
+
+  const n = slides.length;
+  const safeIdx = n > 0 ? Math.min(idx, n - 1) : 0;
+
+  // ── Auto scroll ────────────────────────────────────────────────────────────
+  const resetAuto = useCallback(() => {
+    if (autoRef.current) clearInterval(autoRef.current);
+    if (n <= 1) return;
+    autoRef.current = setInterval(() => setIdx(x => (x + 1) % n), AUTO_INTERVAL);
+  }, [n]);
+
+  useEffect(() => {
+    resetAuto();
     return () => { if (autoRef.current) clearInterval(autoRef.current); };
-  }, [slides.length, startAuto]);
+  }, [resetAuto]);
 
-  const goTo = (i: number) => {
-    if (i === idx || isAnimating) return;
-    setIsAnimating(true);
+  const goTo = useCallback((i: number) => {
     setIdx(i);
-    setTimeout(() => setIsAnimating(false), 500);
-    startAuto();
-  };
+    resetAuto();
+  }, [resetAuto]);
 
-  // ─── Touch / Mouse swipe ───────────────────────────────────────────────
-  const onTouchStart = (e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
+  // ── Touch handlers ─────────────────────────────────────────────────────────
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchX.current = e.touches[0].clientX;
+    touchY.current = e.touches[0].clientY;
     dragDelta.current = 0;
-    isDragging.current = true;
-  };
-  const onTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging.current) return;
-    dragDelta.current = startX.current - e.touches[0].clientX;
-  };
-  const onTouchEnd = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    if (Math.abs(dragDelta.current) > 45) {
-      goTo(dragDelta.current > 0
-        ? (idx + 1) % slides.length
-        : (idx - 1 + slides.length) % slides.length);
-    }
-  };
-  const onMouseDown = (e: React.MouseEvent) => {
-    startX.current = e.clientX;
-    isDragging.current = true;
-    dragDelta.current = 0;
-  };
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current) return;
-    dragDelta.current = startX.current - e.clientX;
-  };
-  const onMouseUp = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    if (Math.abs(dragDelta.current) > 45) {
-      goTo(dragDelta.current > 0
-        ? (idx + 1) % slides.length
-        : (idx - 1 + slides.length) % slides.length);
-    }
-  };
+    isDrag.current = true;
+    isScrolling.current = null;
+    if (autoRef.current) clearInterval(autoRef.current);
+  }, []);
 
-  // ─── Loading skeleton ──────────────────────────────────────────────────
-  if (loading) {
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDrag.current) return;
+    const dx = touchX.current - e.touches[0].clientX;
+    const dy = touchY.current - e.touches[0].clientY;
+    if (isScrolling.current === null) {
+      isScrolling.current = Math.abs(dy) > Math.abs(dx);
+    }
+    if (!isScrolling.current) {
+      e.preventDefault();
+      dragDelta.current = dx;
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!isDrag.current || isScrolling.current) {
+      isDrag.current = false;
+      resetAuto();
+      return;
+    }
+    isDrag.current = false;
+    if (Math.abs(dragDelta.current) > SWIPE_THRESHOLD) {
+      goTo(dragDelta.current > 0 ? (safeIdx + 1) % n : (safeIdx - 1 + n) % n);
+    } else {
+      resetAuto();
+    }
+  }, [safeIdx, n, goTo, resetAuto]);
+
+  // ── Mouse drag ─────────────────────────────────────────────────────────────
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    touchX.current = e.clientX;
+    dragDelta.current = 0;
+    isDrag.current = true;
+    if (autoRef.current) clearInterval(autoRef.current);
+  }, []);
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDrag.current) return;
+    dragDelta.current = touchX.current - e.clientX;
+  }, []);
+  const onMouseUp = useCallback(() => {
+    if (!isDrag.current) { resetAuto(); return; }
+    isDrag.current = false;
+    if (Math.abs(dragDelta.current) > SWIPE_THRESHOLD) {
+      goTo(dragDelta.current > 0 ? (safeIdx + 1) % n : (safeIdx - 1 + n) % n);
+    } else {
+      resetAuto();
+    }
+  }, [safeIdx, n, goTo, resetAuto]);
+
+  // ── Loading skeleton ────────────────────────────────────────────────────────
+  if (!ready || n === 0) {
     return (
-      <div
-        className="mx-3 mt-3 rounded-2xl bg-muted animate-pulse"
-        style={{ aspectRatio: `${ASPECT}` }}
-      />
+      <div className="mx-3 mt-3">
+        <div
+          className="relative w-full rounded-2xl shimmer-bg overflow-hidden"
+          style={{ paddingBottom: `${ASPECT_PERCENT}%` }}
+        />
+      </div>
     );
   }
-  if (slides.length === 0) return null;
 
-  const slide = slides[Math.min(idx, slides.length - 1)];
-  const story = slide.story_id ? stories.find((s) => s.id === slide.story_id) : null;
-  const themeOverlay = THEME_OVERLAYS[idx % THEME_OVERLAYS.length];
+  const slide   = slides[safeIdx];
+  const overlay = CINEMATIC_OVERLAYS[safeIdx % CINEMATIC_OVERLAYS.length];
+  const story   = slide.story_id ? stories.find(s => s.id === slide.story_id) : null;
+  const isCreamed = theme === "cream";
 
-  const handleBuyNow = () => {
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (story) { addToCart(story); goToCheckout(); }
     else if (slide.story_id) navigate({ name: "detail", storyId: slide.story_id });
   };
   const handleDetail = () => {
-    if (slide.story_id) navigate({ name: "detail", storyId: slide.story_id });
+    if (!isDrag.current && Math.abs(dragDelta.current) < 8 && slide.story_id) {
+      navigate({ name: "detail", storyId: slide.story_id });
+    }
   };
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden mx-3 mt-3 select-none cursor-grab active:cursor-grabbing bg-muted",
-        theme === "cream"
-          ? "neo-card"
-          : "rounded-2xl shadow-[0_20px_48px_-16px_rgba(0,0,0,0.5)] ring-1 ring-white/5"
-      )}
-      style={{ aspectRatio: `${ASPECT}` }}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
-    >
-      {/* ── Slide images (all pre-loaded, only active is visible) ── */}
-      {slides.map((s, i) => (
-        <SlideImage key={s.id} src={s.image} title={s.title} active={i === idx} />
-      ))}
-
-      {/* ── Gradient overlay (theme-aware) ── */}
-      <div className={cn(
-        "absolute inset-0 bg-gradient-to-t to-transparent pointer-events-none",
-        themeOverlay.from, themeOverlay.via
-      )} />
-      {/* subtle top vignette */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
-
-      {/* ── Badge ── */}
-      {slide.badge && (
-        <div className={cn(
-          "absolute top-3 left-3 text-[10px] font-black px-2.5 py-1 tracking-widest z-10 uppercase rounded-full",
-          slide.badge === "TRENDING"
-            ? "bg-rose-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.5)]"
-            : "bg-white/90 text-black"
-        )}>
-          {slide.badge}
-        </div>
-      )}
-
-      {/* ── Dot indicators ── */}
-      <div className="absolute top-3 right-3 z-10 flex gap-1.5 items-center">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={(e) => { e.stopPropagation(); goTo(i); }}
-            className={cn(
-              "h-1.5 rounded-full transition-all duration-300",
-              i === idx ? "w-6 bg-white shadow" : "w-1.5 bg-white/40 hover:bg-white/65"
-            )}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* ── Content ── */}
+    <div className="mx-3 mt-3">
+      {/*
+        Zero-CLS aspect ratio container.
+        paddingBottom trick: height = 0, padding creates the box.
+        Never causes layout shift regardless of image load state.
+      */}
       <div
-        className="absolute bottom-0 left-0 right-0 p-4 z-10"
+        className={cn(
+          "relative w-full overflow-hidden select-none cursor-grab active:cursor-grabbing",
+          isCreamed ? "neo-card" : "rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.55)]"
+        )}
+        style={{ paddingBottom: `${ASPECT_PERCENT}%`, height: 0 }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
         onClick={handleDetail}
       >
-        {slide.subtitle && (
-          <p className="text-white/65 text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5 line-clamp-1">
-            {slide.subtitle}
-          </p>
-        )}
-        <div
-          className={cn(
-            "font-display leading-tight text-white drop-shadow-lg line-clamp-2",
-            theme === "cream"
-              ? "text-[19px] font-extrabold tracking-tight"
-              : "text-[17px] font-bold"
-          )}
-        >
-          {slide.title}
-        </div>
+        {/* ── Slides — all in DOM, CSS opacity toggle (GPU) ── */}
+        {slides.map((s, i) => (
+          <SlideImage
+            key={s.id}
+            src={s.image}
+            title={s.title}
+            active={i === safeIdx}
+            preloaded={loadedImages.has(s.id) || !s.image}
+            priority={i === 0}
+          />
+        ))}
 
-        {story && (
-          <div className="flex items-center gap-2 mt-3">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
-              className={cn(
-                "h-9 px-5 text-[12px] font-black active:scale-95 transition shadow-lg",
-                theme === "cream"
-                  ? "neo-button bg-white text-black"
-                  : "rounded-full bg-white text-black"
-              )}
-            >
-              Buy Now · ₹{story.price}
-            </button>
-            <button
-              id="hero-add-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                flyToCart(e.currentTarget);
-                setTimeout(() => addToCart(story), 200);
-              }}
-              className={cn(
-                "h-9 w-9 grid place-items-center text-base font-bold active:scale-95 transition",
-                theme === "cream"
-                  ? "neo-button bg-black text-white"
-                  : "rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-white hover:bg-white/25"
-              )}
-              aria-label="Add to cart"
-            >
-              +
-            </button>
+        {/* ── Cinematic gradient overlay ── */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: overlay.gradient }}
+        />
+        {/* Top vignette */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, transparent 35%)" }}
+        />
+
+        {/* ── Badge ── */}
+        {slide.badge && (
+          <div
+            className="absolute top-3 left-3 z-10 text-[9px] font-black px-2.5 py-1 tracking-[0.18em] uppercase rounded-full"
+            style={{
+              background: overlay.badgeBg,
+              color: overlay.badgeText,
+              boxShadow: `0 2px 12px ${overlay.accent}66`,
+            }}
+          >
+            {slide.badge}
           </div>
         )}
+
+        {/* ── Dot indicators ── */}
+        <div className="absolute top-3 right-3 z-10 flex gap-1.5 items-center">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={e => { e.stopPropagation(); goTo(i); }}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{
+                width: i === safeIdx ? "22px" : "6px",
+                background: i === safeIdx ? "#fff" : "rgba(255,255,255,0.38)",
+              }}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* ── Content overlay ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
+          <div className="hero-content-reveal">
+            {slide.subtitle && (
+              <p className="text-white/60 text-[9px] font-semibold uppercase tracking-[0.22em] mb-1.5 line-clamp-1">
+                {slide.subtitle}
+              </p>
+            )}
+            <p
+              className={cn(
+                "font-display text-white drop-shadow-lg line-clamp-2 leading-tight",
+                isCreamed ? "text-[18px] font-extrabold tracking-tight"
+                : theme === "teal" ? "text-[17px] font-bold tracking-tight"
+                : "text-[16px] font-bold"
+              )}
+            >
+              {slide.title}
+            </p>
+
+            {story && (
+              <div className="flex items-center gap-2 mt-3">
+                <button
+                  onClick={handleBuyNow}
+                  className={cn(
+                    "h-9 px-5 text-[12px] font-black active:scale-95 transition-transform duration-75 shadow-lg",
+                    isCreamed ? "neo-button bg-white text-black" : "rounded-full bg-white text-black"
+                  )}
+                >
+                  Buy Now · ₹{story.price}
+                </button>
+                <button
+                  id="hero-add-btn"
+                  onClick={e => {
+                    e.stopPropagation();
+                    flyToCart(e.currentTarget);
+                    setTimeout(() => addToCart(story), 200);
+                  }}
+                  className={cn(
+                    "h-9 w-9 grid place-items-center text-base font-black active:scale-95 transition-transform duration-75",
+                    isCreamed
+                      ? "neo-button bg-black text-white"
+                      : "rounded-full bg-white/12 backdrop-blur-md border border-white/20 text-white hover:bg-white/22"
+                  )}
+                  aria-label="Add to cart"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// Pre-load all slides — only toggle opacity, no remount
-function SlideImage({ src, title, active }: { src?: string | null; title: string; active: boolean }) {
+// ─── Slide image — memoized ────────────────────────────────────────────────────
+const SlideImage = memo(function SlideImage({
+  src, title, active, preloaded, priority,
+}: {
+  src?: string | null;
+  title: string;
+  active: boolean;
+  preloaded: boolean;
+  priority: boolean;
+}) {
   const [err, setErr] = useState(false);
 
   if (src && !err) {
     return (
-      <img
-        src={src}
-        alt={title}
-        onError={() => setErr(true)}
-        draggable={false}
-        fetchPriority={active ? "high" : "low"}
-        loading="eager"
-        decoding="async"
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
-          active ? "opacity-100" : "opacity-0"
+      <>
+        {/* Blur placeholder while loading */}
+        {!preloaded && (
+          <div className="absolute inset-0 shimmer-bg" />
         )}
-      />
+        <img
+          src={src}
+          alt={title}
+          onError={() => setErr(true)}
+          draggable={false}
+          fetchPriority={priority ? "high" : "low"}
+          loading="eager"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{
+            // GPU-only opacity transition — no layout triggers
+            opacity: active ? 1 : 0,
+            transition: "opacity 500ms cubic-bezier(0.16,1,0.3,1)",
+            willChange: "opacity",
+          }}
+        />
+      </>
     );
   }
 
+  // Branded fallback — never shows a broken image
   return (
     <div
-      className={cn(
-        "absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 transition-opacity duration-500",
-        active ? "opacity-100" : "opacity-0"
-      )}
-    >
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-    </div>
+      className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900"
+      style={{
+        opacity: active ? 1 : 0,
+        transition: "opacity 500ms cubic-bezier(0.16,1,0.3,1)",
+      }}
+    />
   );
-}
+});

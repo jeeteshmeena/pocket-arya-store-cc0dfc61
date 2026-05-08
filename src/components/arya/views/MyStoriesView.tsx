@@ -1,7 +1,8 @@
 import { useApp } from "@/store/app-store";
 import { Send, Library as LibIcon, ShoppingBag, Loader2, RefreshCw, Heart, X } from "lucide-react";
 import { openTelegramLink, BOT_USERNAME, fetchMyPurchases } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import { cn } from "@/lib/utils";
 import { haptics } from "@/lib/haptics";
 
@@ -118,10 +119,11 @@ export function MyStoriesView() {
           {!loading && !error && merged.length > 0 && (
             <div className="mt-4 space-y-2">
               {merged.map((s) => (
-                <StoryRow key={s.story_id} story={s} />
+                <StoryRow key={s.story_id} story={s} onRefresh={load} />
               ))}
             </div>
           )}
+
 
         </>
       )}
@@ -174,68 +176,119 @@ export function MyStoriesView() {
   );
 }
 
-function StoryRow({ story }: { story: PurchasedStory }) {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
+type DeliveryStatus = "idle" | "sending" | "delivered" | "already";
+
+function StoryRow({ story, onRefresh }: { story: PurchasedStory; onRefresh?: () => void }) {
+  const [status, setStatus] = useState<DeliveryStatus>("idle");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { tgUser } = useApp();
+
+  // Stop polling on unmount
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   const handleGet = () => {
     if (status !== "idle") return;
+    haptics.light();
     setStatus("sending");
-    // Open Telegram bot link
+
+    // Open Telegram bot — preserves existing delivery logic untouched
     openTelegramLink(`https://t.me/${BOT_USERNAME}?start=buy_${story.story_id}`);
-    // After short delay show "sent" confirmation
+
+    // After 1.5s show "delivered"
     setTimeout(() => {
-      setStatus("sent");
-      setTimeout(() => setStatus("idle"), 3000);
-    }, 800);
+      setStatus("delivered");
+      // Auto-reset to idle after 5s
+      setTimeout(() => setStatus("idle"), 5000);
+      // Refresh parent list to sync UI
+      if (onRefresh) setTimeout(onRefresh, 2000);
+    }, 1500);
   };
 
+  const stateConfig = {
+    idle: {
+      label: "Get",
+      icon: <Send className="h-3.5 w-3.5" />,
+      cls: "bg-primary text-primary-foreground",
+    },
+    sending: {
+      label: "Sending…",
+      icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
+      cls: "bg-primary/60 text-primary-foreground cursor-wait",
+    },
+    delivered: {
+      label: "Delivered!",
+      icon: (
+        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+          <polyline points="2,8 6,12 14,4" />
+        </svg>
+      ),
+      cls: "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30",
+    },
+    already: {
+      label: "Resend",
+      icon: <Send className="h-3.5 w-3.5" />,
+      cls: "bg-muted text-muted-foreground border border-border",
+    },
+  }[status];
+
   return (
-    <div className="flex gap-3 p-3 rounded-xl bg-surface border border-border items-center animate-fade-in">
+    <div className="flex gap-3 p-3 rounded-[14px] bg-surface border border-border items-center animate-fade-in">
       <StoryThumb poster={story.poster} title={story.title} />
       <div className="flex-1 min-w-0">
-        <div className="font-semibold truncate text-sm text-foreground">{story.title}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">
+        <div className="font-semibold truncate text-[13px] text-foreground leading-tight">{story.title}</div>
+        <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
           {[story.platform, story.genre].filter(Boolean).join(" · ")}
         </div>
-        <div className="mt-1.5 flex items-center gap-2">
-          <span className="text-[10px] font-bold text-emerald-500">✓ Purchased</span>
-          {story.price != null && <span className="text-[10px] text-muted-foreground">· ₹{story.price}</span>}
+
+        {/* Status badges */}
+        <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500">
+            <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+              <polyline points="2,6 5,9 10,3" />
+            </svg>
+            Purchased
+          </span>
+          {story.price != null && (
+            <span className="text-[10px] text-muted-foreground">₹{story.price}</span>
+          )}
         </div>
 
-        {/* Real-time delivery status inline */}
-        {status === "sent" && (
-          <div className="mt-1.5 flex items-center gap-1.5 animate-fade-in">
-            <div className="h-4 w-4 rounded-full bg-emerald-500 grid place-items-center">
-              <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
+        {/* Delivery status — inline feedback */}
+        {status === "delivered" && (
+          <div
+            className="mt-1.5 flex items-center gap-1.5"
+            style={{ animation: "delivery-success 0.45s cubic-bezier(0.34,1.56,0.64,1) both" }}
+          >
+            <div className="h-4 w-4 rounded-full bg-emerald-500 grid place-items-center shrink-0">
+              <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="white" strokeWidth={2.5} strokeLinecap="round">
                 <polyline points="2,6 5,9 10,3" />
               </svg>
             </div>
             <span className="text-[11px] font-semibold text-emerald-500">
-              Sent to bot! Check Telegram.
+              Sent to Telegram — check your bot!
             </span>
+          </div>
+        )}
+        {status === "sending" && (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <Loader2 className="h-3 w-3 animate-spin text-primary shrink-0" />
+            <span className="text-[11px] text-muted-foreground">Opening Telegram bot…</span>
           </div>
         )}
       </div>
 
       <button
         onClick={handleGet}
-        disabled={status !== "idle"}
+        disabled={status === "sending"}
         className={cn(
-          "h-9 px-3 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all active:scale-95",
-          status === "sent"
-            ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
-            : status === "sending"
-              ? "bg-primary/60 text-primary-foreground cursor-wait"
-              : "bg-primary text-primary-foreground"
+          "h-9 px-3 rounded-full text-[11px] font-semibold flex items-center gap-1.5 shrink-0",
+          "transition-transform duration-75 active:scale-95",
+          stateConfig.cls,
         )}
+        aria-label={stateConfig.label}
       >
-        {status === "sending" ? (
-          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
-        ) : status === "sent" ? (
-          <><svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><polyline points="3,8 7,12 13,4" /></svg> Sent!</>
-        ) : (
-          <><Send className="h-3.5 w-3.5" /> Get</>
-        )}
+        {stateConfig.icon}
+        <span>{stateConfig.label}</span>
       </button>
     </div>
   );

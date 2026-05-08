@@ -14,7 +14,9 @@ import { DeepLinkErrorDialog } from "./DeepLinkErrorDialog";
 import { Splash } from "./Splash";
 
 function Shell() {
-  const { view, storiesLoading } = useApp();
+  const { view, storiesLoading, stories } = useApp();
+  const showSplash = storiesLoading && stories.length === 0;
+
   return (
     // Fixed-height container — prevents page scroll, enables app-like behavior
     <div className="fixed inset-0 bg-background text-foreground flex flex-col overflow-hidden">
@@ -48,7 +50,8 @@ function Shell() {
       <CartPanel />
       <TermsOnboarding />
       <DeepLinkErrorDialog />
-      {storiesLoading && <Splash />}
+      {showSplash && <Splash />}
+
     </div>
   );
 }

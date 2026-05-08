@@ -42,6 +42,23 @@
 }
 
 /* ══════════════════════════════════════════════════
+   GLOBAL MOTION DESIGN TOKENS
+   ══════════════════════════════════════════════════ */
+:root {
+  /* Timing */
+  --ease-spring:    cubic-bezier(0.2, 1.4, 0.3, 1);
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Durations */
+  --dur-fast:   150ms;
+  --dur-normal: 250ms;
+  --dur-slow:   400ms;
+  --dur-hero:   500ms;
+}
+
+/* ══════════════════════════════════════════════════
    DEFAULT — Premium Light (Nike / Apple Store feel)
    ══════════════════════════════════════════════════ */
 :root {
@@ -56,7 +73,7 @@
   --card-foreground:      #111111;
   --popover:              #FFFFFF;
   --popover-foreground:   #111111;
-  --primary:              #111111;   /* Black — premium CTA */
+  --primary:              #111111;
   --primary-foreground:   #FFFFFF;
   --secondary:            #F3F4F6;
   --secondary-foreground: #111111;
@@ -106,16 +123,16 @@
   --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --font-display: "Fraunces", "Plus Jakarta Sans", serif;
 
-  --background:           #061E1E;   /* Very deep rich teal */
-  --foreground:           #F1FAF8;   /* Off-white mint text */
-  --surface:              #0A2A2A;   /* Slightly lighter dark teal for cards */
+  --background:           #061E1E;
+  --foreground:           #F1FAF8;
+  --surface:              #0A2A2A;
   --card:                 #0A2A2A;
   --card-foreground:      #F1FAF8;
   --popover:              #0A2A2A;
   --popover-foreground:   #F1FAF8;
-  --primary:              #17A2B8;   /* Bright vibrant teal for CTA */
+  --primary:              #17A2B8;
   --primary-foreground:   #FFFFFF;
-  --secondary:            #084040;   /* Muted teal */
+  --secondary:            #084040;
   --secondary-foreground: #F1FAF8;
   --muted:                #123A3A;
   --muted-foreground:     #84B2B2;
@@ -123,30 +140,29 @@
   --accent-foreground:    #FFFFFF;
   --destructive:          #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border:               #144242;   /* Subtle border */
+  --border:               #144242;
   --input:                #0A2A2A;
   --ring:                 #17A2B8;
 }
 
 /* ══════════════════════════════════════════════════
-   CREAM — Soft pink/cream audiobook (image #2)
-   "Hello, Jenny" / Copenhagen reference
+   CREAM — Neo-brutalism
    ══════════════════════════════════════════════════ */
 .theme-cream {
   --radius: 1.5rem;
   --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --font-display: "Fredoka", "DM Serif Display", serif;
 
-  --background:           #FFFFFF;   /* Clean white canvas */
+  --background:           #FFFFFF;
   --foreground:           #000000;
   --surface:              #FFFFFF;
-  --card:                 #CCE5FF;   /* Soft blue for cards like Trending */
+  --card:                 #CCE5FF;
   --card-foreground:      #000000;
   --popover:              #FFFFFF;
   --popover-foreground:   #000000;
-  --primary:              #0A66C2;   /* Play Book blue CTA */
+  --primary:              #0A66C2;
   --primary-foreground:   #FFFFFF;
-  --secondary:            #FFE066;   /* Yellow active state for tags */
+  --secondary:            #FFE066;
   --secondary-foreground: #000000;
   --muted:                #F5F5F5;
   --muted-foreground:     #555555;
@@ -154,28 +170,27 @@
   --accent-foreground:    #000000;
   --destructive:          #FF4D4D;
   --destructive-foreground: #FFFFFF;
-  --border:               #000000;   /* Thick black borders */
+  --border:               #000000;
   --input:                #FFFFFF;
   --ring:                 #000000;
 }
 
 /* ══════════════════════════════════════════════════
-   MINT — Plant/Greener inspiration (image #1)
-   Soft pale-blue canvas, white cards, mint-green accents
+   MINT
    ══════════════════════════════════════════════════ */
 .theme-mint {
   --radius: 1.5rem;
   --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 
-  --background:           #DCE7F2;   /* Soft sky-blue canvas */
+  --background:           #DCE7F2;
   --foreground:           #0B1220;
   --surface:              #FFFFFF;
   --card:                 #FFFFFF;
   --card-foreground:      #0B1220;
   --popover:              #FFFFFF;
   --popover-foreground:   #0B1220;
-  --primary:              #4FE3A1;   /* Vibrant mint green CTA */
+  --primary:              #4FE3A1;
   --primary-foreground:   #062014;
   --secondary:            #EAF3FF;
   --secondary-foreground: #0B1220;
@@ -190,7 +205,37 @@
   --ring:                 #4FE3A1;
 }
 
-/* Neo-Brutalism Global Overrides for Cream Theme */
+/* ══════════════════════════════════════════════════
+   ROMANTIC
+   ══════════════════════════════════════════════════ */
+.theme-romantic {
+  --radius: 1.5rem;
+  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Fraunces", "DM Serif Display", serif;
+
+  --background:           #FFF1F2;
+  --foreground:           #4A1D2C;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #4A1D2C;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #4A1D2C;
+  --primary:              #D6336C;
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #FCE4EC;
+  --secondary-foreground: #4A1D2C;
+  --muted:                #FBE8EE;
+  --muted-foreground:     #8A4A60;
+  --accent:               #F472B6;
+  --accent-foreground:    #FFFFFF;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #F4D3DD;
+  --input:                #FBE8EE;
+  --ring:                 #D6336C;
+}
+
+/* ── Neo-Brutalism overrides ──────────────────── */
 .theme-cream .neo-card {
   border: 2px solid #000;
   box-shadow: 3px 3px 0px #000;
@@ -222,39 +267,7 @@
   font-weight: 600;
 }
 
-/* ══════════════════════════════════════════════════
-   ROMANTIC — Dusty rose / blush, serif elegance
-   ══════════════════════════════════════════════════ */
-.theme-romantic {
-  --radius: 1.5rem;
-  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  --font-display: "Fraunces", "DM Serif Display", serif;
-
-  --background:           #FFF1F2;   /* Soft blush canvas */
-  --foreground:           #4A1D2C;
-  --surface:              #FFFFFF;
-  --card:                 #FFFFFF;
-  --card-foreground:      #4A1D2C;
-  --popover:              #FFFFFF;
-  --popover-foreground:   #4A1D2C;
-  --primary:              #D6336C;   /* Romantic rose CTA */
-  --primary-foreground:   #FFFFFF;
-  --secondary:            #FCE4EC;
-  --secondary-foreground: #4A1D2C;
-  --muted:                #FBE8EE;
-  --muted-foreground:     #8A4A60;
-  --accent:               #F472B6;
-  --accent-foreground:    #FFFFFF;
-  --destructive:          #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border:               #F4D3DD;
-  --input:                #FBE8EE;
-  --ring:                 #D6336C;
-}
-
-/* ══════════════════════════════════════════════════
-   TEAL — Premium card/button polish
-   ══════════════════════════════════════════════════ */
+/* ── Teal premium card ──────────────────────── */
 .theme-teal .teal-card {
   background: linear-gradient(160deg, #0E3636 0%, #0A2A2A 100%);
   border: 1px solid rgba(23,162,184,0.18);
@@ -265,13 +278,13 @@
 }
 
 /* ══════════════════════════════════════════════════
-   BASE
+   BASE STYLES
    ══════════════════════════════════════════════════ */
 @layer base {
   * { border-color: var(--color-border); }
   html, body, #root {
     height: 100%;
-    overflow: hidden;   /* prevent all page-level scroll — app-like */
+    overflow: hidden;
     transition: background-color 0.4s ease, color 0.4s ease;
   }
   body {
@@ -284,8 +297,6 @@
   }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-  /* Remove ALL blue focus rings globally */
   *:focus-visible {
     outline: 2px solid #111111;
     outline-offset: 2px;
@@ -293,31 +304,65 @@
 }
 
 /* ══════════════════════════════════════════════════
-   ANIMATIONS — clean, no bounce
+   UNIFIED MOTION SYSTEM
+   GPU-accelerated, no layout triggers
    ══════════════════════════════════════════════════ */
+
+/* ── Fade & Slide ── */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-fast {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 @keyframes slide-in-right {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
 }
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes slide-up-full {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-.animate-fade-in        { animation: fade-in 0.2s ease-out both; }
-.animate-slide-in-right { animation: slide-in-right 0.25s cubic-bezier(.2,.8,.2,1) both; }
-.animate-slide-up       { animation: slide-up 0.25s ease-out both; }
-.animate-slide-up-full  { animation: slide-up-full 0.28s cubic-bezier(.2,.8,.2,1) both; }
+.animate-fade-in        { animation: fade-in var(--dur-normal) var(--ease-out-expo) both; }
+.animate-fade-in-fast   { animation: fade-in-fast var(--dur-fast) ease both; }
+.animate-slide-in-right { animation: slide-in-right var(--dur-normal) var(--ease-out-expo) both; }
+.animate-slide-up       { animation: slide-up var(--dur-normal) var(--ease-out-expo) both; }
+.animate-slide-up-full  { animation: slide-up-full 0.28s var(--ease-out-expo) both; }
+.animate-slide-down     { animation: slide-down var(--dur-fast) var(--ease-out-expo) both; }
 
-/* Status dot pulse */
+/* ── Hero banner transition ── */
+@keyframes hero-slide-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes hero-slide-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.97); }
+}
+.hero-enter { animation: hero-slide-in var(--dur-hero) var(--ease-out-expo) both; }
+.hero-exit  { animation: hero-slide-out var(--dur-hero) var(--ease-out-expo) both; }
+
+/* ── Content reveal stagger ── */
+@keyframes content-reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-content-reveal {
+  animation: content-reveal 0.45s var(--ease-out-expo) 0.15s both;
+}
+
+/* ── Status / pulse animations ── */
 @keyframes status-pulse-ring {
   0%   { transform: scale(0.9); opacity: 0.7; }
   70%  { transform: scale(2.2); opacity: 0; }
@@ -332,54 +377,155 @@
   animation: status-pulse-ring 1.8s cubic-bezier(0.4,0,0.6,1) infinite;
 }
 
-/* Status label expand on detail */
 @keyframes status-label-expand {
   from { max-width: 14px; opacity: 0; padding-left: 0; padding-right: 0; }
   to   { max-width: 140px; opacity: 1; padding-left: 8px; padding-right: 10px; }
 }
-.animate-status-expand { animation: status-label-expand 0.6s 0.3s cubic-bezier(.2,.8,.2,1) both; }
+.animate-status-expand { animation: status-label-expand 0.6s 0.3s var(--ease-out-expo) both; }
 
-/* Premium long-press popup */
+/* ── Long-press popup ── */
 @keyframes popup-enter {
-  0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
+  0%   { opacity: 0; transform: scale(0.88) translateY(16px); }
   60%  { opacity: 1; }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
-.animate-popup-enter { animation: popup-enter 0.32s cubic-bezier(.2,1.2,.3,1) both; }
+.animate-popup-enter { animation: popup-enter 0.3s var(--ease-spring) both; }
 
-/* Cart fly bounce */
+/* ── Cart interactions ── */
 @keyframes cart-bounce {
   0%   { transform: scale(1); }
   30%  { transform: scale(1.35) rotate(-6deg); }
   60%  { transform: scale(0.92); }
   100% { transform: scale(1); }
 }
-.animate-cart-bounce { animation: cart-bounce 0.5s cubic-bezier(.2,1.5,.3,1) both; }
+.animate-cart-bounce { animation: cart-bounce 0.45s var(--ease-spring) both; }
 
+@keyframes cart-item-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-cart-item-in { animation: cart-item-in 0.3s var(--ease-out-expo) both; }
 
-/* Splash logo animation */
+/* ── Heart / Wishlist ── */
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.5); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+@keyframes heart-burst {
+  0%   { transform: scale(0); opacity: 1; }
+  60%  { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(2); opacity: 0; }
+}
+.animate-heart-pop   { animation: heart-pop 0.4s var(--ease-spring) both; }
+.heart-burst::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,63,94,0.4) 0%, transparent 70%);
+  animation: heart-burst 0.5s ease-out both;
+}
+
+/* ── Card hover magnetic effect ── */
+.card-magnetic {
+  transition: transform 0.2s var(--ease-out-expo), box-shadow 0.2s ease;
+  will-change: transform;
+}
+.card-magnetic:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 16px 36px -12px rgba(0,0,0,0.22);
+}
+.card-magnetic:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+/* ── Loading shimmer ── */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.shimmer-bg {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-muted);
+}
+.shimmer-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.12) 40%,
+    rgba(255,255,255,0.22) 50%,
+    rgba(255,255,255,0.12) 60%,
+    transparent 100%
+  );
+  animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Splash screen ── */
 @keyframes splash-pulse {
   0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--color-primary); }
-  50%      { transform: scale(1.06); box-shadow: 0 0 0 18px rgba(0,0,0,0); }
+  50%       { transform: scale(1.06); box-shadow: 0 0 0 18px rgba(0,0,0,0); }
 }
 @keyframes splash-ring {
   0%   { transform: scale(0.8); opacity: 0.6; }
   100% { transform: scale(2.2); opacity: 0; }
 }
+@keyframes splash-bar {
+  0%   { left: -35%; width: 35%; }
+  60%  { left: 100%; width: 100%; }
+  100% { left: 100%; width: 35%; }
+}
 .animate-splash-pulse { animation: splash-pulse 1.6s ease-in-out infinite; }
 .animate-splash-ring  { animation: splash-ring 1.6s ease-out infinite; }
+.animate-splash-bar   { animation: splash-bar 1.5s var(--ease-in-out) infinite; }
 
-/* Cart item enter */
-@keyframes cart-item-in {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-.animate-cart-item-in { animation: cart-item-in 0.3s cubic-bezier(.2,.8,.2,1) both; }
-
-/* Heart pop */
-@keyframes heart-pop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.4); }
+/* ── Bottom nav tab transition ── */
+@keyframes tab-pop {
+  0%   { transform: scale(0.88); }
+  60%  { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
-.animate-heart-pop { animation: heart-pop 0.4s cubic-bezier(.2,1.5,.3,1) both; }
+.animate-tab-pop { animation: tab-pop 0.25s var(--ease-spring) both; }
+
+/* ── Skeleton placeholder ── */
+.skeleton {
+  background: var(--color-muted);
+  border-radius: 8px;
+  animation: shimmer 1.6s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Smooth scroll for horizontal rows ── */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-snap-item { scroll-snap-align: start; }
+
+/* ── Delivery status states ── */
+@keyframes delivery-success {
+  0%   { transform: scale(0.5) rotate(-12deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.animate-delivery-success { animation: delivery-success 0.5s var(--ease-spring) both; }
+
+/* ── Safe area helpers ── */
+.pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
+.mb-safe { margin-bottom: max(env(safe-area-inset-bottom), 0px); }
+
+/* ── Reduce motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
