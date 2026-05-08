@@ -33,13 +33,11 @@ export function ExploreView() {
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="flex-1 p-[12px]">
-        <div className="grid grid-cols-2 gap-[12px]">
+      {/* Grid — square cards, no overlap */}
+      <div className="flex-1 px-4 pt-4">
+        <div className="grid grid-cols-2 gap-4">
           {list.map(s => (
-            <div key={s.id} className="w-full">
-              <StoryCard story={s} wide />
-            </div>
+            <StoryCard key={s.id} story={s} square />
           ))}
         </div>
         {list.length === 0 && (

@@ -9,6 +9,7 @@
 @custom-variant teal (&:is(.theme-teal *));
 @custom-variant cream (&:is(.theme-cream *));
 @custom-variant mint (&:is(.theme-mint *));
+@custom-variant romantic (&:is(.theme-romantic *));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -222,6 +223,48 @@
 }
 
 /* ══════════════════════════════════════════════════
+   ROMANTIC — Dusty rose / blush, serif elegance
+   ══════════════════════════════════════════════════ */
+.theme-romantic {
+  --radius: 1.5rem;
+  --font-sans:    "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Fraunces", "DM Serif Display", serif;
+
+  --background:           #FFF1F2;   /* Soft blush canvas */
+  --foreground:           #4A1D2C;
+  --surface:              #FFFFFF;
+  --card:                 #FFFFFF;
+  --card-foreground:      #4A1D2C;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #4A1D2C;
+  --primary:              #D6336C;   /* Romantic rose CTA */
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #FCE4EC;
+  --secondary-foreground: #4A1D2C;
+  --muted:                #FBE8EE;
+  --muted-foreground:     #8A4A60;
+  --accent:               #F472B6;
+  --accent-foreground:    #FFFFFF;
+  --destructive:          #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border:               #F4D3DD;
+  --input:                #FBE8EE;
+  --ring:                 #D6336C;
+}
+
+/* ══════════════════════════════════════════════════
+   TEAL — Premium card/button polish
+   ══════════════════════════════════════════════════ */
+.theme-teal .teal-card {
+  background: linear-gradient(160deg, #0E3636 0%, #0A2A2A 100%);
+  border: 1px solid rgba(23,162,184,0.18);
+  box-shadow: 0 12px 30px -16px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.theme-teal .teal-glow {
+  box-shadow: 0 8px 24px -8px rgba(23,162,184,0.55), 0 0 0 1px rgba(23,162,184,0.35);
+}
+
+/* ══════════════════════════════════════════════════
    BASE
    ══════════════════════════════════════════════════ */
 @layer base {
@@ -313,3 +356,30 @@
 }
 .animate-cart-bounce { animation: cart-bounce 0.5s cubic-bezier(.2,1.5,.3,1) both; }
 
+
+/* Splash logo animation */
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--color-primary); }
+  50%      { transform: scale(1.06); box-shadow: 0 0 0 18px rgba(0,0,0,0); }
+}
+@keyframes splash-ring {
+  0%   { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.animate-splash-pulse { animation: splash-pulse 1.6s ease-in-out infinite; }
+.animate-splash-ring  { animation: splash-ring 1.6s ease-out infinite; }
+
+/* Cart item enter */
+@keyframes cart-item-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-cart-item-in { animation: cart-item-in 0.3s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Heart pop */
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+.animate-heart-pop { animation: heart-pop 0.4s cubic-bezier(.2,1.5,.3,1) both; }

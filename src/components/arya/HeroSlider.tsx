@@ -145,19 +145,21 @@ export function HeroSlider() {
       <div className="absolute top-3.5 right-3.5 z-10 flex gap-1.5">
         {slides.map((_, i) => (
           <button key={i} onClick={() => setIdx(i)}
-            className={cn("h-1.5 rounded-full transition-all duration-300",
-              i === idx ? "w-6 bg-white" : "w-1.5 bg-white/40")}
+            className={cn("h-1.5 rounded-full transition-all duration-300 backdrop-blur-sm",
+              i === idx ? "w-7 bg-white shadow" : "w-1.5 bg-white/45 hover:bg-white/70")}
             aria-label={`Go to slide ${i + 1}`} />
         ))}
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 z-10" onClick={handleDetail}>
         {slide.subtitle && !slide.subtitle.includes("New Release") && (
-          <p className="text-white/75 text-[11px] font-semibold uppercase tracking-wider mb-1.5">{slide.subtitle}</p>
+          <p className="text-white/75 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.18em] mb-1.5 line-clamp-1">{slide.subtitle}</p>
         )}
         <div className={cn(
           "font-display leading-tight text-white drop-shadow-md line-clamp-2",
-          theme === "cream" ? "text-2xl font-extrabold tracking-tight" : "text-xl font-bold"
+          theme === "cream" ? "text-[20px] sm:text-2xl font-extrabold tracking-tight"
+            : theme === "teal" ? "text-[19px] sm:text-2xl font-bold tracking-tight"
+            : "text-[18px] sm:text-xl font-bold"
         )}>
           {slide.title}
         </div>

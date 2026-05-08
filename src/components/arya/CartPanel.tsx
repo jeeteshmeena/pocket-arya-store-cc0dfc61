@@ -36,7 +36,7 @@ export function CartPanel() {
             <div className={cn("text-center text-sm pt-20 font-semibold", useApp().theme === "cream" ? "text-black/60" : "text-muted-foreground")}>Your cart is empty</div>
           )}
           {cart.map((s) => (
-            <div key={s.id} className={cn("flex gap-3 p-2 relative", useApp().theme === "cream" ? "neo-card bg-white" : "rounded-xl bg-surface")}>
+            <div key={s.id} className={cn("flex gap-3 p-2 relative animate-cart-item-in", useApp().theme === "cream" ? "neo-card bg-white" : "rounded-xl bg-surface")}>
               <button
                 onClick={() => openDetail(s.id)}
                 className="flex flex-1 min-w-0 gap-3 text-left active:scale-[0.99] transition"

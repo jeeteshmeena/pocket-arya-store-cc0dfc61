@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Story } from "@/lib/data";
 import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
 
-type Theme = "default" | "dark" | "teal" | "cream" | "mint";
+type Theme = "default" | "dark" | "teal" | "cream" | "mint" | "romantic";
 type View =
   | { name: "home" }
   | { name: "explore" }
@@ -41,6 +41,11 @@ type Ctx = {
   // Library (delivered after bot confirms — kept locally for now)
   purchased: Story[];
   purchase: (items: Story[]) => void;
+
+  // Wishlist — "Want to Listen"
+  wishlist: Story[];
+  toggleWishlist: (s: Story) => void;
+  inWishlist: (id: string) => boolean;
 
   // UI
   cartOpen: boolean;
@@ -103,6 +108,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("arya_cart", JSON.stringify(cart));
   }, [cart]);
   const [purchased, setPurchased] = useState<Story[]>([]);
+  const [wishlist, setWishlist] = useState<Story[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem("arya_wishlist");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+  useEffect(() => {
+    localStorage.setItem("arya_wishlist", JSON.stringify(wishlist));
+  }, [wishlist]);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [history, setHistory] = useState<View[]>([{ name: "home" }]);
@@ -111,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("theme-dark", "theme-teal", "theme-cream", "theme-mint");
+    root.classList.remove("theme-dark", "theme-teal", "theme-cream", "theme-mint", "theme-romantic");
     if (theme !== "default") root.classList.add(`theme-${theme}`);
     localStorage.setItem("arya_theme", theme);
   }, [theme]);
@@ -202,6 +218,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const ids = new Set(p.map((x) => x.id));
       return [...p, ...items.filter((i) => !ids.has(i.id))];
     }),
+    wishlist,
+    toggleWishlist: (s) => setWishlist((w) =>
+      w.find((x) => x.id === s.id) ? w.filter((x) => x.id !== s.id) : [...w, s]
+    ),
+    inWishlist: (id) => wishlist.some((x) => x.id === id),
     cartOpen, setCartOpen,
     searchOpen, setSearchOpen,
     view,
@@ -227,7 +248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     deepLinkError,
     clearDeepLinkError: () => setDeepLinkError(null),
-  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
+  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, wishlist, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }

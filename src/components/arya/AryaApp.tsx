@@ -11,9 +11,10 @@ import { DetailView } from "./views/DetailView";
 import { CheckoutView } from "./views/CheckoutView";
 import { TermsOnboarding } from "./TermsOnboarding";
 import { DeepLinkErrorDialog } from "./DeepLinkErrorDialog";
+import { Splash } from "./Splash";
 
 function Shell() {
-  const { view } = useApp();
+  const { view, storiesLoading } = useApp();
   return (
     // Fixed-height container — prevents page scroll, enables app-like behavior
     <div className="fixed inset-0 bg-background text-foreground flex flex-col overflow-hidden">
@@ -47,6 +48,7 @@ function Shell() {
       <CartPanel />
       <TermsOnboarding />
       <DeepLinkErrorDialog />
+      {storiesLoading && <Splash />}
     </div>
   );
 }

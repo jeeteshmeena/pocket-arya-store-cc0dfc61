@@ -1,6 +1,6 @@
 import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
-import { Plus, Check, ShoppingCart } from "lucide-react";
+import { Plus, Check, ShoppingCart, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useState, useLayoutEffect } from "react";
 import { flyToCart } from "@/lib/fly-to-cart";
@@ -24,8 +24,9 @@ function getGenre(genre?: string) {
   return { bg: key ? GENRE_COLORS[key] : "#F3F4F6", text: key ? GENRE_TEXT[key] : "#374151" };
 }
 
-export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
-  const { addToCart, cart, navigate, theme } = useApp();
+export function StoryCard({ story, wide, square }: { story: Story; wide?: boolean; square?: boolean }) {
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist } = useApp();
+  const liked = inWishlist(story.id);
   const inCart = cart.some((x) => x.id === story.id);
   const imgRef = useRef<HTMLImageElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -66,7 +67,7 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
         ref={cardRef}
         className={cn(
           "shrink-0 cursor-pointer transition-transform duration-200 active:scale-[0.98] select-none",
-          wide ? "w-44" : "w-40" // Make wide just slightly wider than normal
+          square ? "w-full" : wide ? "w-44" : "w-40"
         )}
         style={{ WebkitTouchCallout: "none" }}
         onContextMenu={(e) => e.preventDefault()}
@@ -83,8 +84,10 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
       >
         <div className={cn(
           "relative overflow-hidden bg-muted",
-          theme === "cream" ? "neo-card" : "shadow-sm rounded-2xl",
-          wide ? "aspect-[4/5]" : "aspect-square" // Taller aspect ratio for wide/trending cards
+          theme === "cream" ? "neo-card" :
+          theme === "teal" ? "rounded-2xl ring-1 ring-white/5 shadow-[0_10px_28px_-12px_rgba(0,0,0,0.55)]" :
+          "shadow-sm rounded-2xl",
+          square ? "aspect-square" : wide ? "aspect-[4/5]" : "aspect-square"
         )}>
           {hasImage ? (
             <img ref={imgRef} src={poster!} alt={story.title}
@@ -97,21 +100,32 @@ export function StoryCard({ story, wide }: { story: Story; wide?: boolean }) {
             </div>
           )}
 
-          {typeof story.isCompleted === "boolean" && (
-            <div className="absolute top-2 left-2 z-10">
-              <StatusBadge isCompleted={!!story.isCompleted} />
-            </div>
-          )}
+          {/* Wishlist heart */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              haptics.light();
+              toggleWishlist(story);
+            }}
+            aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
+            className={cn(
+              "absolute top-2 left-2 h-8 w-8 rounded-full grid place-items-center backdrop-blur-md transition-all active:scale-90",
+              liked ? "bg-rose-500/95 text-white animate-heart-pop" : "bg-black/30 text-white/90 hover:bg-black/50"
+            )}
+          >
+            <Heart className="h-4 w-4" fill={liked ? "currentColor" : "none"} strokeWidth={2.2} />
+          </button>
 
           <button
             onClick={handleAdd}
             className={cn(
               "absolute bottom-2 right-2 h-[34px] w-[34px] rounded-full grid place-items-center shadow-md transition-all active:scale-[0.85]",
-              "bg-foreground text-background hover:scale-105"
+              theme === "teal" ? "bg-primary text-primary-foreground hover:scale-105"
+              : "bg-foreground text-background hover:scale-105"
             )}
             aria-label={inCart ? "In cart" : "Add to cart"}
           >
-            {inCart ? <Check className="h-4 w-4" /> : <Plus className="h-[18px] w-[18px]" />}
+            {inCart ? <Check className="h-4 w-4" /> : <Plus className="h-[18px] w-[18px] " />}
           </button>
         </div>
 
