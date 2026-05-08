@@ -18,5 +18,9 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      input: path.resolve(__dirname, "app.html"),
+    },
   },
 });
+

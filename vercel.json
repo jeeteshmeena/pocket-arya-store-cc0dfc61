@@ -2,18 +2,15 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": null,
-  "cleanUrls": false,
-  "trailingSlash": false,
-  "routes": [
-    { "src": "/api/(.*)", "dest": "http://158.101.4.188/api/$1" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
-    { "src": "/aryaPremium(.*)", "dest": "/index.html" },
-    { "src": "/terms",    "dest": "/terms.html" },
-    { "src": "/privacy",  "dest": "/privacy.html" },
-    { "src": "/refund",   "dest": "/refund.html" },
-    { "src": "/shipping", "dest": "/shipping.html" },
-    { "src": "/contact",  "dest": "/contact.html" },
-    { "src": "/(.*)\\.(.+)", "dest": "/$1.$2" },
-    { "src": "/", "dest": "/landing.html" }
+  "rewrites": [
+    { "source": "/api/:path*",  "destination": "http://158.101.4.188/api/:path*" },
+    { "source": "/aryaPremium", "destination": "/app.html" },
+    { "source": "/aryaPremium/:path*", "destination": "/app.html" },
+    { "source": "/terms",    "destination": "/terms.html" },
+    { "source": "/privacy",  "destination": "/privacy.html" },
+    { "source": "/refund",   "destination": "/refund.html" },
+    { "source": "/shipping", "destination": "/shipping.html" },
+    { "source": "/contact",  "destination": "/contact.html" },
+    { "source": "/",         "destination": "/landing.html" }
   ]
 }
