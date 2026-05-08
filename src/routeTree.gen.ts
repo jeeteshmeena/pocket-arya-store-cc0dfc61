@@ -9,8 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AryaPremiumRouteImport } from './routes/aryaPremium'
 import { Route as IndexRouteImport } from './routes/index'
 
+const AryaPremiumRoute = AryaPremiumRouteImport.update({
+  id: '/aryaPremium',
+  path: '/aryaPremium',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +25,39 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aryaPremium': typeof AryaPremiumRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aryaPremium': typeof AryaPremiumRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/aryaPremium': typeof AryaPremiumRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/aryaPremium'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/aryaPremium'
+  id: '__root__' | '/' | '/aryaPremium'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AryaPremiumRoute: typeof AryaPremiumRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/aryaPremium': {
+      id: '/aryaPremium'
+      path: '/aryaPremium'
+      fullPath: '/aryaPremium'
+      preLoaderRoute: typeof AryaPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AryaPremiumRoute: AryaPremiumRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
