@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AryaPremiumRouteImport } from './routes/aryaPremium'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -17,26 +18,36 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 
+const AryaPremiumRoute = AryaPremiumRouteImport.update({
+  id: '/aryaPremium',
+  path: '/aryaPremium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aryaPremium': typeof AryaPremiumRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aryaPremium': typeof AryaPremiumRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/aryaPremium': typeof AryaPremiumRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/aryaPremium'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/aryaPremium'
+  id: '__root__' | '/' | '/aryaPremium'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AryaPremiumRoute: typeof AryaPremiumRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +59,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aryaPremium': {
+      id: '/aryaPremium'
+      path: '/aryaPremium'
+      fullPath: '/aryaPremium'
+      preLoaderRoute: typeof AryaPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AryaPremiumRoute: AryaPremiumRoute,
 }
+
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
