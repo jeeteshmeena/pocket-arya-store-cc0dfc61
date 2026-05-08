@@ -2,7 +2,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
-type ThemeId = "default" | "dark" | "teal" | "cream" | "mint";
+type ThemeId = "default" | "dark" | "teal" | "cream" | "mint" | "romantic";
 
 type ThemePreset = {
   id: ThemeId;
@@ -51,6 +51,13 @@ const THEMES: ThemePreset[] = [
     desc: "Sky canvas · Mint CTA",
     font: "Plus Jakarta",
     canvas: "#DCE7F2", card: "#FFFFFF", ink: "#0B1220", accent: "#4FE3A1",
+  },
+  {
+    id: "romantic",
+    title: "Romantic",
+    desc: "Blush rose · Serif elegance",
+    font: "Fraunces",
+    canvas: "#FFF1F2", card: "#FFFFFF", ink: "#4A1D2C", accent: "#D6336C",
   },
 ];
 
