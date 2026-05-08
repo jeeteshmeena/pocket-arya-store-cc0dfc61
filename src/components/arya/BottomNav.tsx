@@ -101,7 +101,57 @@ function TealNav({ current, onNav }: { current: string; onNav: (id: string) => v
   );
 }
 
-// ── PILL — Floating glass pill nav (Cream, Mint, Dark, Romantic) ──
+// ── MINT — Soft floating dock with leaf-curve indicator (unique) ──
+function MintNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  return (
+    <nav
+      className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
+      style={{ bottom: "max(env(safe-area-inset-bottom), 14px)" }}
+    >
+      <div
+        className="pointer-events-auto mx-4 px-2 py-2 flex items-center gap-1 rounded-[32px]"
+        style={{
+          background: "linear-gradient(180deg, #FFFFFF 0%, #F4FBF8 100%)",
+          border: "1px solid #DCEEE5",
+          boxShadow: "0 18px 44px -16px rgba(31,191,122,0.35), 0 2px 8px rgba(11,31,42,0.06), inset 0 1px 0 #FFFFFF",
+        }}
+      >
+        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+          const active = current === id;
+          return (
+            <button
+              key={id}
+              onClick={() => onNav(id)}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative h-12 flex items-center justify-center transition-all duration-300 active:scale-90",
+                active ? "px-4 gap-2" : "w-12"
+              )}
+              style={
+                active
+                  ? {
+                      background: "linear-gradient(135deg, #1FBF7A 0%, #16A86A 100%)",
+                      color: "#FFFFFF",
+                      borderRadius: "20px",
+                      boxShadow: "0 8px 18px -6px rgba(31,191,122,0.55), inset 0 1px 0 rgba(255,255,255,0.25)",
+                    }
+                  : { color: "#5A6B7B" }
+              }
+            >
+              <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.6 : 1.9} />
+              {active && (
+                <span className="text-[12px] font-bold tracking-tight whitespace-nowrap">{label}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+// ── PILL — Floating glass pill nav (Cream, Dark, Romantic) ──
 function PillNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
   const { theme } = useApp();
   const isCream = theme === "cream";
@@ -120,9 +170,16 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
           : isDark
             ? "rounded-2xl bg-surface/80 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
             : isRomantic
-              ? "rounded-[26px] bg-white/85 backdrop-blur-xl border border-rose-100 shadow-[0_18px_48px_-12px_rgba(214,51,108,0.35)]"
+              ? "rounded-[26px] border"
               : "rounded-2xl bg-surface/90 backdrop-blur-xl border border-border shadow-[0_12px_40px_-12px_rgba(0,0,0,0.25)]"
-      )}>
+      )}
+        style={isRomantic ? {
+          background: "linear-gradient(160deg, rgba(58,20,36,0.92) 0%, rgba(31,9,19,0.92) 100%)",
+          backdropFilter: "blur(20px)",
+          borderColor: "rgba(232,93,138,0.35)",
+          boxShadow: "0 18px 48px -12px rgba(0,0,0,0.6), 0 0 30px -10px rgba(232,93,138,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
+        } : undefined}
+      >
         {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
           const active = current === id;
           return (
@@ -136,11 +193,17 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
                 active
                   ? (isCream ? "neo-button bg-secondary text-secondary-foreground px-4 shadow-[2px_2px_0px_#000]"
                      : isDark ? "rounded-xl bg-white text-black px-4 shadow-lg"
-                     : isRomantic ? "rounded-2xl bg-primary text-primary-foreground px-4 shadow-md"
+                     : isRomantic ? "rounded-2xl px-4"
                      : "rounded-xl bg-primary text-primary-foreground px-4 shadow-md")
                   : (isCream ? "rounded-xl w-12 justify-center text-foreground hover:bg-muted"
+                     : isRomantic ? "rounded-xl w-12 justify-center text-rose-100/60 hover:text-rose-100"
                      : "rounded-xl w-12 justify-center text-muted-foreground hover:text-foreground")
               )}
+              style={active && isRomantic ? {
+                background: "linear-gradient(135deg, #E85D8A 0%, #C4456E 100%)",
+                color: "#FFFFFF",
+                boxShadow: "0 8px 20px -6px rgba(232,93,138,0.6), inset 0 1px 0 rgba(255,255,255,0.2)",
+              } : undefined}
             >
               <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.5 : 1.8} />
               {active && (
@@ -167,6 +230,7 @@ export function BottomNav() {
   };
 
   if (theme === "teal") return <TealNav current={current} onNav={onNav} />;
-  if (theme === "cream" || theme === "mint" || theme === "dark" || theme === "romantic") return <PillNav current={current} onNav={onNav} />;
+  if (theme === "mint") return <MintNav current={current} onNav={onNav} />;
+  if (theme === "cream" || theme === "dark" || theme === "romantic") return <PillNav current={current} onNav={onNav} />;
   return <DefaultNav current={current} onNav={onNav} />;
 }
