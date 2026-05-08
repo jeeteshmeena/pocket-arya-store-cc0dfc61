@@ -1,25 +1,22 @@
 import { HeroSlider } from "../HeroSlider";
 import { Row } from "../Row";
 import { useApp } from "@/store/app-store";
-import { Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export function HomeView() {
-  const { purchased, stories, storiesLoading, storiesError, reloadStories } = useApp();
+  const { purchased, stories, storiesLoading, storiesError, reloadStories, theme } = useApp();
 
   if (storiesLoading) {
     return (
       <div className="animate-fade-in px-4 pt-4 space-y-8">
-        {/* Hero Skeleton */}
-        <div className="h-48 w-full rounded-2xl bg-muted animate-pulse"></div>
-        
-        {/* Rows Skeleton */}
+        <div className="h-48 w-full rounded-2xl bg-muted animate-pulse" />
         {[1, 2, 3].map(i => (
           <div key={i} className="space-y-3">
-            <div className="h-6 w-32 rounded bg-muted animate-pulse"></div>
+            <div className="h-5 w-28 rounded bg-muted animate-pulse" />
             <div className="flex gap-3 overflow-hidden">
-              <div className="h-40 w-40 shrink-0 rounded-2xl bg-muted animate-pulse"></div>
-              <div className="h-40 w-40 shrink-0 rounded-2xl bg-muted animate-pulse"></div>
-              <div className="h-40 w-40 shrink-0 rounded-2xl bg-muted animate-pulse"></div>
+              {[1, 2, 3].map(j => (
+                <div key={j} className="h-40 w-40 shrink-0 rounded-xl bg-muted animate-pulse" />
+              ))}
             </div>
           </div>
         ))}
@@ -42,18 +39,33 @@ export function HomeView() {
     );
   }
 
-  // Extract dynamic categories (genres) from available stories
+  // ── Real trending: sort by purchase_count / downloads desc ──
+  const trending = [...stories]
+    .sort((a, b) => {
+      const ca = (a as any).purchase_count ?? (a as any).downloads ?? 0;
+      const cb = (b as any).purchase_count ?? (b as any).downloads ?? 0;
+      return cb - ca;
+    })
+    .slice(0, 8);
+
+  // ── Real new releases: sort by created_at / uploaded_at desc ──
+  const newReleases = [...stories]
+    .sort((a, b) => {
+      const da = (a as any).created_at ?? (a as any).uploaded_at ?? "";
+      const db = (b as any).created_at ?? (b as any).uploaded_at ?? "";
+      return db > da ? 1 : db < da ? -1 : 0;
+    })
+    .slice(0, 8);
+
+  // ── Dynamic genre rows ──
   const genres = Array.from(new Set(stories.map((s) => s.genre).filter(Boolean))).sort();
-  const { theme } = useApp();
 
   return (
     <div className="animate-fade-in pb-20">
       <HeroSlider />
       {purchased.length > 0 && <Row title="Continue" stories={purchased} />}
-      <Row title="Trending Now" stories={stories.slice(0, 6)} wide />
-      <Row title={theme === "cream" ? "New & Noteworthy" : "New Releases"} stories={[...stories].reverse().slice(0, 6)} />
-      
-      {/* Dynamic Categories */}
+      <Row title="Trending Now" stories={trending} wide />
+      <Row title={theme === "cream" ? "New & Noteworthy" : "New Releases"} stories={newReleases} />
       {genres.map(g => (
         <Row key={g} title={g} stories={stories.filter((s) => s.genre === g)} />
       ))}
