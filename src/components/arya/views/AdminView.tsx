@@ -7,9 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function AdminView() {
   const { back, tgUser, theme } = useApp();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "stories">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "stories" | "banners" | "buyers" | "support">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [stories, setStories] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [buyers, setBuyers] = useState<any[]>([]);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,6 +21,10 @@ export function AdminView() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
   const [editingStory, setEditingStory] = useState<any>(null);
+
+  // Banner Form State
+  const [isBannerFormOpen, setIsBannerFormOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<any>(null);
 
   useEffect(() => {
     if (!tgUser.telegram_id) {
@@ -30,12 +38,20 @@ export function AdminView() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statsData, storiesData] = await Promise.all([
+      const [statsData, storiesData, bannersData, buyersData, supportData, analyticsData] = await Promise.all([
         fetchAdminStats(tgUser),
-        fetchAdminStories(tgUser)
+        fetchAdminStories(tgUser),
+        fetchAdminBanners(tgUser),
+        fetchAdminBuyers(tgUser),
+        fetchAdminSupport(tgUser),
+        fetchAnalytics(tgUser)
       ]);
       setStats(statsData);
       setStories(storiesData);
+      setBanners(bannersData);
+      setBuyers(buyersData);
+      setSupportTickets(supportData);
+      setAnalytics(analyticsData);
       setError(null);
     } catch (err: any) {
       setError(err.message || "Failed to load admin data.");
@@ -54,6 +70,16 @@ export function AdminView() {
     }
   };
 
+  const handleDeleteBanner = async (bannerId: string) => {
+    if (!confirm("Delete this banner?")) return;
+    try {
+      await deleteAdminBanner(tgUser, bannerId);
+      setBanners(banners.filter(b => b.id !== bannerId));
+    } catch (err: any) {
+      alert("Failed to delete: " + err.message);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormSaving(true);
@@ -65,6 +91,32 @@ export function AdminView() {
       alert("Failed to save: " + err.message);
     } finally {
       setFormSaving(false);
+    }
+  };
+
+  const handleSaveBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSaving(true);
+    try {
+      await saveAdminBanner(tgUser, editingBanner);
+      await loadData();
+      setIsBannerFormOpen(false);
+    } catch (err: any) {
+      alert("Failed to save banner: " + err.message);
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  const handleReplySupport = async (ticketId: string) => {
+    const reply = prompt("Enter your reply to the user:");
+    if (!reply) return;
+    try {
+      await replyAdminSupport(tgUser, ticketId, reply);
+      setSupportTickets(supportTickets.filter(t => t.id !== ticketId));
+      alert("Reply sent!");
+    } catch (err: any) {
+      alert("Failed to send reply: " + err.message);
     }
   };
 
@@ -130,27 +182,20 @@ export function AdminView() {
             Admin Panel
           </h1>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={cn("flex-1 py-2 text-sm font-semibold rounded-xl transition", 
-              activeTab === "dashboard" 
-                ? (theme === "cream" ? "bg-black text-white" : "bg-primary text-primary-foreground") 
-                : (theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-surface text-muted-foreground")
-            )}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab("stories")}
-            className={cn("flex-1 py-2 text-sm font-semibold rounded-xl transition", 
-              activeTab === "stories" 
-                ? (theme === "cream" ? "bg-black text-white" : "bg-primary text-primary-foreground") 
-                : (theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-surface text-muted-foreground")
-            )}
-          >
-            Manage Stories
-          </button>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          {["dashboard", "stories", "banners", "buyers", "support"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={cn("whitespace-nowrap px-4 py-2 text-sm font-semibold rounded-xl transition", 
+                activeTab === tab 
+                  ? (theme === "cream" ? "bg-black text-white" : "bg-primary text-primary-foreground") 
+                  : (theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-surface text-muted-foreground")
+              )}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -217,6 +262,39 @@ export function AdminView() {
                     )}
                   </div>
                 </div>
+
+                {/* Live Analytics */}
+                <div className={cn("p-4 rounded-2xl", theme === "cream" ? "bg-white border-2 border-black shadow-[4px_4px_0px_#000]" : "bg-surface")}>
+                  <h2 className={cn("font-bold text-lg mb-4 flex items-center gap-2", theme === "cream" ? "text-black" : "")}>
+                    <Activity className="h-5 w-5" /> Live Analytics
+                  </h2>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xs font-bold text-primary uppercase tracking-wider mb-3">Recent Searches</h3>
+                      <div className="space-y-2">
+                        {analytics?.recent_searches?.length > 0 ? analytics.recent_searches.map((s: any, i: number) => (
+                          <div key={i} className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-foreground/80">"{s.query}"</span>
+                            <span className="text-xs text-muted-foreground">{new Date(s.time).toLocaleTimeString()}</span>
+                          </div>
+                        )) : <div className="text-xs text-muted-foreground">No recent searches</div>}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-xs font-bold text-primary uppercase tracking-wider mb-3">Recent Story Views</h3>
+                      <div className="space-y-2">
+                        {analytics?.recent_views?.length > 0 ? analytics.recent_views.map((v: any, i: number) => (
+                          <div key={i} className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-foreground/80 truncate pr-2">{v.story_id}</span>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">{new Date(v.time).toLocaleTimeString()}</span>
+                          </div>
+                        )) : <div className="text-xs text-muted-foreground">No recent views</div>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -255,18 +333,84 @@ export function AdminView() {
                   ))}
                 </div>
               </div>
+            {activeTab === "banners" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <button
+                  onClick={() => { setEditingBanner({ id: "new", image_url: "", target_link: "", order: banners.length }); setIsBannerFormOpen(true); }}
+                  className={cn("w-full py-3 flex justify-center items-center gap-2 font-bold rounded-xl transition active:scale-[0.98]", theme === "cream" ? "bg-[#c4a980] text-black border-2 border-black shadow-[4px_4px_0px_#000]" : "bg-primary text-primary-foreground")}
+                >
+                  <Plus className="h-5 w-5" /> Add New Banner
+                </button>
+                <div className="space-y-3">
+                  {banners.map(banner => (
+                    <div key={banner.id} className={cn("p-3 rounded-xl flex gap-3 items-center", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
+                      <img src={banner.image_url} alt="Banner" className="w-20 h-12 object-cover rounded-md bg-muted" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-muted-foreground truncate">{banner.target_link}</div>
+                        <div className="text-xs font-bold text-primary">Order: {banner.order}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { setEditingBanner(banner); setIsBannerFormOpen(true); }} className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20"><Edit className="h-4 w-4" /></button>
+                        <button onClick={() => handleDeleteBanner(banner.id)} className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "buyers" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h2 className={cn("font-bold text-xl mb-4", theme === "cream" ? "text-black" : "")}>Recent Buyers</h2>
+                <div className="space-y-3">
+                  {buyers.map((buyer, i) => (
+                    <div key={i} className={cn("p-4 rounded-xl flex justify-between items-center text-sm", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
+                      <div>
+                        <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>{buyer.username}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{new Date(buyer.date).toLocaleString()}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-500">₹{buyer.amount}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground">{buyer.status}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "support" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h2 className={cn("font-bold text-xl mb-4", theme === "cream" ? "text-black" : "")}>Open Support Tickets</h2>
+                <div className="space-y-3">
+                  {supportTickets.length === 0 ? (
+                    <div className="text-center p-8 text-muted-foreground bg-surface rounded-xl">No open tickets.</div>
+                  ) : supportTickets.map(ticket => (
+                    <div key={ticket.id} className={cn("p-4 rounded-xl", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>{ticket.username}</div>
+                          <div className="text-[10px] text-muted-foreground">{new Date(ticket.date).toLocaleString()}</div>
+                        </div>
+                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase font-bold">{ticket.type}</span>
+                      </div>
+                      <p className="text-sm mt-2 mb-4 text-foreground/80 bg-background/50 p-3 rounded-lg border border-border/50">{ticket.text}</p>
+                      <button onClick={() => handleReplySupport(ticket.id)} className="w-full py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg">Reply to User</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </>
         )}
       </div>
 
-      {/* Story Form Modal */}
       {isFormOpen && editingStory && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
           <div className={cn("w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-6", theme === "cream" ? "bg-[#f8f5f0] border-2 border-black shadow-[8px_8px_0px_#000]" : "bg-surface border border-border")}>
             <div className="flex justify-between items-center mb-6 sticky top-0 bg-inherit py-2 z-10 border-b border-border/50">
               <h2 className={cn("text-xl font-bold", theme === "cream" ? "text-black" : "")}>
-                {editingStory.story_id.startsWith("story_") ? "Add Story" : "Edit Story"}
+                {(editingStory?.story_id || "").startsWith("story_") ? "Add Story" : "Edit Story"}
               </h2>
               <button onClick={() => setIsFormOpen(false)} className="p-2 rounded-full bg-muted/50 text-muted-foreground">
                 <X className="h-5 w-5" />
@@ -279,7 +423,7 @@ export function AdminView() {
                 <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Basic Details</h3>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Story ID</label>
-                  <input required type="text" value={editingStory.story_id} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} disabled={!editingStory.story_id.startsWith("story_")} />
+                  <input required type="text" value={editingStory.story_id || ""} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} disabled={!(editingStory?.story_id || "").startsWith("story_")} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -387,6 +531,40 @@ export function AdminView() {
 
               <button disabled={formSaving} type="submit" className={cn("w-full mt-6 py-4 font-bold text-lg rounded-xl transition", theme === "cream" ? "bg-black text-white shadow-[4px_4px_0px_#555] active:translate-y-1 active:shadow-none" : "bg-primary text-primary-foreground")}>
                 {formSaving ? "Saving..." : "Save Complete Story"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Form Modal */}
+      {isBannerFormOpen && editingBanner && (
+        <div className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className={cn("w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-6", theme === "cream" ? "bg-[#f8f5f0] border-2 border-black shadow-[8px_8px_0px_#000]" : "bg-surface border border-border")}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className={cn("text-xl font-bold", theme === "cream" ? "text-black" : "")}>
+                {editingBanner.id === "new" ? "Add Banner" : "Edit Banner"}
+              </h2>
+              <button onClick={() => setIsBannerFormOpen(false)} className="p-2 rounded-full bg-muted/50 text-muted-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveBanner} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Image URL</label>
+                <input required type="url" value={editingBanner.image_url} onChange={e => setEditingBanner({...editingBanner, image_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://catbox.moe/..." />
+                {editingBanner.image_url && <img src={editingBanner.image_url} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl" />}
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Target Link</label>
+                <input required type="text" value={editingBanner.target_link} onChange={e => setEditingBanner({...editingBanner, target_link: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="/story/jjk_hindi" />
+              </div>
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Sort Order</label>
+                <input required type="number" value={editingBanner.order} onChange={e => setEditingBanner({...editingBanner, order: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+              </div>
+              <button disabled={formSaving} type="submit" className={cn("w-full mt-6 py-4 font-bold text-lg rounded-xl transition", theme === "cream" ? "bg-black text-white shadow-[4px_4px_0px_#555] active:translate-y-1 active:shadow-none" : "bg-primary text-primary-foreground")}>
+                {formSaving ? "Saving..." : "Save Banner"}
               </button>
             </form>
           </div>

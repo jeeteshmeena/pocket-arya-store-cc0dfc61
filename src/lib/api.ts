@@ -74,6 +74,44 @@ export async function deleteAdminStory(identity: TelegramIdentity, storyId: stri
   await request<any>(`/admin/story/${storyId}?telegram_id=${identity.telegram_id}`, { method: "DELETE" });
 }
 
+export async function fetchAdminBanners(identity: TelegramIdentity): Promise<any[]> {
+  const res = await request<any>(`/admin/banners?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data;
+}
+
+export async function saveAdminBanner(identity: TelegramIdentity, data: any): Promise<void> {
+  await request<any>("/admin/banner", {
+    method: "POST",
+    body: JSON.stringify({ ...data, telegram_id: String(identity.telegram_id) }),
+  });
+}
+
+export async function deleteAdminBanner(identity: TelegramIdentity, bannerId: string): Promise<void> {
+  await request<any>(`/admin/banner?telegram_id=${identity.telegram_id}&banner_id=${bannerId}`, { method: "DELETE" });
+}
+
+export async function fetchAdminBuyers(identity: TelegramIdentity): Promise<any[]> {
+  const res = await request<any>(`/admin/buyers?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data;
+}
+
+export async function fetchAdminSupport(identity: TelegramIdentity): Promise<any[]> {
+  const res = await request<any>(`/admin/support?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data;
+}
+
+export async function replyAdminSupport(identity: TelegramIdentity, ticketId: string, replyText: string): Promise<void> {
+  await request<any>("/admin/support/reply", {
+    method: "POST",
+    body: JSON.stringify({ telegram_id: String(identity.telegram_id), ticket_id: ticketId, reply_text: replyText }),
+  });
+}
+
+export async function fetchAnalytics(identity: TelegramIdentity): Promise<any> {
+  const res = await request<any>(`/admin/analytics?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data;
+}
+
 export async function checkoutCart(
   storyIds: string[],
   identity: TelegramIdentity,
