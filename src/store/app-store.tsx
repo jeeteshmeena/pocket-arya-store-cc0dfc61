@@ -129,6 +129,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [deepLinkError, setDeepLinkError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (tgUser.telegram_id) {
+      import("@/lib/api").then(({ fetchMyPurchases }) => {
+        fetchMyPurchases(tgUser.telegram_id!).then((items) => {
+          // Map to Story array so length and access works properly
+          setPurchased(items.map(i => ({
+            id: i.story_id,
+            title: i.title,
+            poster: i.poster,
+            price: i.price,
+            platform: i.platform,
+            genre: i.genre,
+            isCompleted: i.isCompleted,
+            episodes: i.episodes,
+          } as unknown as Story)));
+        });
+      });
+    }
+  }, [tgUser.telegram_id]);
+
+  useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("theme-dark", "theme-teal", "theme-cream", "theme-mint", "theme-romantic");
     if (theme !== "default") root.classList.add(`theme-${theme}`);

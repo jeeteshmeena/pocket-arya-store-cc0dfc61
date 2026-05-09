@@ -124,7 +124,9 @@ export async function submitSupport(data: {
   file?: File | null;
 }): Promise<{ success: boolean; message: string }> {
   const formData = new FormData();
-  if (data.telegram_id) formData.append("telegram_id", data.telegram_id.toString());
+  if (data.telegram_id != null) formData.append("telegram_id", data.telegram_id.toString());
+  else formData.append("telegram_id", "0");
+  
   if (data.username) formData.append("username", data.username);
   if (data.first_name) formData.append("first_name", data.first_name);
   formData.append("type", data.type);
@@ -145,6 +147,19 @@ export async function submitSupport(data: {
     throw new Error(json.message || "API returned an error");
   }
   return json as { success: boolean; message: string };
+}
+
+export async function fetchMyRequests(telegramId: number): Promise<{
+  id: string; type: string; text: string; status: string; created_at: string;
+}[]> {
+  try {
+    const res = await fetch(`/api/my-requests?telegram_id=${telegramId}`);
+    if (!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j.data) ? j.data : [];
+  } catch {
+    return [];
+  }
 }
 
 export function openTelegramLink(url: string) {

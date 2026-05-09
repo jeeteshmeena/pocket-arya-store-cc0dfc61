@@ -116,7 +116,11 @@ export function SupportView() {
             </button>
 
             <button
-              onClick={() => setSupportMode("chat")}
+              onClick={() => {
+                import("@/lib/api").then(({ openTelegramLink }) => {
+                  openTelegramLink("https://t.me/AryaPremiumSupport");
+                });
+              }}
               className={cn(
                 "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
                 theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30 shadow-sm" : "bg-surface border-border/60 hover:bg-muted/30"
