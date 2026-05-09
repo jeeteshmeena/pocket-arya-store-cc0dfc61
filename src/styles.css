@@ -1,5 +1,5 @@
 /* Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Fraunces:wght@500;600;700;800&family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800;900&family=Fraunces:wght@500;600;700;800&family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pinyon+Script&display=swap");
 
 @import "tailwindcss" source(none);
 @source "../src";
@@ -218,8 +218,9 @@
    ══════════════════════════════════════════════════ */
 .theme-romantic {
   --radius: 1.25rem;
-  --font-sans:    "Fraunces", "DM Serif Display", serif;
-  --font-display: "DM Serif Display", "Fraunces", serif;
+  --font-sans:    "Cormorant Garamond", "Fraunces", serif;
+  --font-display: "DM Serif Display", "Cormorant Garamond", serif;
+  --font-script:  "Pinyon Script", "DM Serif Display", cursive;
 
   --background:           #1A0810;
   --foreground:           #FBE9EE;
@@ -255,6 +256,113 @@
     radial-gradient(circle at 20% 0%, rgba(232,93,138,0.18) 0%, transparent 45%),
     radial-gradient(circle at 80% 100%, rgba(244,166,189,0.12) 0%, transparent 50%);
 }
+
+/* ── Romantic decorative graphics ──────────────────── */
+.romantic-decor {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+.romantic-decor .heart,
+.romantic-decor .petal,
+.romantic-decor .sparkle {
+  position: absolute;
+  will-change: transform, opacity;
+  opacity: 0;
+  animation: romantic-float linear infinite;
+}
+.romantic-decor .heart {
+  color: #E85D8A;
+  filter: drop-shadow(0 0 8px rgba(232,93,138,0.55));
+}
+.romantic-decor .petal {
+  color: #F4A6BD;
+  filter: drop-shadow(0 0 6px rgba(244,166,189,0.4));
+  animation-name: romantic-petal;
+}
+.romantic-decor .sparkle {
+  color: #FFD7E3;
+  filter: drop-shadow(0 0 6px rgba(255,215,227,0.7));
+  animation-name: romantic-twinkle;
+}
+@keyframes romantic-float {
+  0%   { transform: translate3d(0, 110vh, 0) rotate(0deg) scale(0.85); opacity: 0; }
+  10%  { opacity: 0.85; }
+  50%  { transform: translate3d(20px, 50vh, 0) rotate(15deg) scale(1); }
+  90%  { opacity: 0.7; }
+  100% { transform: translate3d(-10px, -10vh, 0) rotate(-10deg) scale(0.9); opacity: 0; }
+}
+@keyframes romantic-petal {
+  0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.7; }
+  50%  { transform: translate3d(40px, 50vh, 0) rotate(180deg); }
+  100% { transform: translate3d(-30px, 110vh, 0) rotate(360deg); opacity: 0; }
+}
+@keyframes romantic-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50%      { opacity: 0.9; transform: scale(1.1); }
+}
+/* ── Romantic typography system ──────────────────── */
+.theme-romantic body,
+.theme-romantic {
+  font-family: var(--font-sans);
+  font-feature-settings: "liga", "dlig", "kern";
+  letter-spacing: 0.005em;
+}
+.theme-romantic h1,
+.theme-romantic h2,
+.theme-romantic h3,
+.theme-romantic .font-display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
+}
+.theme-romantic h1 { letter-spacing: -0.02em; }
+.theme-romantic .font-script {
+  font-family: var(--font-script);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+.theme-romantic .uppercase,
+.theme-romantic [class*="uppercase"] {
+  letter-spacing: 0.18em;
+  font-weight: 500;
+}
+.theme-romantic button,
+.theme-romantic .btn {
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.theme-romantic small,
+.theme-romantic .text-xs,
+.theme-romantic .text-\[10px\],
+.theme-romantic .text-\[11px\] {
+  letter-spacing: 0.06em;
+}
+
+/* ── Romantic ornamental frame (SVG, no pseudo-char) ─ */
+.theme-romantic .romantic-frame {
+  position: relative;
+}
+.theme-romantic .romantic-frame::before,
+.theme-romantic .romantic-frame::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  background-color: rgba(232,93,138,0.7);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M12 21s-7-4.35-9.5-8.5C.84 9.36 2.5 5 6.5 5c2 0 3.5 1.2 4.5 2.7C12 6.2 13.5 5 15.5 5c4 0 5.66 4.36 4 7.5C19 16.65 12 21 12 21z'/></svg>") center/contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M12 21s-7-4.35-9.5-8.5C.84 9.36 2.5 5 6.5 5c2 0 3.5 1.2 4.5 2.7C12 6.2 13.5 5 15.5 5c4 0 5.66 4.36 4 7.5C19 16.65 12 21 12 21z'/></svg>") center/contain no-repeat;
+  filter: drop-shadow(0 0 6px rgba(232,93,138,0.5));
+}
+.theme-romantic .romantic-frame::before { left: -22px; }
+.theme-romantic .romantic-frame::after  { right: -22px; }
 
 /* ── Neo-Brutalism overrides ──────────────────── */
 .theme-cream .neo-card {
