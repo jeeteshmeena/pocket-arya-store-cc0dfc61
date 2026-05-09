@@ -404,13 +404,18 @@
 }
 .animate-status-expand { animation: status-label-expand 0.6s 0.3s var(--ease-out-expo) both; }
 
-/* ── Long-press popup ── */
+/* ── Long-press popup (smooth scale from card center, no fly-in) ── */
 @keyframes popup-enter {
-  0%   { opacity: 0; transform: scale(0.88) translateY(16px); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0%   { opacity: 0; transform: scale(0.94); }
+  100% { opacity: 1; transform: scale(1); }
 }
-.animate-popup-enter { animation: popup-enter 0.3s var(--ease-spring) both; }
+.animate-popup-enter { animation: popup-enter 0.26s cubic-bezier(0.16,1,0.3,1) both; }
+
+@keyframes preview-pop {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
 
 /* ── Cart interactions ── */
 @keyframes cart-bounce {
