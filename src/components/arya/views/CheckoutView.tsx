@@ -33,7 +33,7 @@ type Phase =
   | { name: "error"; message: string };
 
 export function CheckoutView() {
-  const { resetCheckout, navigate, back, cart, clearCart, purchase, tgUser } = useApp();
+  const { resetCheckout, navigate, replaceView, back, cart, clearCart, purchase, tgUser } = useApp();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
