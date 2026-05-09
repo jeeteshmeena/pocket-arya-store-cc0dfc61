@@ -55,11 +55,18 @@ export function DetailView({ storyId }: { storyId: string }) {
             </div>
             
             <div className="neo-card bg-[#8CC6E6] aspect-[4/5] p-6 flex flex-col relative overflow-hidden">
+              {!bannerLoaded && !bannerErr && (
+                <div className="absolute inset-0 shimmer-bg" aria-hidden />
+              )}
               {story.banner && !bannerErr ? (
                 <img
                   src={story.banner} alt={story.title}
                   onError={() => setBannerErr(true)}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  onLoad={() => setBannerLoaded(true)}
+                  className={cn(
+                    "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+                    bannerLoaded ? "opacity-100" : "opacity-0"
+                  )}
                 />
               ) : (
                 <div className="absolute inset-0 bg-muted" />
@@ -82,11 +89,18 @@ export function DetailView({ storyId }: { storyId: string }) {
         ) : (
           /* Default Hero */
           <>
+            {!bannerLoaded && !bannerErr && (
+              <div className="absolute inset-0 shimmer-bg" aria-hidden />
+            )}
             {story.banner && !bannerErr ? (
               <img
                 src={story.banner} alt={story.title}
                 onError={() => setBannerErr(true)}
-                className="absolute inset-0 h-full w-full object-cover"
+                onLoad={() => setBannerLoaded(true)}
+                className={cn(
+                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+                  bannerLoaded ? "opacity-100" : "opacity-0"
+                )}
               />
             ) : (
               <div className="absolute inset-0 bg-muted" />
