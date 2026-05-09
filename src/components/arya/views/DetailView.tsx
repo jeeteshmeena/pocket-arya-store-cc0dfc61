@@ -275,3 +275,63 @@ function Meta({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function DetailSkeleton({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="animate-fade-in pb-28">
+      <div className="relative h-64 overflow-hidden">
+        <div className="absolute inset-0 shimmer-bg" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-background" />
+        <button
+          onClick={onBack}
+          className="absolute top-3 left-3 h-9 w-9 grid place-items-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-sm"
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-3 items-end">
+          <div className="h-28 w-20 shrink-0 rounded-md shimmer-bg border border-border" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="h-5 w-3/4 rounded shimmer-bg" />
+            <div className="h-3 w-1/2 rounded shimmer-bg" />
+            <div className="flex gap-2 pt-1">
+              <div className="h-5 w-16 rounded-full shimmer-bg" />
+              <div className="h-5 w-12 rounded-full shimmer-bg" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 mt-5 space-y-2">
+        <div className="h-3 w-full rounded shimmer-bg" />
+        <div className="h-3 w-[92%] rounded shimmer-bg" />
+        <div className="h-3 w-[78%] rounded shimmer-bg" />
+      </div>
+
+      <div className="px-4 mt-6 grid grid-cols-3 gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border/50 bg-muted/40 p-2.5 space-y-1.5">
+            <div className="h-2.5 w-12 rounded shimmer-bg" />
+            <div className="h-3.5 w-16 rounded shimmer-bg" />
+          </div>
+        ))}
+      </div>
+
+      <div className="px-4 mt-6">
+        <div className="h-4 w-24 rounded shimmer-bg mb-3" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/30 p-3">
+              <div className="h-9 w-9 rounded-full shimmer-bg shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-2/3 rounded shimmer-bg" />
+                <div className="h-2.5 w-1/3 rounded shimmer-bg" />
+              </div>
+              <div className="h-7 w-14 rounded-full shimmer-bg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
