@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AryaPremiumRouteImport } from './routes/aryaPremium'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AryaPremiumRouteImport } from './routes/aryaPremium'
 
 const AryaPremiumRoute = AryaPremiumRouteImport.update({
   id: '/aryaPremium',
@@ -21,12 +20,6 @@ const AryaPremiumRoute = AryaPremiumRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-
-const AryaPremiumRoute = AryaPremiumRouteImport.update({
-  id: '/aryaPremium',
-  path: '/aryaPremium',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -70,13 +63,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/aryaPremium': {
-      id: '/aryaPremium'
-      path: '/aryaPremium'
-      fullPath: '/aryaPremium'
-      preLoaderRoute: typeof AryaPremiumRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
