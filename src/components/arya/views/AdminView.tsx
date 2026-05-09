@@ -333,6 +333,8 @@ export function AdminView() {
                   ))}
                 </div>
               </div>
+            )}
+
             {activeTab === "banners" && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <button
