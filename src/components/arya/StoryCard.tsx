@@ -6,7 +6,7 @@
 import { memo, useRef, useState, useCallback, useLayoutEffect, useEffect } from "react";
 import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
-import { Check, ShoppingCart } from "lucide-react";
+import { Check, ShoppingCart, Zap, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
