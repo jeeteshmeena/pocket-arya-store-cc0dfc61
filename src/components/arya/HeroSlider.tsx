@@ -65,7 +65,7 @@ function useBanners(fallbackStories: ReturnType<typeof useApp>["stories"]) {
 
   useEffect(() => {
     let alive = true;
-    fetch(`${BASE_URL}/banners`, { cache: "no-store" })
+    fetch(`${BASE_URL}/banners`)
       .then(r => r.json())
       .then(j => {
         if (!alive) return;
@@ -117,10 +117,14 @@ function usePreloadImages(slides: Banner[]) {
   const [loadedSet, setLoadedSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    slides.forEach((s, i) => {
+    // Only eagerly preload the first slide; the rest are picked up lazily
+    // by the <img> tags themselves once the carousel rotates to them.
+    // This prevents a burst of N parallel image requests at app startup
+    // which is a major cause of slow first-load on mobile networks.
+    slides.slice(0, 1).forEach((s) => {
       if (!s.image) return;
       const img = new Image();
-      img.fetchPriority = i === 0 ? "high" : "low";
+      img.fetchPriority = "high";
       img.src = s.image;
       img.onload = () =>
         setLoadedSet(prev => new Set([...prev, s.id]));
@@ -400,13 +404,13 @@ const SlideImage = memo(function SlideImage({
           src={src}
           alt={title}
           onError={() => setErr(true)}
+          onLoad={() => { /* image painted */ }}
           draggable={false}
           fetchPriority={priority ? "high" : "low"}
-          loading="eager"
+          loading={priority ? "eager" : "lazy"}
           decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
           style={{
-            // GPU-only opacity transition — no layout triggers
             opacity: active ? 1 : 0,
             transition: "opacity 500ms cubic-bezier(0.16,1,0.3,1)",
             willChange: "opacity",

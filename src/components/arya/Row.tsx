@@ -21,17 +21,24 @@ export const Row = memo(function Row({
   const { theme } = useApp();
   const ref = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  // Separate "near viewport" gate — mounts cards before the row scrolls in,
+  // so images are queued ahead of time but never all at once at startup.
+  const [mount, setMount] = useState(false);
 
-  // Intersection observer — animate in when row enters viewport
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+    const obsMount = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setMount(true); obsMount.disconnect(); } },
+      { rootMargin: "600px 0px" }
+    );
+    const obsAnim = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obsAnim.disconnect(); } },
       { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
     );
-    obs.observe(el);
-    return () => obs.disconnect();
+    obsMount.observe(el);
+    obsAnim.observe(el);
+    return () => { obsMount.disconnect(); obsAnim.disconnect(); };
   }, []);
 
   if (!stories.length) return null;
@@ -70,21 +77,28 @@ export const Row = memo(function Row({
       {/* Scroll row */}
       <div
         className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        style={{ WebkitOverflowScrolling: "touch", minHeight: wide ? 220 : 200 }}
       >
-        {stories.map((s, i) => (
-          <div
-            key={s.id}
-            style={{
-              // Stagger entry for each card
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateX(0)" : "translateX(12px)",
-              transition: `opacity 320ms ${i * 40}ms ease, transform 320ms ${i * 40}ms ease`,
-            }}
-          >
-            <StoryCard story={s} wide={wide} />
-          </div>
-        ))}
+        {mount
+          ? stories.map((s, i) => (
+              <div
+                key={s.id}
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateX(0)" : "translateX(12px)",
+                  transition: `opacity 320ms ${Math.min(i, 6) * 40}ms ease, transform 320ms ${Math.min(i, 6) * 40}ms ease`,
+                }}
+              >
+                <StoryCard story={s} wide={wide} />
+              </div>
+            ))
+          : stories.slice(0, 4).map((s) => (
+              <div
+                key={s.id}
+                className={cn("shrink-0 rounded-[14px] shimmer-bg", wide ? "w-44 aspect-[4/5]" : "w-40 aspect-square")}
+                aria-hidden="true"
+              />
+            ))}
       </div>
     </section>
   );
