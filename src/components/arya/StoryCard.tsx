@@ -4,6 +4,7 @@
  *           tactile press, layered shadows, intersection-observer lazy images
  */
 import { memo, useRef, useState, useCallback, useLayoutEffect, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
 import { Check, ShoppingCart, Zap, ChevronRight } from "lucide-react";
@@ -370,46 +371,29 @@ function PreviewPopup({
   story, anchor, inCart, onClose, onAdd, onBuyNow, onOpen,
 }: {
   story: Story;
-  anchor: DOMRect | null;
+  anchor: DOMRect | null; // Kept for prop signature compat but unused for positioning
   inCart: boolean;
   onClose: () => void;
   onAdd: () => void;
   onBuyNow: () => void;
   onOpen: () => void;
 }) {
-  const popRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number; origin: string } | null>(null);
   const { theme } = useApp();
   const { bg, text } = getGenre(story.genre);
   const hasImage = isDisplayableUrl(story.poster);
 
+  // Prevent body scroll when mounted
   useLayoutEffect(() => {
-    if (!anchor || !popRef.current) return;
-    const PAD = 14;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const w  = Math.min(300, vw - PAD * 2);
-    const h  = popRef.current.offsetHeight || 380;
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
-    // Center the popup over the card's center, clamped to viewport
-    const cardCx = anchor.left + anchor.width / 2;
-    const cardCy = anchor.top + anchor.height / 2;
-
-    let left = cardCx - w / 2;
-    left = Math.max(PAD, Math.min(left, vw - w - PAD));
-
-    let top = cardCy - h / 2;
-    top = Math.max(PAD, Math.min(top, vh - h - PAD));
-
-    // Origin = where the card is, so popup grows out of the card
-    const ox = Math.max(0, Math.min(w, cardCx - left));
-    const oy = Math.max(0, Math.min(h, cardCy - top));
-    setPos({ left, top, origin: `${ox}px ${oy}px` });
-  }, [anchor]);
-
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100]"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={onClose}
       onContextMenu={e => e.preventDefault()}
     >
@@ -418,21 +402,20 @@ function PreviewPopup({
         style={{ animation: "info-backdrop-in 0.22s ease both" }}
       />
       <div
-        ref={popRef}
         onClick={e => e.stopPropagation()}
         className={cn(
-          "absolute w-[300px] max-w-[calc(100vw-28px)] overflow-hidden",
+          "relative w-full max-w-[320px] max-h-[85vh] overflow-y-auto scrollbar-hide",
           theme === "cream"
             ? "rounded-[22px] bg-white border-[3px] border-black shadow-[5px_5px_0px_#000]"
             : "rounded-[22px] bg-card text-card-foreground border border-border/60 shadow-[0_30px_80px_-12px_rgba(0,0,0,0.6)]"
         )}
         style={{
-          ...(pos ? { left: pos.left, top: pos.top, transformOrigin: pos.origin } : { visibility: "hidden" }),
           animation: "preview-pop 0.32s cubic-bezier(0.16,1,0.3,1) both",
+          transformOrigin: "center center",
         }}
       >
         {/* Poster */}
-        <div className="aspect-[16/10] w-full bg-muted relative">
+        <div className="aspect-[16/10] w-full bg-muted relative shrink-0">
           {hasImage ? (
             <LazyImage src={story.poster!} alt={story.title} />
           ) : (
@@ -454,7 +437,7 @@ function PreviewPopup({
         </div>
 
         {/* Body */}
-        <div className="p-4">
+        <div className="p-4 shrink-0">
           <h3 className={cn(
             "text-[15px] font-bold leading-tight line-clamp-2 text-foreground",
             theme === "cream" && "font-display"
@@ -512,6 +495,7 @@ function PreviewPopup({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
