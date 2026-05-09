@@ -6,7 +6,7 @@
 import { memo, useRef, useState, useCallback, useLayoutEffect, useEffect } from "react";
 import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
-import { Check, ShoppingCart } from "lucide-react";
+import { Check, ShoppingCart, Zap, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
@@ -203,13 +203,14 @@ function LazyImage({ src, alt, className }: { src: string; alt: string; classNam
 
 // ─── Main StoryCard ────────────────────────────────────────────────────────────
 export const StoryCard = memo(function StoryCard({
-  story, wide, square,
+  story, wide, square, enablePreview,
 }: {
   story: Story;
   wide?: boolean;
   square?: boolean;
+  enablePreview?: boolean;
 }) {
-  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser } = useApp();
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout } = useApp();
 
   const liked   = inWishlist(story.id);
   const inCart  = cart.some(x => x.id === story.id);
@@ -240,6 +241,7 @@ export const StoryCard = memo(function StoryCard({
   }, [toggleWishlist, story]);
 
   const startPress = useCallback(() => {
+    if (!enablePreview) return;
     longPressed.current = false;
     timerRef.current = setTimeout(() => {
       haptics.medium();
@@ -247,7 +249,7 @@ export const StoryCard = memo(function StoryCard({
       if (cardRef.current) setAnchor(cardRef.current.getBoundingClientRect());
       setShowPreview(true);
     }, 380);
-  }, []);
+  }, [enablePreview]);
 
   const cancelPress = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -262,7 +264,7 @@ export const StoryCard = memo(function StoryCard({
           square ? "w-full" : wide ? "w-44" : "w-40"
         )}
         style={{ WebkitTouchCallout: "none" }}
-        onContextMenu={e => e.preventDefault()}
+        onContextMenu={enablePreview ? (e => e.preventDefault()) : undefined}
         onTouchStart={startPress}
         onTouchEnd={cancelPress}
         onTouchMove={cancelPress}
@@ -347,6 +349,12 @@ export const StoryCard = memo(function StoryCard({
             addToCart(story);
             setShowPreview(false);
           }}
+          onBuyNow={() => {
+            haptics.medium();
+            if (!inCart) addToCart(story);
+            setShowPreview(false);
+            setTimeout(() => goToCheckout(), 60);
+          }}
           onOpen={() => {
             setShowPreview(false);
             navigate({ name: "detail", storyId: story.id });
@@ -357,15 +365,16 @@ export const StoryCard = memo(function StoryCard({
   );
 });
 
-// ─── Preview Popup ─────────────────────────────────────────────────────────────
+// ─── Preview Popup (anchored at card center, smooth scale-in) ──────────────────
 function PreviewPopup({
-  story, anchor, inCart, onClose, onAdd, onOpen,
+  story, anchor, inCart, onClose, onAdd, onBuyNow, onOpen,
 }: {
   story: Story;
   anchor: DOMRect | null;
   inCart: boolean;
   onClose: () => void;
   onAdd: () => void;
+  onBuyNow: () => void;
   onOpen: () => void;
 }) {
   const popRef = useRef<HTMLDivElement>(null);
@@ -376,42 +385,54 @@ function PreviewPopup({
 
   useLayoutEffect(() => {
     if (!anchor || !popRef.current) return;
-    const PAD = 12, vw = window.innerWidth, vh = window.innerHeight;
-    const w = Math.min(305, vw - PAD * 2);
-    const h = popRef.current.offsetHeight || 360;
+    const PAD = 14;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w  = Math.min(300, vw - PAD * 2);
+    const h  = popRef.current.offsetHeight || 380;
 
-    let left = anchor.left + anchor.width / 2 - w / 2;
+    // Center the popup over the card's center, clamped to viewport
+    const cardCx = anchor.left + anchor.width / 2;
+    const cardCy = anchor.top + anchor.height / 2;
+
+    let left = cardCx - w / 2;
     left = Math.max(PAD, Math.min(left, vw - w - PAD));
 
-    const spaceBelow = vh - anchor.bottom - PAD;
-    const spaceAbove = anchor.top - PAD;
-    let top: number, originY: string;
-    if (spaceBelow >= h + 8 || spaceBelow >= spaceAbove) {
-      top = Math.min(anchor.bottom + 8, vh - h - PAD);
-      originY = "top";
-    } else {
-      top = Math.max(PAD, anchor.top - h - 8);
-      originY = "bottom";
-    }
-    const cx = anchor.left + anchor.width / 2;
-    setPos({ left, top, origin: `${Math.max(0, Math.min(w, cx - left))}px ${originY}` });
+    let top = cardCy - h / 2;
+    top = Math.max(PAD, Math.min(top, vh - h - PAD));
+
+    // Origin = where the card is, so popup grows out of the card
+    const ox = Math.max(0, Math.min(w, cardCx - left));
+    const oy = Math.max(0, Math.min(h, cardCy - top));
+    setPos({ left, top, origin: `${ox}px ${oy}px` });
   }, [anchor]);
 
   return (
-    <div className="fixed inset-0 z-[100]" onClick={onClose} onContextMenu={e => e.preventDefault()}>
-      <div className="absolute inset-0 bg-black/55 backdrop-blur-[7px] animate-fade-in-fast" />
+    <div
+      className="fixed inset-0 z-[100]"
+      onClick={onClose}
+      onContextMenu={e => e.preventDefault()}
+    >
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-[8px]"
+        style={{ animation: "info-backdrop-in 0.22s ease both" }}
+      />
       <div
         ref={popRef}
         onClick={e => e.stopPropagation()}
         className={cn(
-          "absolute w-[305px] max-w-[calc(100vw-24px)] overflow-hidden animate-popup-enter",
+          "absolute w-[300px] max-w-[calc(100vw-28px)] overflow-hidden",
           theme === "cream"
-            ? "rounded-[20px] bg-white border-[3px] border-black shadow-[5px_5px_0px_#000]"
-            : "rounded-[20px] bg-surface border border-border shadow-[0_28px_72px_-16px_rgba(0,0,0,0.55)]"
+            ? "rounded-[22px] bg-white border-[3px] border-black shadow-[5px_5px_0px_#000]"
+            : "rounded-[22px] bg-card text-card-foreground border border-border/60 shadow-[0_30px_80px_-12px_rgba(0,0,0,0.6)]"
         )}
-        style={pos ? { left: pos.left, top: pos.top, transformOrigin: pos.origin } : { visibility: "hidden" }}
+        style={{
+          ...(pos ? { left: pos.left, top: pos.top, transformOrigin: pos.origin } : { visibility: "hidden" }),
+          animation: "preview-pop 0.32s cubic-bezier(0.16,1,0.3,1) both",
+        }}
       >
-        <div className="aspect-[4/3] w-full bg-muted relative">
+        {/* Poster */}
+        <div className="aspect-[16/10] w-full bg-muted relative">
           {hasImage ? (
             <LazyImage src={story.poster!} alt={story.title} />
           ) : (
@@ -426,9 +447,13 @@ function PreviewPopup({
               <StatusBadge isCompleted={!!story.isCompleted} expanded size="md" />
             </div>
           )}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/30 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="absolute bottom-2 right-3 text-white text-[11px] font-bold drop-shadow">
+            ₹{story.price}
+          </div>
         </div>
 
+        {/* Body */}
         <div className="p-4">
           <h3 className={cn(
             "text-[15px] font-bold leading-tight line-clamp-2 text-foreground",
@@ -450,31 +475,41 @@ function PreviewPopup({
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-foreground">{story.episodes} eps</span>
             )}
           </div>
-          <div className="mt-3.5 flex items-center gap-2">
-            <div className="flex-1">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Price</div>
-              <div className="text-[17px] font-display font-extrabold text-foreground">₹{story.price}</div>
-            </div>
+
+          {/* Action buttons */}
+          <div className="mt-3.5 grid grid-cols-2 gap-2">
             <button
               onClick={onAdd}
               disabled={inCart}
               className={cn(
-                "h-9 px-3 rounded-[10px] text-[11px] font-bold inline-flex items-center gap-1.5 active:scale-95 transition-transform duration-75",
-                inCart ? "bg-muted text-muted-foreground" : "bg-surface border border-border text-foreground hover:bg-muted"
+                "h-11 rounded-[12px] text-[12px] font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] transition",
+                inCart
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-surface border border-border text-foreground hover:bg-muted"
               )}
             >
-              {inCart ? <><Check className="h-3.5 w-3.5" /> In Cart</> : <><ShoppingCart className="h-3.5 w-3.5" /> Add</>}
+              {inCart ? <><Check className="h-4 w-4" /> In Cart</> : <><ShoppingCart className="h-4 w-4" /> Add to Cart</>}
             </button>
             <button
-              onClick={onOpen}
+              onClick={onBuyNow}
               className={cn(
-                "h-9 px-4 rounded-[10px] text-[11px] font-bold active:scale-95 transition-transform duration-75",
-                theme === "cream" ? "neo-button bg-primary text-primary-foreground" : "bg-primary text-primary-foreground shadow-md"
+                "h-11 rounded-[12px] text-[12px] font-extrabold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] transition shadow-[0_8px_22px_-6px_rgba(0,0,0,0.45)]",
+                theme === "cream"
+                  ? "neo-button bg-primary text-primary-foreground"
+                  : "bg-foreground text-background"
               )}
             >
-              Open →
+              <Zap className="h-4 w-4" strokeWidth={2.5} /> Buy Now
             </button>
           </div>
+
+          {/* View details link */}
+          <button
+            onClick={onOpen}
+            className="mt-2 w-full h-9 rounded-[10px] inline-flex items-center justify-center gap-1 text-[12px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition"
+          >
+            View story details <ChevronRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </div>
