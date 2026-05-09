@@ -12,6 +12,7 @@ import { CheckoutView } from "./views/CheckoutView";
 import { TermsOnboarding } from "./TermsOnboarding";
 import { DeepLinkErrorDialog } from "./DeepLinkErrorDialog";
 import { Splash } from "./Splash";
+import { RomanticDecor } from "./RomanticDecor";
 
 function Shell() {
   const { view, storiesLoading, stories } = useApp();
