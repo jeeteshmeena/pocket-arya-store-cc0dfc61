@@ -117,12 +117,19 @@ export function DetailView({ storyId }: { storyId: string }) {
 
             {/* Poster + title */}
             <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-3 items-end">
-              <div className="h-28 w-20 overflow-hidden shrink-0 shadow-md bg-muted border border-border">
+              <div className="relative h-28 w-20 overflow-hidden shrink-0 shadow-md bg-muted border border-border">
+                {!posterLoaded && !posterErr && (
+                  <div className="absolute inset-0 shimmer-bg" aria-hidden />
+                )}
                 {story.poster && !posterErr ? (
                   <img
                     src={story.poster} alt=""
                     onError={() => setPosterErr(true)}
-                    className="h-full w-full object-cover"
+                    onLoad={() => setPosterLoaded(true)}
+                    className={cn(
+                      "h-full w-full object-cover transition-opacity duration-500",
+                      posterLoaded ? "opacity-100" : "opacity-0"
+                    )}
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center p-2">
