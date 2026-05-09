@@ -154,20 +154,40 @@ const CartBtn = memo(function CartBtn({
   );
 });
 
-// ─── Lazy image with shimmer ───────────────────────────────────────────────────
+// ─── Lazy image with shimmer + IntersectionObserver gating ──────────────────
+// Only fetches the image once it (or its container) is within ~400px of the
+// viewport. Prevents dozens of poster requests firing at app startup, which
+// causes the "5–10 minute" perceived load on slower connections.
 function LazyImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState(false);
 
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || inView) return;
+    if (typeof IntersectionObserver === "undefined") { setInView(true); return; }
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
+      },
+      { rootMargin: "400px 200px", threshold: 0.01 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [inView]);
+
   return (
-    <div className={cn("relative h-full w-full", className)}>
+    <div ref={wrapRef} className={cn("relative h-full w-full", className)}>
       {!loaded && <div className="absolute inset-0 shimmer-bg" />}
-      {!err && (
+      {inView && !err && (
         <img
           src={src}
           alt={alt}
           loading="lazy"
           decoding="async"
+          fetchPriority="low"
           onLoad={() => setLoaded(true)}
           onError={() => { setErr(true); setLoaded(true); }}
           className="h-full w-full object-cover pointer-events-none"
