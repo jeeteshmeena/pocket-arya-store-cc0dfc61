@@ -114,7 +114,7 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
   };
 
   const handleSupport = () => {
-    setDialog("contact");
+    navigate({ name: "support" });
   };
 
   if (loading) {

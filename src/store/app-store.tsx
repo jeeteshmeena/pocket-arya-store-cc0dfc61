@@ -11,7 +11,8 @@ type View =
   | { name: "detail"; storyId: string }
   | { name: "purchased-detail"; storyId: string }
   | { name: "settings" }
-  | { name: "checkout" };
+  | { name: "checkout" }
+  | { name: "support" };
 
 type CheckoutState =
   | { status: "idle" }

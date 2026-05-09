@@ -182,7 +182,7 @@ export function ProfileView() {
         <Item
           icon={LifeBuoy}
           label="Contact Us"
-          onClick={() => setDialog("contact")}
+          onClick={() => navigate({ name: "support" })}
           isCream={useApp().theme === "cream"}
         />
         <Item icon={ScrollText} label="Terms & Conditions" onClick={() => setDialog("terms")} isCream={useApp().theme === "cream"} />

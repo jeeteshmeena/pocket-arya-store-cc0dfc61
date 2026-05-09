@@ -5,7 +5,7 @@ import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { BOT_USERNAME, submitSupport } from "@/lib/api";
 
-export type InfoDialogKind = "terms" | "refund" | "faq" | "about" | "privacy" | "delivery" | "contact" | null;
+export type InfoDialogKind = "terms" | "refund" | "faq" | "about" | "privacy" | "delivery" | null;
 
 const META: Record<NonNullable<InfoDialogKind>, { title: string; icon: React.ReactNode }> = {
   terms:    { title: "Terms of Service", icon: <FileText className="h-4 w-4" /> },
@@ -14,7 +14,6 @@ const META: Record<NonNullable<InfoDialogKind>, { title: string; icon: React.Rea
   about:    { title: "About Arya Premium", icon: <Sparkles className="h-4 w-4" /> },
   privacy:  { title: "Privacy Policy",    icon: <Shield className="h-4 w-4" /> },
   delivery: { title: "Delivery Policy",   icon: <Truck className="h-4 w-4" /> },
-  contact:  { title: "Contact Support",   icon: <MessageSquare className="h-4 w-4" /> },
 };
 
 // Pair tabs for terms/privacy/refund (like reference image)
@@ -179,71 +178,7 @@ export function InfoDialog({
                   {ABOUT_TEXT}
                 </p>
               </div>
-                        ) : current === "contact" ? (
-              supportMode !== "menu" ? (
-                <SupportForm type={supportMode} onBack={() => setSupportMode("menu")} theme={theme} />
-              ) : (
-                <div className="space-y-3 pb-4">
-                  <button
-                    onClick={() => setSupportMode("support")}
-                    className={cn(
-                      "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
-                      theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
-                    )}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="h-9 w-9 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                        <Ticket className="h-4.5 w-4.5" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-[14px]">Open Support Ticket</div>
-                        <div className="text-[12px] text-muted-foreground">Get help with orders or access</div>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-                  </button>
-
-                  <button
-                    onClick={() => setSupportMode("chat")}
-                    className={cn(
-                      "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
-                      theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
-                    )}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                        <MessageCircle className="h-4.5 w-4.5" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-[14px]">Live Chat</div>
-                        <div className="text-[12px] text-muted-foreground">Chat with an agent directly</div>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-                  </button>
-
-                  <button
-                    onClick={() => setSupportMode("suggestion")}
-                    className={cn(
-                      "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
-                      theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
-                    )}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="h-9 w-9 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                        <Lightbulb className="h-4.5 w-4.5" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-[14px]">Submit Suggestion</div>
-                        <div className="text-[12px] text-muted-foreground">Request features or stories</div>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-                  </button>
-                </div>
-              )
             ) : (
-
               <LegalSections
                 text={
                   current === "terms"    ? TERMS_TEXT    :

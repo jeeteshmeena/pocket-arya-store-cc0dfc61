@@ -121,11 +121,30 @@ export async function submitSupport(data: {
   first_name: string | null;
   type: string;
   message: string;
+  file?: File | null;
 }): Promise<{ success: boolean; message: string }> {
-  return request<{ success: boolean; message: string }>("/support", {
+  const formData = new FormData();
+  if (data.telegram_id) formData.append("telegram_id", data.telegram_id.toString());
+  if (data.username) formData.append("username", data.username);
+  if (data.first_name) formData.append("first_name", data.first_name);
+  formData.append("type", data.type);
+  formData.append("message", data.message);
+  if (data.file) formData.append("file", data.file);
+
+  const res = await fetch(`${BASE_URL}/support`, {
     method: "POST",
-    body: JSON.stringify(data),
+    body: formData,
   });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Request failed (${res.status}): ${text || res.statusText}`);
+  }
+  const json = await res.json();
+  if (json && json.success === false) {
+    throw new Error(json.message || "API returned an error");
+  }
+  return json as { success: boolean; message: string };
 }
 
 export function openTelegramLink(url: string) {
