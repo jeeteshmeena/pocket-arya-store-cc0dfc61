@@ -256,6 +256,68 @@
     radial-gradient(circle at 80% 100%, rgba(244,166,189,0.12) 0%, transparent 50%);
 }
 
+/* ── Romantic decorative graphics ──────────────────── */
+.romantic-decor {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+.romantic-decor .heart,
+.romantic-decor .petal,
+.romantic-decor .sparkle {
+  position: absolute;
+  will-change: transform, opacity;
+  opacity: 0;
+  animation: romantic-float linear infinite;
+}
+.romantic-decor .heart {
+  color: #E85D8A;
+  filter: drop-shadow(0 0 8px rgba(232,93,138,0.55));
+}
+.romantic-decor .petal {
+  color: #F4A6BD;
+  filter: drop-shadow(0 0 6px rgba(244,166,189,0.4));
+  animation-name: romantic-petal;
+}
+.romantic-decor .sparkle {
+  color: #FFD7E3;
+  filter: drop-shadow(0 0 6px rgba(255,215,227,0.7));
+  animation-name: romantic-twinkle;
+}
+@keyframes romantic-float {
+  0%   { transform: translate3d(0, 110vh, 0) rotate(0deg) scale(0.85); opacity: 0; }
+  10%  { opacity: 0.85; }
+  50%  { transform: translate3d(20px, 50vh, 0) rotate(15deg) scale(1); }
+  90%  { opacity: 0.7; }
+  100% { transform: translate3d(-10px, -10vh, 0) rotate(-10deg) scale(0.9); opacity: 0; }
+}
+@keyframes romantic-petal {
+  0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.7; }
+  50%  { transform: translate3d(40px, 50vh, 0) rotate(180deg); }
+  100% { transform: translate3d(-30px, 110vh, 0) rotate(360deg); opacity: 0; }
+}
+@keyframes romantic-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50%      { opacity: 0.9; transform: scale(1.1); }
+}
+.theme-romantic .romantic-frame {
+  position: relative;
+}
+.theme-romantic .romantic-frame::before,
+.theme-romantic .romantic-frame::after {
+  content: "❦";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(232,93,138,0.55);
+  font-size: 14px;
+}
+.theme-romantic .romantic-frame::before { left: -18px; }
+.theme-romantic .romantic-frame::after  { right: -18px; }
+
 /* ── Neo-Brutalism overrides ──────────────────── */
 .theme-cream .neo-card {
   border: 2px solid #000;
