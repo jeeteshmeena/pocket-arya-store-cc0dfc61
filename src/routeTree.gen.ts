@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AryaPremiumRouteImport } from './routes/aryaPremium'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AryaPremiumRouteImport } from './routes/aryaPremium'
 
+const AryaPremiumRoute = AryaPremiumRouteImport.update({
+  id: '/aryaPremium',
+  path: '/aryaPremium',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -52,6 +58,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/aryaPremium': {
+      id: '/aryaPremium'
+      path: '/aryaPremium'
+      fullPath: '/aryaPremium'
+      preLoaderRoute: typeof AryaPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'

@@ -1,21 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AryaApp } from "@/components/arya/AryaApp";
 
-/**
- * Route: /aryaPremium
- *
- * This is the REAL Telegram Mini App route.
- * BotFather URL: https://aryapremium.store/aryaPremium
- *
- * Supports:
- *   /aryaPremium
- *   /aryaPremium?story=id
- *   /aryaPremium?tgWebAppStartParam=...
- *   /aryaPremium?tgWebAppData=...  (Telegram adds this as query params in some clients)
- *
- * Query params are handled inside AryaApp / app-store.tsx — not here.
- * This route simply mounts the full Mini App shell.
- */
+// Telegram BotFather is configured to open the Mini App at /aryaPremium.
+// This route mounts the same app so the launch URL matches on every host
+// (Lovable preview, lovable.app, custom domain, Vercel) without relying on
+// host-level rewrites.
 export const Route = createFileRoute("/aryaPremium")({
   component: AryaApp,
 });

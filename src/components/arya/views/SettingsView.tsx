@@ -48,16 +48,16 @@ const THEMES: ThemePreset[] = [
   {
     id: "mint",
     title: "Mint Plant",
-    desc: "Sky canvas · Mint CTA",
-    font: "Plus Jakarta",
-    canvas: "#DCE7F2", card: "#FFFFFF", ink: "#0B1220", accent: "#4FE3A1",
+    desc: "Sky canvas · Mint dock",
+    font: "Fraunces",
+    canvas: "#DCE7F2", card: "#FFFFFF", ink: "#0B1F2A", accent: "#1FBF7A",
   },
   {
     id: "romantic",
-    title: "Romantic",
-    desc: "Blush rose · Serif elegance",
-    font: "Fraunces",
-    canvas: "#FFF1F2", card: "#FFFFFF", ink: "#4A1D2C", accent: "#D6336C",
+    title: "Dark Romance",
+    desc: "Burgundy · Candle-lit serif",
+    font: "DM Serif",
+    canvas: "#1A0810", card: "#2A0E1A", ink: "#FBE9EE", accent: "#E85D8A",
   },
 ];
 

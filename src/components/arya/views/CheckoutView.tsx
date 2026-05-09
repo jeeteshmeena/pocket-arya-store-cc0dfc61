@@ -1,142 +1,122 @@
 import {
-  Loader2, CheckCircle2, AlertCircle, ArrowLeft,
-  Copy, Check, CreditCard, Send, Library, X, Trash2,
+  Loader2, CheckCircle2, AlertCircle, ArrowLeft, Copy, Check,
+  CreditCard, Library, ShieldCheck, ShoppingBag, Sparkles, Receipt,
+  CalendarDays, Package, Clock, Send, Trash2
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
-import { openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import {
+  openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment,
+} from "@/lib/api";
 
-// ── Thumbnail ─────────────────────────────────────────────────────
-function Thumb({ poster, title, size = "md" }: { poster?: string | null; title: string; size?: "sm" | "md" | "lg" }) {
+// ── Thumbnail with fallback ────────────────────────────────────────
+function Thumb({ poster, title, size = 48 }: { poster?: string | null; title: string; size?: number }) {
   const [err, setErr] = useState(false);
-  const dim = size === "sm" ? "h-11 w-11" : size === "lg" ? "h-16 w-16" : "h-14 w-14";
+  const cls = "rounded-xl object-cover shrink-0 ring-1 ring-border/60";
+  const dim = { height: size, width: size };
   if (poster && !err) {
-    return <img src={poster} alt={title} onError={() => setErr(true)} className={`${dim} rounded-xl object-cover shrink-0`} />;
+    return <img src={poster} alt={title} onError={() => setErr(true)} className={cls} style={dim} />;
   }
   return (
-    <div className={`${dim} rounded-xl bg-muted flex items-center justify-center shrink-0`}>
+    <div className={`${cls} bg-muted flex items-center justify-center`} style={dim}>
       <span className="text-[8px] text-muted-foreground font-semibold text-center px-1 leading-tight line-clamp-3">
-        {title.slice(0, 15)}
+        {title.slice(0, 18)}
       </span>
     </div>
   );
 }
 
-// ── Detail row (label + value) ────────────────────────────────────
-function DetailRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
-  };
-  return (
-    <div className="flex items-start justify-between gap-3 py-2.5 border-b border-border/50 last:border-0">
-      <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold shrink-0">{label}</span>
-      <div className="flex items-center gap-1.5 min-w-0">
-        <span className={cn("text-[12px] font-semibold text-foreground break-all text-right", mono && "font-mono")}>{value}</span>
-        <button onClick={copy} className="h-5 w-5 grid place-items-center rounded text-muted-foreground hover:text-foreground shrink-0 transition">
-          {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-type PaymentDetails = {
-  order_id: string;
-  payment_id: string;
-  bot_url: string;
-  total: number;
-  items: { title: string; poster?: string | null; price: number; id: string }[];
-};
-
 type Phase =
   | { name: "idle" }
   | { name: "loading" }
-  | { name: "success"; details: PaymentDetails }
+  | { name: "success"; order_id: string; payment_id?: string; bot_url: string; amount: number }
   | { name: "error"; message: string };
 
 export function CheckoutView() {
-  const { resetCheckout, navigate, back, cart, clearCart, removeFromCart, purchase, tgUser } = useApp();
+  const { resetCheckout, navigate, replaceView, back, cart, clearCart, purchase, removeFromCart, tgUser } = useApp();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Snapshot cart at mount — so success screen still shows purchased items
+  // Snapshot cart at mount so success screen still shows items
   const cartSnap = useRef(cart);
   if (phase.name === "idle") cartSnap.current = cart;
 
-  const total = cart.reduce((a, b) => a + b.price, 0);
+  const total = cartSnap.current.reduce((a, b) => a + b.price, 0);
+  const itemCount = cartSnap.current.length;
 
-  // ── Main payment handler ──────────────────────────────────────
+  const copy = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 1800);
+    } catch {}
+  };
+
+  // ── Main payment handler ───────────────────────────────────────
   const handlePay = async () => {
-    if (!cart.length) return;
+    if (!cartSnap.current.length) return;
     import("@/lib/haptics").then(m => m.haptics.heavy());
     setPhase({ name: "loading" });
 
     try {
-      // 1. Expand WebApp so Razorpay modal has room
       const tg = (window as any).Telegram?.WebApp;
       if (tg) { tg.expand(); tg.disableClosingConfirmation?.(); }
 
-      // 2. Load Razorpay (check window first, then dynamically inject)
       if (!(window as any).Razorpay) {
         await new Promise<void>((res, rej) => {
           const s = document.createElement("script");
           s.src = "https://checkout.razorpay.com/v1/checkout.js";
           s.onload = () => res();
-          s.onerror = () => rej(new Error("Razorpay script failed to load. Check internet connection."));
+          s.onerror = () => rej(new Error("Razorpay script failed to load"));
           document.head.appendChild(s);
         });
       }
 
-      // 3. Create server-side order
       const order = await createRazorpayOrder(
-        cart.map((s) => s.id),
+        cartSnap.current.map((s) => s.id),
         tgUser,
       );
+
       if (!order.razorpay_order_id || !order.key) {
-        throw new Error("Could not create order. Please try again.");
+        throw new Error("Invalid order received from server.");
       }
 
-      // 4. Open Razorpay modal
-      const snap = [...cart]; // snapshot before clearCart
       await new Promise<void>((resolve, reject) => {
-        const descRaw = snap.map((s) => s.title).join(", ");
+        const descRaw = cartSnap.current.map((s) => s.title).join(", ");
+        const descStr = descRaw.length > 200 ? descRaw.substring(0, 197) + "..." : descRaw;
+
         const rzp = new (window as any).Razorpay({
           key:         order.key,
           amount:      order.amount,
           currency:    order.currency,
-          name:        "Arya Premium",
-          description: descRaw.length > 200 ? descRaw.substring(0, 197) + "…" : descRaw,
+          name:        "SliceURL",
+          description: descStr || "Digital Access",
           order_id:    order.razorpay_order_id,
-          prefill:     { name: tgUser.username || "", contact: "" },
-          theme:       { color: "#C9A227" },
+          prefill:     { name: tgUser.username || "" },
+          theme:       { color: "#111111" },
 
           handler: async (resp: any) => {
             try {
-              // 5. Verify on server
               const verified = await verifyRazorpayPayment({
                 razorpay_order_id:   resp.razorpay_order_id,
                 razorpay_payment_id: resp.razorpay_payment_id,
                 razorpay_signature:  resp.razorpay_signature,
-                story_ids:   snap.map((s) => s.id),
+                story_ids:   cartSnap.current.map((s) => s.id),
                 telegram_id: tgUser.telegram_id,
                 username:    tgUser.username,
               });
 
-              // 6. Update local state
-              purchase(snap);
+              const paidAmount = total;
+              purchase(cartSnap.current);
               clearCart();
-
               setPhase({
-                name: "success",
-                details: {
-                  order_id:   verified.order_id ?? order.receipt ?? "—",
-                  payment_id: resp.razorpay_payment_id,
-                  bot_url:    verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
-                  total:      verified.total ?? total,
-                  items:      snap,
-                },
+                name:       "success",
+                order_id:   verified.order_id ?? order.receipt,
+                payment_id: resp.razorpay_payment_id,
+                bot_url:    verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
+                amount:     paidAmount,
               });
+              import("@/lib/haptics").then(m => m.haptics.heavy());
               resolve();
             } catch (e: any) {
               reject(new Error(e.message || "Payment verification failed"));
@@ -164,208 +144,423 @@ export function CheckoutView() {
     }
   };
 
-  // ── SUCCESS SCREEN ─────────────────────────────────────────────
-  if (phase.name === "success") {
-    const { details } = phase;
-    return (
-      <div className="animate-fade-in px-4 pt-4 pb-8 max-w-lg mx-auto">
-        {/* ✅ Confirmation badge */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="h-20 w-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 grid place-items-center mb-4 animate-pulse-once">
-            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-          </div>
-          <h1 className="font-display font-bold text-2xl text-foreground">Payment Successful!</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Your {details.items.length === 1 ? "story has" : `${details.items.length} stories have`} been unlocked.
-          </p>
-          <div className="mt-2 text-2xl font-black text-foreground">₹{details.total}</div>
-        </div>
-
-        {/* 🧾 Order details card */}
-        <div className="rounded-2xl bg-surface border border-border overflow-hidden mb-4 shadow-sm">
-          <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">Order Details</span>
-          </div>
-          <div className="px-4">
-            <DetailRow label="Order ID"  value={details.order_id}   mono />
-            <DetailRow label="Payment ID" value={details.payment_id}  mono />
-            <DetailRow label="Amount"    value={`₹${details.total}`} />
-            <DetailRow label="Status"    value="Paid ✓" />
-          </div>
-        </div>
-
-        {/* 📚 Purchased items */}
-        <div className="rounded-2xl bg-surface border border-border overflow-hidden mb-4 shadow-sm">
-          <div className="px-4 py-3 border-b border-border/60 bg-muted/40">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground font-bold">
-              Purchased ({details.items.length})
-            </span>
-          </div>
-          <div className="divide-y divide-border/50">
-            {details.items.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 px-4 py-3">
-                <Thumb poster={s.poster} title={s.title} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold truncate text-foreground">{s.title}</div>
-                </div>
-                <div className="text-[13px] font-bold text-foreground">₹{s.price}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 📋 Instructions */}
-        <div className="rounded-2xl bg-amber-500/8 border border-amber-500/20 px-4 py-3 mb-5 text-[12px] text-amber-700 dark:text-amber-400 leading-relaxed">
-          <div className="font-semibold mb-1">📥 How to receive your story</div>
-          Open the bot below and tap <strong>My Stories</strong> to access your episodes.
-          Files will be delivered directly to your Telegram.
-        </div>
-
-        {/* Buttons */}
-        <div className="space-y-3">
-          <button
-            onClick={() => { setPhase({ name: "idle" }); navigate({ name: "my_stories" }); }}
-            className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md"
-          >
-            <Library className="h-5 w-5" />
-            Go to My Library
-          </button>
-          <button
-            onClick={() => openTelegramLink(details.bot_url)}
-            className="w-full h-[52px] rounded-2xl bg-surface border border-border text-sm font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
-          >
-            <Send className="h-4 w-4" />
-            Open Delivery Bot
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── ERROR SCREEN ───────────────────────────────────────────────
-  if (phase.name === "error") {
-    return (
-      <div className="animate-fade-in px-4 pt-4 pb-8 flex flex-col items-center text-center">
-        <div className="h-20 w-20 rounded-full bg-red-500/10 border-2 border-red-500/20 grid place-items-center mb-4">
-          <AlertCircle className="h-10 w-10 text-red-500" />
-        </div>
-        <h2 className="font-display font-bold text-xl text-foreground">Payment Failed</h2>
-        <p className="mt-2 text-sm text-muted-foreground max-w-xs">{phase.message}</p>
-        <div className="mt-8 w-full space-y-3 max-w-sm">
-          <button
-            onClick={() => setPhase({ name: "idle" })}
-            className="w-full h-[52px] rounded-2xl bg-foreground text-background font-bold active:scale-[0.98] transition shadow-md"
-          >
-            Try Again
-          </button>
-          <button
-            onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
-            className="w-full h-[52px] rounded-2xl bg-surface border border-border text-sm font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
-          >
-            <Send className="h-4 w-4" /> Contact @{BOT_USERNAME}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── IDLE / LOADING SCREEN ──────────────────────────────────────
   return (
     <div className="relative">
-      <main className="flex-1 overflow-y-auto pb-[140px] px-4 pt-3 animate-fade-in">
+      <main className="flex-1 overflow-y-auto pb-[160px] px-4 pt-3 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
           <button
-            onClick={back}
-            className="h-9 w-9 grid place-items-center rounded-full hover:bg-muted transition"
+            onClick={phase.name === "idle" ? back : () => { setPhase({ name: "idle" }); resetCheckout(); }}
+            className="h-10 w-10 grid place-items-center rounded-full bg-surface border border-border/60 hover:bg-muted transition active:scale-95"
             aria-label="Back"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-[18px] w-[18px]" />
           </button>
-          <h1 className="font-display font-bold text-xl">Checkout</h1>
-          <span className="ml-auto text-sm text-muted-foreground">{cart.length} item{cart.length !== 1 ? "s" : ""}</span>
+          <div className="flex-1">
+            <h1 className="font-display font-extrabold text-[22px] tracking-tight leading-none">
+              {phase.name === "success" ? "Order Confirmed" :
+               phase.name === "error"   ? "Payment Failed" :
+               phase.name === "loading" ? "Processing"     : "Checkout"}
+            </h1>
+            {phase.name === "idle" && itemCount > 0 && (
+              <p className="text-[12px] text-muted-foreground mt-1">
+                {itemCount} {itemCount === 1 ? "item" : "items"} · ready to purchase
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Loading overlay */}
-        {phase.name === "loading" && (
-          <div className="rounded-2xl bg-surface border border-border p-10 flex flex-col items-center text-center shadow-sm mb-4">
-            <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
-            <h2 className="mt-4 font-display font-bold text-lg text-foreground">Opening payment…</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Please wait, do not close this screen</p>
-          </div>
-        )}
-
-        {/* Cart items — clickable + removable */}
-        {phase.name === "idle" && cart.length > 0 && (
-          <div className="rounded-2xl bg-surface border border-border divide-y divide-border overflow-hidden mb-4 shadow-sm">
-            {cart.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 p-3">
-                {/* Clickable poster → opens detail */}
-                <button
-                  onClick={() => navigate({ name: "detail", storyId: s.id })}
-                  className="shrink-0 active:scale-95 transition"
-                >
-                  <Thumb poster={s.poster} title={s.title} />
-                </button>
-
-                {/* Story info — clickable to detail */}
-                <button
-                  className="flex-1 min-w-0 text-left"
-                  onClick={() => navigate({ name: "detail", storyId: s.id })}
-                >
-                  <div className="text-sm font-semibold truncate text-foreground">{s.title}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{s.platform} · {s.genre}</div>
-                </button>
-
-                {/* Price */}
-                <div className="text-sm font-bold text-foreground mr-1">₹{s.price}</div>
-
-                {/* Remove from cart */}
-                <button
-                  onClick={() => removeFromCart(s.id)}
-                  className="h-8 w-8 grid place-items-center rounded-full hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition shrink-0"
-                  aria-label="Remove"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+        {/* ── IDLE: Order Summary ─────────────────────────────── */}
+        {(phase.name === "idle" || phase.name === "loading") && cartSnap.current.length > 0 && (
+          <>
+            <SectionLabel>Order Summary</SectionLabel>
+            <div className="rounded-[20px] bg-surface border border-border/60 overflow-hidden mb-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+              <div className="divide-y divide-border/60">
+                {cartSnap.current.map((s) => (
+                  <div key={s.id} onClick={() => navigate({ name: "detail", storyId: s.id })} className="flex items-center gap-3 p-3.5 cursor-pointer hover:bg-muted/30 transition group">
+                    <Thumb poster={s.poster} title={s.title} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[14px] font-semibold truncate text-foreground leading-tight group-hover:text-primary transition-colors">{s.title}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1 truncate">
+                        {[s.platform, s.genre].filter(Boolean).join(" · ")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-[14px] font-bold text-foreground tabular-nums">₹{s.price}</div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeFromCart(s.id); }}
+                        className="h-8 w-8 grid place-items-center rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition active:scale-90"
+                        aria-label="Remove item"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+
+              {/* Bill breakdown */}
+              <div className="px-4 py-3 bg-muted/40 border-t border-border/60 space-y-1.5">
+                <Row label={`Subtotal (${itemCount})`} value={`₹${total}`} />
+                <Row label="Platform fee" value="₹0" muted />
+                <Row label="Tax" value="Included" muted />
+                <div className="h-px bg-border/70 my-2" />
+                <Row label="Total" value={`₹${total}`} bold />
+              </div>
+            </div>
+
+            {/* Trust strip */}
+            <div className="flex items-center justify-center gap-2 mb-4 text-[11px] text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span className="font-medium">100% secure payment · Encrypted by Razorpay</span>
+            </div>
+          </>
+        )}
+
+        {/* ── LOADING ─────────────────────────────────────────── */}
+        {phase.name === "loading" && (
+          <div className="rounded-[20px] bg-surface border border-border/60 p-8 flex flex-col items-center text-center shadow-sm animate-fade-in">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/15 animate-splash-ring" />
+              <div className="h-14 w-14 rounded-full bg-primary/10 grid place-items-center relative">
+                <Loader2 className="h-7 w-7 animate-spin text-primary" />
+              </div>
+            </div>
+            <h2 className="mt-5 font-display font-bold text-[17px] text-foreground">Opening secure payment</h2>
+            <p className="mt-1.5 text-[13px] text-muted-foreground max-w-[260px]">
+              Please don't close this screen. We're preparing your Razorpay session.
+            </p>
           </div>
         )}
 
-        {/* Empty cart */}
-        {phase.name === "idle" && cart.length === 0 && (
-          <div className="rounded-2xl bg-surface border border-border p-10 flex flex-col items-center text-center shadow-sm">
-            <X className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">Your cart is empty</p>
+        {/* ── SUCCESS ─────────────────────────────────────────── */}
+        {phase.name === "success" && (
+          <div className="space-y-4 animate-fade-in">
+            {/* Receipt-style hero (perforated edge) */}
+            <div className="relative">
+              <div className="rounded-[24px] bg-surface border border-border/60 shadow-[0_12px_36px_rgba(0,0,0,0.10)] overflow-hidden">
+                {/* Top emerald banner */}
+                <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-600 px-6 pt-7 pb-8 text-center text-white">
+                  <div className="relative inline-block">
+                    <div className="absolute inset-0 rounded-full bg-white/25 animate-splash-ring" />
+                    <div className="h-[68px] w-[68px] rounded-full bg-white grid place-items-center relative shadow-[0_10px_30px_rgba(0,0,0,0.22)]">
+                      <CheckCircle2 className="h-10 w-10 text-emerald-500" strokeWidth={2.6} />
+                    </div>
+                  </div>
+                  <h2 className="mt-4 font-display font-extrabold text-[22px] tracking-tight">
+                    Thank You for Your Order
+                  </h2>
+                  <p className="mt-1.5 text-[12.5px] text-white/85 max-w-[280px] mx-auto leading-snug">
+                    Your purchase is confirmed and your stories are now in your Library.
+                  </p>
+                </div>
+
+                {/* Perforated divider */}
+                <div className="relative h-5 bg-surface">
+                  <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-background border border-border/60" />
+                  <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-background border border-border/60" />
+                  <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 border-t border-dashed border-border" />
+                </div>
+
+                {/* Receipt body */}
+                <div className="px-5 pt-3 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
+                    <Receipt className="h-3.5 w-3.5" /> Receipt
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <ReceiptRow
+                      icon={<CalendarDays className="h-3.5 w-3.5" />}
+                      label="Date"
+                      value={new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                    />
+                    <ReceiptRow
+                      icon={<Receipt className="h-3.5 w-3.5" />}
+                      label="Order ID"
+                      mono
+                      value={phase.order_id}
+                      onCopy={() => copy("order", phase.order_id)}
+                      copied={copiedKey === "order"}
+                    />
+                    {phase.payment_id && (
+                      <ReceiptRow
+                        icon={<CreditCard className="h-3.5 w-3.5" />}
+                        label="Payment ID"
+                        mono
+                        value={phase.payment_id}
+                        onCopy={() => copy("pay", phase.payment_id!)}
+                        copied={copiedKey === "pay"}
+                      />
+                    )}
+                    <ReceiptRow
+                      icon={<CreditCard className="h-3.5 w-3.5" />}
+                      label="Method"
+                      valueNode={<span className="font-semibold">Razorpay</span>}
+                    />
+                  </div>
+
+                  <div className="my-4 border-t border-dashed border-border" />
+
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Paid</div>
+                      <div className="font-display font-extrabold text-[26px] tracking-tight tabular-nums leading-none mt-1">
+                        ₹{phase.amount}
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider">
+                      <Sparkles className="h-3 w-3" /> Paid
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Order timeline */}
+            <div>
+              <SectionLabel>Order Status</SectionLabel>
+              <div className="rounded-[20px] bg-surface border border-border/60 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <Timeline
+                  steps={[
+                    { label: "Order Placed", time: "Just now", icon: <ShoppingBag className="h-3.5 w-3.5" />, done: true },
+                    { label: "Payment Confirmed", time: "Just now", icon: <CreditCard className="h-3.5 w-3.5" />, done: true },
+                    { label: "Added to Library", time: "Just now", icon: <Library className="h-3.5 w-3.5" />, done: true },
+                    { label: "Episodes Ready", time: "Available now", icon: <Package className="h-3.5 w-3.5" />, done: true },
+                  ]}
+                />
+              </div>
+            </div>
+
+            {/* Purchased items */}
+            <div>
+              <SectionLabel>Items ({cartSnap.current.length})</SectionLabel>
+              <div className="rounded-[20px] bg-surface border border-border/60 overflow-hidden divide-y divide-border/60 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                {cartSnap.current.map((s) => (
+                  <div key={s.id} className="flex items-center gap-3 p-3.5">
+                    <Thumb poster={s.poster} title={s.title} size={52} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[14px] font-semibold truncate text-foreground leading-tight">{s.title}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1 truncate">
+                        {[s.platform, s.genre].filter(Boolean).join(" · ")}
+                      </div>
+                      <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        <Check className="h-3 w-3" strokeWidth={3} /> In your library
+                      </div>
+                    </div>
+                    <div className="text-[14px] font-bold text-foreground tabular-nums">₹{s.price}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Single primary CTA */}
+            <div className="pt-1">
+              <button
+                onClick={() => { resetCheckout(); replaceView({ name: "mystories" }); }}
+                className="w-full h-[56px] rounded-[16px] bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
+              >
+                <Library className="h-5 w-5" />
+                Go to My Library
+              </button>
+              <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
+                A confirmation receipt has been recorded for your account.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── ERROR ───────────────────────────────────────────── */}
+        {phase.name === "error" && (
+          <div className="rounded-[20px] bg-surface border border-border/60 p-7 flex flex-col items-center text-center shadow-sm animate-fade-in">
+            <div className="h-16 w-16 rounded-full bg-red-500/15 grid place-items-center mb-4">
+              <AlertCircle className="h-9 w-9 text-red-500" />
+            </div>
+            <h2 className="font-display font-bold text-[18px] text-foreground">Payment Failed</h2>
+            <p className="mt-2 text-[13px] text-muted-foreground max-w-[280px]">{phase.message}</p>
+            <div className="mt-6 w-full space-y-2.5">
+              <button
+                onClick={() => setPhase({ name: "idle" })}
+                className="w-full h-[52px] rounded-[16px] bg-foreground text-background font-bold active:scale-[0.98] transition shadow-md"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
+                className="w-full h-[48px] rounded-[16px] bg-surface border border-border text-[13px] font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
+              >
+                <Send className="h-4 w-4" /> Contact @{BOT_USERNAME}
+              </button>
+            </div>
           </div>
         )}
       </main>
 
-      {/* Sticky footer — Pay button */}
-      {phase.name === "idle" && (
-        <footer className="fixed bottom-[70px] left-0 right-0 z-40 p-4 bg-background/80 backdrop-blur-[20px] border-t border-border/60 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+      {/* ── IDLE: STICKY FOOTER ──────────────────────────────── */}
+      {phase.name === "idle" && cartSnap.current.length > 0 && (
+        <footer className="fixed bottom-[70px] left-0 right-0 z-40 px-4 pt-3 pb-4 bg-background/85 backdrop-blur-2xl border-t border-border/60 shadow-[0_-12px_32px_rgba(0,0,0,0.08)]">
           <div className="mx-auto max-w-2xl">
-            <div className="flex items-center justify-between mb-4 px-1">
-              <span className="text-sm font-semibold text-muted-foreground">Total Amount</span>
-              <span className="font-display font-extrabold text-2xl tracking-tight text-foreground">₹{total}</span>
-            </div>
             <button
               onClick={handlePay}
-              disabled={cart.length === 0}
-              className="w-full h-[54px] rounded-[14px] bg-foreground text-background font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-md disabled:opacity-40"
+              disabled={cartSnap.current.length === 0}
+              className="w-full h-[56px] rounded-[16px] bg-foreground text-background font-bold flex items-center justify-between px-5 active:scale-[0.98] transition shadow-[0_10px_28px_rgba(0,0,0,0.22)] disabled:opacity-40"
             >
-              <CreditCard className="h-5 w-5" />
-              Pay ₹{total} Now
+              <span className="flex items-center gap-2.5">
+                <CreditCard className="h-5 w-5" />
+                <span className="text-[15px]">Pay Securely</span>
+              </span>
+              <span className="font-display font-extrabold text-[18px] tracking-tight tabular-nums">₹{total}</span>
             </button>
-            <div className="mt-3.5 text-center text-[12px] font-medium text-muted-foreground/70 flex items-center justify-center gap-1.5">
-              <span>Secured by Razorpay</span>
-              <span>·</span>
-              <span>256-bit SSL</span>
+            <div className="mt-2.5 text-center text-[11px] font-medium text-muted-foreground/80 flex items-center justify-center gap-1.5">
+              <ShieldCheck className="h-3 w-3" />
+              <span>Secured by Razorpay · 256-bit encryption</span>
             </div>
           </div>
         </footer>
       )}
+
+      {/* Empty cart fallback */}
+      {phase.name === "idle" && cartSnap.current.length === 0 && (
+        <div className="px-4 pb-20">
+          <div className="mt-4 rounded-[20px] bg-surface border border-border/60 p-10 text-center">
+            <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
+              <ShoppingBag className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="mt-3 font-semibold text-foreground">Your cart is empty</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">Browse stories and add them to checkout.</p>
+            <button
+              onClick={() => navigate({ name: "explore" })}
+              className="mt-5 h-11 px-6 rounded-full bg-foreground text-background text-sm font-semibold"
+            >
+              Browse Stories
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-1 mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+      {children}
+    </div>
+  );
+}
+
+function Row({ label, value, bold, muted }: { label: string; value: string; bold?: boolean; muted?: boolean }) {
+  return (
+    <div className="flex items-center justify-between text-[13px]">
+      <span className={muted ? "text-muted-foreground" : "text-foreground/80"}>{label}</span>
+      <span className={`tabular-nums ${bold ? "font-extrabold text-[15px] text-foreground" : "font-semibold text-foreground"}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function DetailRow({
+  label, value, valueNode, mono, bold, onCopy, copied,
+}: {
+  label: string;
+  value?: string;
+  valueNode?: React.ReactNode;
+  mono?: boolean;
+  bold?: boolean;
+  onCopy?: () => void;
+  copied?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+        {label}
+      </span>
+      <div className="flex items-center gap-2 min-w-0">
+        {valueNode ? valueNode : (
+          <span className={`truncate text-[13px] text-foreground ${mono ? "font-mono" : ""} ${bold ? "font-extrabold" : "font-semibold"}`}>
+            {value}
+          </span>
+        )}
+        {onCopy && (
+          <button
+            onClick={onCopy}
+            className="h-7 w-7 grid place-items-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition shrink-0 active:scale-90"
+            aria-label={`Copy ${label}`}
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Receipt-style row (icon + label + value, optional copy) ────
+function ReceiptRow({
+  icon, label, value, valueNode, mono, onCopy, copied,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value?: string;
+  valueNode?: React.ReactNode;
+  mono?: boolean;
+  onCopy?: () => void;
+  copied?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground shrink-0">
+        <span className="h-6 w-6 rounded-md bg-muted/60 grid place-items-center text-foreground/60">{icon}</span>
+        {label}
+      </span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        {valueNode ? valueNode : (
+          <span className={`truncate text-[12.5px] text-foreground ${mono ? "font-mono" : ""} font-semibold`}>
+            {value}
+          </span>
+        )}
+        {onCopy && (
+          <button
+            onClick={onCopy}
+            className="h-6 w-6 grid place-items-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition shrink-0 active:scale-90"
+            aria-label={`Copy ${label}`}
+          >
+            {copied ? <Check className="h-3 w-3 text-emerald-500" strokeWidth={3} /> : <Copy className="h-3 w-3" />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Order timeline ─────────────────────────────────────────────
+function Timeline({ steps }: { steps: { label: string; time: string; icon: React.ReactNode; done: boolean }[] }) {
+  return (
+    <ol className="relative">
+      {steps.map((s, i) => (
+        <li key={i} className="flex gap-3 pb-4 last:pb-0 relative">
+          {i < steps.length - 1 && (
+            <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gradient-to-b from-emerald-500/40 to-emerald-500/10" />
+          )}
+          <div
+            className={`h-8 w-8 rounded-full grid place-items-center shrink-0 ring-2 relative z-[1] ${
+              s.done
+                ? "bg-emerald-500 text-white ring-emerald-500/20 shadow-[0_4px_14px_rgba(16,185,129,0.35)]"
+                : "bg-muted text-muted-foreground ring-border"
+            }`}
+            style={s.done ? { animation: `delivery-success 0.5s var(--ease-spring) both`, animationDelay: `${i * 90}ms` } : undefined}
+          >
+            {s.done ? <Check className="h-4 w-4" strokeWidth={3} /> : s.icon}
+          </div>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <div className="text-[13px] font-bold text-foreground leading-tight">{s.label}</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5 inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {s.time}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
