@@ -187,7 +187,7 @@ export function MyStoriesView() {
 
 type DeliveryStatus = "idle" | "sending" | "delivered" | "already";
 
-function StoryRow({ story, onRefresh }: { story: PurchasedStory; onRefresh?: () => void }) {
+function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefresh?: () => void; onOpen?: () => void }) {
   const [status, setStatus] = useState<DeliveryStatus>("idle");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { tgUser } = useApp();
