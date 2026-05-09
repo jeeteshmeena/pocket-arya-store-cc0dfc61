@@ -404,13 +404,13 @@ const SlideImage = memo(function SlideImage({
           src={src}
           alt={title}
           onError={() => setErr(true)}
+          onLoad={() => { /* image painted */ }}
           draggable={false}
           fetchPriority={priority ? "high" : "low"}
-          loading="eager"
+          loading={priority ? "eager" : "lazy"}
           decoding="async"
           className="absolute inset-0 h-full w-full object-cover"
           style={{
-            // GPU-only opacity transition — no layout triggers
             opacity: active ? 1 : 0,
             transition: "opacity 500ms cubic-bezier(0.16,1,0.3,1)",
             willChange: "opacity",
