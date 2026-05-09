@@ -89,7 +89,7 @@ export const Row = memo(function Row({
                   transition: `opacity 320ms ${Math.min(i, 6) * 40}ms ease, transform 320ms ${Math.min(i, 6) * 40}ms ease`,
                 }}
               >
-                <StoryCard story={s} wide={wide} />
+                <StoryCard story={s} wide={wide} enablePreview />
               </div>
             ))
           : stories.slice(0, 4).map((s) => (
