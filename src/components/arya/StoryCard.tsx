@@ -203,13 +203,14 @@ function LazyImage({ src, alt, className }: { src: string; alt: string; classNam
 
 // ─── Main StoryCard ────────────────────────────────────────────────────────────
 export const StoryCard = memo(function StoryCard({
-  story, wide, square,
+  story, wide, square, enablePreview,
 }: {
   story: Story;
   wide?: boolean;
   square?: boolean;
+  enablePreview?: boolean;
 }) {
-  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser } = useApp();
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout } = useApp();
 
   const liked   = inWishlist(story.id);
   const inCart  = cart.some(x => x.id === story.id);
@@ -240,6 +241,7 @@ export const StoryCard = memo(function StoryCard({
   }, [toggleWishlist, story]);
 
   const startPress = useCallback(() => {
+    if (!enablePreview) return;
     longPressed.current = false;
     timerRef.current = setTimeout(() => {
       haptics.medium();
@@ -247,7 +249,7 @@ export const StoryCard = memo(function StoryCard({
       if (cardRef.current) setAnchor(cardRef.current.getBoundingClientRect());
       setShowPreview(true);
     }, 380);
-  }, []);
+  }, [enablePreview]);
 
   const cancelPress = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -262,7 +264,7 @@ export const StoryCard = memo(function StoryCard({
           square ? "w-full" : wide ? "w-44" : "w-40"
         )}
         style={{ WebkitTouchCallout: "none" }}
-        onContextMenu={e => e.preventDefault()}
+        onContextMenu={enablePreview ? (e => e.preventDefault()) : undefined}
         onTouchStart={startPress}
         onTouchEnd={cancelPress}
         onTouchMove={cancelPress}
