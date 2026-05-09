@@ -486,3 +486,72 @@ function DetailRow({
     </div>
   );
 }
+
+// ── Receipt-style row (icon + label + value, optional copy) ────
+function ReceiptRow({
+  icon, label, value, valueNode, mono, onCopy, copied,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value?: string;
+  valueNode?: React.ReactNode;
+  mono?: boolean;
+  onCopy?: () => void;
+  copied?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground shrink-0">
+        <span className="h-6 w-6 rounded-md bg-muted/60 grid place-items-center text-foreground/60">{icon}</span>
+        {label}
+      </span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        {valueNode ? valueNode : (
+          <span className={`truncate text-[12.5px] text-foreground ${mono ? "font-mono" : ""} font-semibold`}>
+            {value}
+          </span>
+        )}
+        {onCopy && (
+          <button
+            onClick={onCopy}
+            className="h-6 w-6 grid place-items-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition shrink-0 active:scale-90"
+            aria-label={`Copy ${label}`}
+          >
+            {copied ? <Check className="h-3 w-3 text-emerald-500" strokeWidth={3} /> : <Copy className="h-3 w-3" />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Order timeline ─────────────────────────────────────────────
+function Timeline({ steps }: { steps: { label: string; time: string; icon: React.ReactNode; done: boolean }[] }) {
+  return (
+    <ol className="relative">
+      {steps.map((s, i) => (
+        <li key={i} className="flex gap-3 pb-4 last:pb-0 relative">
+          {i < steps.length - 1 && (
+            <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gradient-to-b from-emerald-500/40 to-emerald-500/10" />
+          )}
+          <div
+            className={`h-8 w-8 rounded-full grid place-items-center shrink-0 ring-2 relative z-[1] ${
+              s.done
+                ? "bg-emerald-500 text-white ring-emerald-500/20 shadow-[0_4px_14px_rgba(16,185,129,0.35)]"
+                : "bg-muted text-muted-foreground ring-border"
+            }`}
+            style={s.done ? { animation: `delivery-success 0.5s var(--ease-spring) both`, animationDelay: `${i * 90}ms` } : undefined}
+          >
+            {s.done ? <Check className="h-4 w-4" strokeWidth={3} /> : s.icon}
+          </div>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <div className="text-[13px] font-bold text-foreground leading-tight">{s.label}</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5 inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {s.time}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
