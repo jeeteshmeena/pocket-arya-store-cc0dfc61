@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Mail, Send, Check, FileText, Shield, HelpCircle, Sparkles, Truck, Receipt, MessageSquare } from "lucide-react";
+import { X, Mail, Send, Check, FileText, Shield, HelpCircle, Sparkles, Truck, Receipt, MessageSquare, ChevronDown, Ticket, MessageCircle, Lightbulb } from "lucide-react";
 import { FAQ_ITEMS, ABOUT_TEXT, TERMS_TEXT, REFUND_TEXT, PRIVACY_TEXT, DELIVERY_TEXT } from "./legal-content";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
+import { BOT_USERNAME } from "@/lib/api";
 
 export type InfoDialogKind = "terms" | "refund" | "faq" | "about" | "privacy" | "delivery" | "contact" | null;
 
@@ -116,19 +117,19 @@ export function InfoDialog({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-5 pt-3 sm:pt-5 pb-3 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-muted grid place-items-center text-foreground shrink-0">
+        <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-4 shrink-0 border-b border-border/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-10 w-10 rounded-[10px] bg-muted/60 flex items-center justify-center text-foreground shrink-0">
               {meta.icon}
             </div>
-            <h2 className="font-display font-extrabold text-[18px] tracking-tight truncate">
+            <h2 className="font-display font-bold text-[17px] tracking-tight truncate">
               {meta.title}
             </h2>
           </div>
           <button
             onClick={handleClose}
             aria-label="Close"
-            className="h-9 w-9 grid place-items-center rounded-full bg-muted hover:bg-muted/70 text-muted-foreground hover:text-foreground active:scale-90 transition shrink-0"
+            className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground rounded-full transition-colors shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -170,24 +171,7 @@ export function InfoDialog({
         >
           <div style={{ animation: "info-content-in 0.32s cubic-bezier(0.16,1,0.3,1) both" }}>
             {current === "faq" ? (
-              <div className="space-y-3 pb-4">
-                {FAQ_ITEMS.map((item, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "p-4 rounded-2xl border transition",
-                      theme === "cream" ? "neo-card bg-white" : "bg-surface border-border/60 hover:border-border"
-                    )}
-                  >
-                    <div className={cn("text-[14px]", theme === "cream" ? "font-extrabold text-black" : "font-bold text-foreground")}>
-                      {item.q}
-                    </div>
-                    <div className={cn("text-[13px] mt-1.5 leading-relaxed", theme === "cream" ? "font-medium text-black/70" : "text-muted-foreground")}>
-                      {item.a}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <AccordionFAQ theme={theme} />
             ) : current === "about" ? (
               <div className={cn("p-5 rounded-2xl border", theme === "cream" ? "neo-card bg-white" : "bg-surface border-border/60")}>
                 <p className={cn("text-[13.5px] whitespace-pre-line leading-relaxed", theme === "cream" ? "font-medium text-black/80" : "text-muted-foreground")}>
@@ -195,38 +179,69 @@ export function InfoDialog({
                 </p>
               </div>
             ) : current === "contact" ? (
-              <div className="space-y-3">
+              <div className="space-y-3 pb-4">
                 <a
-                  href="https://t.me/ItsNewtonPlanet"
+                  href={`https://t.me/${BOT_USERNAME}?start=support`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-4 p-4 w-full text-left bg-surface border border-border/60 rounded-2xl hover:bg-muted transition active:scale-[0.98]"
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98]",
+                    theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
+                  )}
                 >
-                  <div className="h-11 w-11 shrink-0 grid place-items-center rounded-xl bg-primary/10 text-primary">
-                    <Send className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-bold text-[14px]">Telegram Support</div>
-                    <div className="text-[12px] mt-0.5 text-muted-foreground truncate">@ItsNewtonPlanet</div>
-                  </div>
-                </a>
-                <button
-                  onClick={copyEmail}
-                  className="flex items-center gap-4 p-4 w-full text-left bg-surface border border-border/60 rounded-2xl hover:bg-muted transition active:scale-[0.98]"
-                >
-                  <div className={cn(
-                    "h-11 w-11 shrink-0 grid place-items-center rounded-xl transition",
-                    copied ? "bg-emerald-500/15 text-emerald-500" : "bg-primary/10 text-primary"
-                  )}>
-                    {copied ? <Check className="h-5 w-5" strokeWidth={3} /> : <Mail className="h-5 w-5" />}
-                  </div>
-                  <div className="min-w-0">
-                    <div className={cn("font-bold text-[14px]", copied && "text-emerald-500")}>
-                      {copied ? "Copied to Clipboard" : "Email Support"}
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-9 w-9 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                      <Ticket className="h-4.5 w-4.5" />
                     </div>
-                    <div className="text-[12px] mt-0.5 text-muted-foreground truncate">Support.AaryaPremium@gmail.com</div>
+                    <div>
+                      <div className="font-semibold text-[14px]">Open Support Ticket</div>
+                      <div className="text-[12px] text-muted-foreground">Get help with orders or access</div>
+                    </div>
                   </div>
-                </button>
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                </a>
+
+                <a
+                  href={`https://t.me/${BOT_USERNAME}?start=chat`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98]",
+                    theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
+                  )}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                      <MessageCircle className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-[14px]">Live Chat</div>
+                      <div className="text-[12px] text-muted-foreground">Chat with an agent directly</div>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                </a>
+
+                <a
+                  href={`https://t.me/${BOT_USERNAME}?start=suggestion`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98]",
+                    theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
+                  )}
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-9 w-9 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                      <Lightbulb className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-[14px]">Submit Suggestion</div>
+                      <div className="text-[12px] text-muted-foreground">Request features or stories</div>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                </a>
               </div>
             ) : (
               <LegalSections
@@ -266,15 +281,15 @@ function LegalSections({ text, themeMode }: { text: string; themeMode: "cream" |
           <div
             key={i}
             className={cn(
-              "rounded-2xl border p-4",
-              themeMode === "cream" ? "neo-card bg-white" : "bg-surface border-border/60"
+              "rounded-xl border p-4",
+              themeMode === "cream" ? "bg-white border-border/60" : "bg-surface border-border/60"
             )}
             style={{ animation: `info-content-in 0.4s cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 35}ms` }}
           >
             {heading && (
               <div className={cn(
                 "text-[14px] mb-1.5",
-                themeMode === "cream" ? "font-extrabold text-black" : "font-bold text-foreground"
+                themeMode === "cream" ? "font-bold text-black" : "font-bold text-foreground"
               )}>
                 {heading}
               </div>
@@ -285,6 +300,45 @@ function LegalSections({ text, themeMode }: { text: string; themeMode: "cream" |
             )}>
               {body}
             </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Accordion FAQ ──────────────────────────────────────────────────
+function AccordionFAQ({ theme }: { theme: string }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+
+  return (
+    <div className="space-y-2 pb-4">
+      {FAQ_ITEMS.map((item, i) => {
+        const isOpen = openIdx === i;
+        return (
+          <div
+            key={i}
+            className={cn(
+              "rounded-xl border transition-all overflow-hidden",
+              theme === "cream" ? "bg-white border-border/60" : "bg-surface border-border/60"
+            )}
+            style={{ animation: `info-content-in 0.4s cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 35}ms` }}
+          >
+            <button
+              onClick={() => { import("@/lib/haptics").then(h => h.haptics.light()); setOpenIdx(isOpen ? null : i); }}
+              className="flex w-full items-center justify-between p-4 text-left focus:outline-none"
+            >
+              <span className="font-medium text-[14px]">{item.q}</span>
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-300 shrink-0 ml-4", isOpen && "rotate-180")} />
+            </button>
+            <div
+              className={cn("px-4 overflow-hidden transition-all duration-300 ease-in-out", isOpen ? "max-h-96 pb-4 opacity-100" : "max-h-0 opacity-0")}
+            >
+              <div className="h-px bg-border/40 w-full mb-3" />
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                {item.a}
+              </p>
+            </div>
           </div>
         );
       })}
