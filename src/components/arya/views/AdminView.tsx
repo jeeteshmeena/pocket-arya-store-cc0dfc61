@@ -74,13 +74,26 @@ export function AdminView() {
     } else {
       setEditingStory({
         story_id: `story_${Date.now()}`,
-        name: "",
+        bot_id: "",
+        bot_username: "UseAryaBot",
+        start_id: "",
+        end_id: "",
+        source: "",
+        story_name_en: "",
+        story_name_hi: "",
+        description: "",
+        description_hi: "",
+        episodes: "1",
         status: "available",
+        genre: "Romance",
+        language: "Hindi",
         price: 99,
         discount_price: 49,
-        episodes: "0",
-        type: "audiobook",
-        banner_url: "",
+        payment_methods: ["upi", "razorpay"],
+        platform: "Pocket FM",
+        delivery_mode: "pool",
+        channel_id: "",
+        image: "",
         poster_url: "",
         is_completed: false
       });
@@ -172,7 +185,7 @@ export function AdminView() {
                             <div className={theme === "cream" ? "text-black/60 text-xs" : "text-muted-foreground text-xs"}>ID: {o.order_id}</div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-green-500">₹{o.amount}</div>
+                            <div className="font-bold text-green-500">₹{o.total_amount || o.amount || 0}</div>
                             <div className="text-[10px] uppercase text-muted-foreground">{o.status}</div>
                           </div>
                         </div>
@@ -227,7 +240,7 @@ export function AdminView() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className={cn("font-bold text-sm truncate", theme === "cream" ? "text-black" : "")}>{story.name}</div>
+                        <div className={cn("font-bold text-sm truncate", theme === "cream" ? "text-black" : "")}>{story.story_name_en || story.name}</div>
                         <div className="text-xs text-muted-foreground">₹{story.price} • {story.status}</div>
                       </div>
                       <div className="flex gap-2">
@@ -250,8 +263,8 @@ export function AdminView() {
       {/* Story Form Modal */}
       {isFormOpen && editingStory && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className={cn("w-full max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-6", theme === "cream" ? "bg-[#f8f5f0] border-2 border-black shadow-[8px_8px_0px_#000]" : "bg-surface border border-border")}>
-            <div className="flex justify-between items-center mb-6">
+          <div className={cn("w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl p-6", theme === "cream" ? "bg-[#f8f5f0] border-2 border-black shadow-[8px_8px_0px_#000]" : "bg-surface border border-border")}>
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-inherit py-2 z-10 border-b border-border/50">
               <h2 className={cn("text-xl font-bold", theme === "cream" ? "text-black" : "")}>
                 {editingStory.story_id.startsWith("story_") ? "Add Story" : "Edit Story"}
               </h2>
@@ -260,57 +273,120 @@ export function AdminView() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Story ID</label>
-                <input required type="text" value={editingStory.story_id} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="e.g. jjk_hindi" disabled={!editingStory.story_id.startsWith("story_")} />
-              </div>
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Story Name</label>
-                <input required type="text" value={editingStory.name} onChange={e => setEditingStory({...editingStory, name: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Story title" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSave} className="space-y-5">
+              
+              <div className="space-y-4 p-4 rounded-xl border border-border bg-background/50">
+                <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Basic Details</h3>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Price (₹)</label>
-                  <input required type="number" value={editingStory.price} onChange={e => setEditingStory({...editingStory, price: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Story ID</label>
+                  <input required type="text" value={editingStory.story_id} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} disabled={!editingStory.story_id.startsWith("story_")} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Name (EN)</label>
+                    <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Name (HI)</label>
+                    <input required type="text" value={editingStory.story_name_hi} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Discount (₹)</label>
-                  <input required type="number" value={editingStory.discount_price} onChange={e => setEditingStory({...editingStory, discount_price: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>
-                  <select value={editingStory.status} onChange={e => setEditingStory({...editingStory, status: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}>
-                    <option value="available">Available</option>
-                    <option value="coming_soon">Coming Soon</option>
-                    <option value="hidden">Hidden</option>
-                  </select>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Desc (EN)</label>
+                  <textarea rows={2} required value={editingStory.description} onChange={e => setEditingStory({...editingStory, description: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Format</label>
-                  <select value={editingStory.type} onChange={e => setEditingStory({...editingStory, type: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}>
-                    <option value="audiobook">Audiobook</option>
-                    <option value="ebook">Ebook</option>
-                  </select>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Desc (HI)</label>
+                  <textarea rows={2} required value={editingStory.description_hi} onChange={e => setEditingStory({...editingStory, description_hi: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                 </div>
               </div>
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Episodes Count / Description</label>
-                <input type="text" value={editingStory.episodes} onChange={e => setEditingStory({...editingStory, episodes: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="e.g. 500+ Episodes" />
+
+              <div className="space-y-4 p-4 rounded-xl border border-border bg-background/50">
+                <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Bot & Delivery Data</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Start ID</label>
+                    <input type="number" value={editingStory.start_id || ""} onChange={e => setEditingStory({...editingStory, start_id: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">End ID</label>
+                    <input type="number" value={editingStory.end_id || ""} onChange={e => setEditingStory({...editingStory, end_id: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Source Channel ID</label>
+                    <input type="number" value={editingStory.source || ""} onChange={e => setEditingStory({...editingStory, source: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Delivery Channel ID</label>
+                    <input type="number" value={editingStory.channel_id || ""} onChange={e => setEditingStory({...editingStory, channel_id: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Leave blank for pool" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Bot ID</label>
+                    <input type="number" value={editingStory.bot_id || ""} onChange={e => setEditingStory({...editingStory, bot_id: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Bot Username</label>
+                    <input type="text" value={editingStory.bot_username || ""} onChange={e => setEditingStory({...editingStory, bot_username: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="UseAryaBot" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Poster URL</label>
-                <input type="url" value={editingStory.poster_url} onChange={e => setEditingStory({...editingStory, poster_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://..." />
+
+              <div className="space-y-4 p-4 rounded-xl border border-border bg-background/50">
+                <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Pricing & Metadata</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Price (₹)</label>
+                    <input required type="number" value={editingStory.price} onChange={e => setEditingStory({...editingStory, price: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Discount (₹)</label>
+                    <input required type="number" value={editingStory.discount_price} onChange={e => setEditingStory({...editingStory, discount_price: Number(e.target.value)})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>
+                    <select value={editingStory.status} onChange={e => setEditingStory({...editingStory, status: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}>
+                      <option value="available">Available</option>
+                      <option value="coming_soon">Coming Soon</option>
+                      <option value="hidden">Hidden</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Episodes Count</label>
+                    <input type="text" value={editingStory.episodes} onChange={e => setEditingStory({...editingStory, episodes: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Platform</label>
+                    <input type="text" value={editingStory.platform} onChange={e => setEditingStory({...editingStory, platform: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Pocket FM" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Language</label>
+                    <input type="text" value={editingStory.language} onChange={e => setEditingStory({...editingStory, language: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Hindi" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Poster Image URL (Catbox/CDN)</label>
+                  <input type="url" value={editingStory.poster_url} onChange={e => setEditingStory({...editingStory, poster_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://..." />
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Telegram File ID (Image)</label>
+                  <input type="text" value={editingStory.image || ""} onChange={e => setEditingStory({...editingStory, image: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="AgACAgUAAx0..." />
+                </div>
+                <label className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background cursor-pointer mt-2">
+                  <input type="checkbox" checked={editingStory.is_completed} onChange={e => setEditingStory({...editingStory, is_completed: e.target.checked})} className="h-5 w-5 rounded border-gray-300" />
+                  <span className="text-sm font-semibold">Mark as Story Completed</span>
+                </label>
               </div>
-              <label className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background cursor-pointer mt-2">
-                <input type="checkbox" checked={editingStory.is_completed} onChange={e => setEditingStory({...editingStory, is_completed: e.target.checked})} className="h-5 w-5 rounded border-gray-300" />
-                <span className="text-sm font-semibold">Mark as Completed</span>
-              </label>
 
               <button disabled={formSaving} type="submit" className={cn("w-full mt-6 py-4 font-bold text-lg rounded-xl transition", theme === "cream" ? "bg-black text-white shadow-[4px_4px_0px_#555] active:translate-y-1 active:shadow-none" : "bg-primary text-primary-foreground")}>
-                {formSaving ? "Saving..." : "Save Story"}
+                {formSaving ? "Saving..." : "Save Complete Story"}
               </button>
             </form>
           </div>
