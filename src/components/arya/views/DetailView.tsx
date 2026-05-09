@@ -5,13 +5,16 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
 
 export function DetailView({ storyId }: { storyId: string }) {
-  const { back, addToCart, goToCheckout, cart, stories } = useApp();
+  const { back, addToCart, goToCheckout, cart, stories, storiesLoading } = useApp();
   const story = stories.find((s) => s.id === storyId);
   const [expanded, setExpanded] = useState(false);
   const [bannerErr, setBannerErr] = useState(false);
   const [posterErr, setPosterErr] = useState(false);
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+  const [posterLoaded, setPosterLoaded] = useState(false);
 
   if (!story) {
+    if (storiesLoading) return <DetailSkeleton onBack={back} />;
     return (
       <div className="animate-fade-in px-6 pt-24 text-center">
         <p className="text-sm text-muted-foreground">Story not found.</p>
@@ -52,11 +55,18 @@ export function DetailView({ storyId }: { storyId: string }) {
             </div>
             
             <div className="neo-card bg-[#8CC6E6] aspect-[4/5] p-6 flex flex-col relative overflow-hidden">
+              {!bannerLoaded && !bannerErr && (
+                <div className="absolute inset-0 shimmer-bg" aria-hidden />
+              )}
               {story.banner && !bannerErr ? (
                 <img
                   src={story.banner} alt={story.title}
                   onError={() => setBannerErr(true)}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  onLoad={() => setBannerLoaded(true)}
+                  className={cn(
+                    "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+                    bannerLoaded ? "opacity-100" : "opacity-0"
+                  )}
                 />
               ) : (
                 <div className="absolute inset-0 bg-muted" />
@@ -79,11 +89,18 @@ export function DetailView({ storyId }: { storyId: string }) {
         ) : (
           /* Default Hero */
           <>
+            {!bannerLoaded && !bannerErr && (
+              <div className="absolute inset-0 shimmer-bg" aria-hidden />
+            )}
             {story.banner && !bannerErr ? (
               <img
                 src={story.banner} alt={story.title}
                 onError={() => setBannerErr(true)}
-                className="absolute inset-0 h-full w-full object-cover"
+                onLoad={() => setBannerLoaded(true)}
+                className={cn(
+                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+                  bannerLoaded ? "opacity-100" : "opacity-0"
+                )}
               />
             ) : (
               <div className="absolute inset-0 bg-muted" />
@@ -100,12 +117,19 @@ export function DetailView({ storyId }: { storyId: string }) {
 
             {/* Poster + title */}
             <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-3 items-end">
-              <div className="h-28 w-20 overflow-hidden shrink-0 shadow-md bg-muted border border-border">
+              <div className="relative h-28 w-20 overflow-hidden shrink-0 shadow-md bg-muted border border-border">
+                {!posterLoaded && !posterErr && (
+                  <div className="absolute inset-0 shimmer-bg" aria-hidden />
+                )}
                 {story.poster && !posterErr ? (
                   <img
                     src={story.poster} alt=""
                     onError={() => setPosterErr(true)}
-                    className="h-full w-full object-cover"
+                    onLoad={() => setPosterLoaded(true)}
+                    className={cn(
+                      "h-full w-full object-cover transition-opacity duration-500",
+                      posterLoaded ? "opacity-100" : "opacity-0"
+                    )}
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center p-2">
@@ -248,6 +272,66 @@ function Meta({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg bg-muted/50 p-2.5 border border-border/50">
       <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{label}</div>
       <div className="font-bold text-[13px] text-foreground mt-0.5 truncate">{value}</div>
+    </div>
+  );
+}
+
+function DetailSkeleton({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="animate-fade-in pb-28">
+      <div className="relative h-64 overflow-hidden">
+        <div className="absolute inset-0 shimmer-bg" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-background" />
+        <button
+          onClick={onBack}
+          className="absolute top-3 left-3 h-9 w-9 grid place-items-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-sm"
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex gap-3 items-end">
+          <div className="h-28 w-20 shrink-0 rounded-md shimmer-bg border border-border" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="h-5 w-3/4 rounded shimmer-bg" />
+            <div className="h-3 w-1/2 rounded shimmer-bg" />
+            <div className="flex gap-2 pt-1">
+              <div className="h-5 w-16 rounded-full shimmer-bg" />
+              <div className="h-5 w-12 rounded-full shimmer-bg" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 mt-5 space-y-2">
+        <div className="h-3 w-full rounded shimmer-bg" />
+        <div className="h-3 w-[92%] rounded shimmer-bg" />
+        <div className="h-3 w-[78%] rounded shimmer-bg" />
+      </div>
+
+      <div className="px-4 mt-6 grid grid-cols-3 gap-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-lg border border-border/50 bg-muted/40 p-2.5 space-y-1.5">
+            <div className="h-2.5 w-12 rounded shimmer-bg" />
+            <div className="h-3.5 w-16 rounded shimmer-bg" />
+          </div>
+        ))}
+      </div>
+
+      <div className="px-4 mt-6">
+        <div className="h-4 w-24 rounded shimmer-bg mb-3" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/30 p-3">
+              <div className="h-9 w-9 rounded-full shimmer-bg shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-2/3 rounded shimmer-bg" />
+                <div className="h-2.5 w-1/3 rounded shimmer-bg" />
+              </div>
+              <div className="h-7 w-14 rounded-full shimmer-bg" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
