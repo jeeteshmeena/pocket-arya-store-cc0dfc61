@@ -58,6 +58,22 @@ export async function fetchAdminStats(identity: TelegramIdentity): Promise<any> 
   return res.data;
 }
 
+export async function fetchAdminStories(identity: TelegramIdentity): Promise<any[]> {
+  const res = await request<any>(`/admin/stories?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data;
+}
+
+export async function saveAdminStory(identity: TelegramIdentity, storyData: any): Promise<void> {
+  await request<any>("/admin/story", {
+    method: "POST",
+    body: JSON.stringify({ ...storyData, telegram_id: String(identity.telegram_id) }),
+  });
+}
+
+export async function deleteAdminStory(identity: TelegramIdentity, storyId: string): Promise<void> {
+  await request<any>(`/admin/story/${storyId}?telegram_id=${identity.telegram_id}`, { method: "DELETE" });
+}
+
 export async function checkoutCart(
   storyIds: string[],
   identity: TelegramIdentity,
