@@ -3,7 +3,7 @@
  * Features: Instagram heart burst, hover cart tooltip, magnetic desktop hover,
  *           tactile press, layered shadows, intersection-observer lazy images
  */
-import { memo, useRef, useState, useCallback, useLayoutEffect } from "react";
+import { memo, useRef, useState, useCallback, useLayoutEffect, useEffect } from "react";
 import type { Story } from "@/lib/data";
 import { useApp } from "@/store/app-store";
 import { Check, ShoppingCart } from "lucide-react";
