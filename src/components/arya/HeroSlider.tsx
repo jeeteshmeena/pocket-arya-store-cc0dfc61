@@ -65,7 +65,7 @@ function useBanners(fallbackStories: ReturnType<typeof useApp>["stories"]) {
 
   useEffect(() => {
     let alive = true;
-    fetch(`${BASE_URL}/banners`, { cache: "no-store" })
+    fetch(`${BASE_URL}/banners`)
       .then(r => r.json())
       .then(j => {
         if (!alive) return;
