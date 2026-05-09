@@ -117,10 +117,14 @@ function usePreloadImages(slides: Banner[]) {
   const [loadedSet, setLoadedSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    slides.forEach((s, i) => {
+    // Only eagerly preload the first slide; the rest are picked up lazily
+    // by the <img> tags themselves once the carousel rotates to them.
+    // This prevents a burst of N parallel image requests at app startup
+    // which is a major cause of slow first-load on mobile networks.
+    slides.slice(0, 1).forEach((s) => {
       if (!s.image) return;
       const img = new Image();
-      img.fetchPriority = i === 0 ? "high" : "low";
+      img.fetchPriority = "high";
       img.src = s.image;
       img.onload = () =>
         setLoadedSet(prev => new Set([...prev, s.id]));
