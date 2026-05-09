@@ -241,7 +241,13 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
   }[status];
 
   return (
-    <div className="flex gap-3 p-3 rounded-[14px] bg-surface border border-border items-center animate-fade-in">
+    <div
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen?.(); } }}
+      className="group flex gap-3 p-3 rounded-[16px] bg-surface border border-border/60 items-center animate-fade-in cursor-pointer transition hover:border-border hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] active:scale-[0.99]"
+    >
       <StoryThumb poster={story.poster} title={story.title} />
       <div className="flex-1 min-w-0">
         <div className="font-semibold truncate text-[13px] text-foreground leading-tight">{story.title}</div>
@@ -249,7 +255,6 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
           {[story.platform, story.genre].filter(Boolean).join(" · ")}
         </div>
 
-        {/* Status badges */}
         <div className="mt-1.5 flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500">
             <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
@@ -262,7 +267,6 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
           )}
         </div>
 
-        {/* Delivery status — inline feedback */}
         {status === "delivered" && (
           <div
             className="mt-1.5 flex items-center gap-1.5"
@@ -287,7 +291,7 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
       </div>
 
       <button
-        onClick={handleGet}
+        onClick={(e) => { e.stopPropagation(); handleGet(); }}
         disabled={status === "sending"}
         className={cn(
           "h-9 px-3 rounded-full text-[11px] font-semibold flex items-center gap-1.5 shrink-0",
@@ -299,6 +303,153 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
         {stateConfig.icon}
         <span>{stateConfig.label}</span>
       </button>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0 -ml-1 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+    </div>
+  );
+}
+
+// ── Premium bottom-sheet detail for purchased stories ────────
+function PurchasedDetailSheet({ story, onClose }: { story: PurchasedStory; onClose: () => void }) {
+  const [sending, setSending] = useState(false);
+  const [delivered, setDelivered] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  const handleGet = () => {
+    if (sending) return;
+    haptics.medium();
+    setSending(true);
+    openTelegramLink(`https://t.me/${BOT_USERNAME}?start=buy_${story.story_id}`);
+    setTimeout(() => { setSending(false); setDelivered(true); }, 1400);
+    setTimeout(() => setDelivered(false), 5000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center animate-fade-in">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Sheet */}
+      <div
+        className="relative w-full sm:max-w-md bg-card text-card-foreground rounded-t-[28px] sm:rounded-[28px] shadow-[0_-20px_60px_rgba(0,0,0,0.35)] border border-border/60 overflow-hidden"
+        style={{ animation: "sheet-up 0.32s cubic-bezier(0.2,1.4,0.3,1) both" }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="h-1.5 w-12 rounded-full bg-foreground/15" />
+        </div>
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-4 top-4 h-9 w-9 grid place-items-center rounded-full bg-muted hover:bg-muted/70 text-muted-foreground hover:text-foreground active:scale-90 transition"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Content */}
+        <div className="px-5 pb-6 pt-2">
+          {/* Hero */}
+          <div className="flex items-center gap-4 pt-2 pb-5">
+            <div className="relative">
+              <StoryThumb poster={story.poster} title={story.title} />
+              <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-emerald-500 grid place-items-center ring-2 ring-card shadow">
+                <CheckCircle2 className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-display font-extrabold text-[19px] tracking-tight leading-tight truncate">
+                {story.title}
+              </h2>
+              <p className="mt-1 text-[12px] text-muted-foreground truncate">
+                {[story.platform, story.genre].filter(Boolean).join(" · ") || "Premium story"}
+              </p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 h-6 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                <Sparkles className="h-3 w-3" /> Owned
+              </div>
+            </div>
+          </div>
+
+          {/* Purchase summary */}
+          <div className="rounded-[18px] bg-surface border border-border/60 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Bot Purchase
+            </div>
+            <div className="px-4 py-3.5 flex items-center justify-between gap-3">
+              <span className="text-[13px] text-foreground/80">Purchased via Arya Bot</span>
+              {story.price != null && (
+                <span className="text-[13px] font-bold tabular-nums">₹{story.price}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Info banner */}
+          <div className="mt-3 rounded-[16px] border border-amber-500/25 bg-amber-500/[0.06] p-3.5 flex items-start gap-3">
+            <div className="h-8 w-8 rounded-xl bg-amber-500/15 grid place-items-center shrink-0">
+              <Inbox className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[12px] font-bold text-amber-700 dark:text-amber-300">
+                Episodes delivered on Telegram
+              </div>
+              <p className="text-[11.5px] text-amber-700/80 dark:text-amber-300/80 mt-0.5 leading-relaxed">
+                Tap below to receive your story files instantly inside the bot chat.
+              </p>
+            </div>
+          </div>
+
+          {/* Delivered state */}
+          {delivered && (
+            <div
+              className="mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-500/12 border border-emerald-500/25"
+              style={{ animation: "delivery-success 0.45s cubic-bezier(0.34,1.56,0.64,1) both" }}
+            >
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+              <span className="text-[12px] font-semibold text-emerald-600 dark:text-emerald-400">
+                Sent to Telegram — check your bot chat
+              </span>
+            </div>
+          )}
+
+          {/* CTA */}
+          <button
+            onClick={handleGet}
+            disabled={sending}
+            className="mt-5 w-full h-[54px] rounded-[16px] bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-[0_8px_24px_rgba(0,0,0,0.22)] disabled:opacity-70"
+          >
+            {sending ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Opening Telegram…</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-[18px] w-[18px]" />
+                <span>Get Episodes via Bot</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
+            className="mt-2 w-full h-[46px] rounded-[14px] bg-surface border border-border/60 text-[13px] font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 transition"
+          >
+            <Bot className="h-4 w-4" />
+            Open Bot
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
