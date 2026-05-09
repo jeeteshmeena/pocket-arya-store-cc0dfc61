@@ -21,6 +21,7 @@ function Shell() {
   return (
     // Fixed-height container — prevents page scroll, enables app-like behavior
     <div className="fixed inset-0 bg-background text-foreground flex flex-col overflow-hidden">
+      <RomanticDecor />
       <Header />
 
       {/*
