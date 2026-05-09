@@ -218,8 +218,9 @@
    ══════════════════════════════════════════════════ */
 .theme-romantic {
   --radius: 1.25rem;
-  --font-sans:    "Fraunces", "DM Serif Display", serif;
-  --font-display: "DM Serif Display", "Fraunces", serif;
+  --font-sans:    "Cormorant Garamond", "Fraunces", serif;
+  --font-display: "DM Serif Display", "Cormorant Garamond", serif;
+  --font-script:  "Pinyon Script", "DM Serif Display", cursive;
 
   --background:           #1A0810;
   --foreground:           #FBE9EE;
