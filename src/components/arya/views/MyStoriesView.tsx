@@ -69,7 +69,7 @@ function StoryThumb({ poster, title }: { poster?: string | null; title: string }
 export function MyStoriesView() {
   const { navigate, tgUser, purchased, wishlist, toggleWishlist } = useApp();
   const [tab, setTab] = useState<"mine" | "want">("mine");
-  const [selected, setSelected] = useState<PurchasedStory | null>(null);
+  // const [selected, setSelected] = useState<PurchasedStory | null>(null);
 
   // DB purchases
   const [dbStories, setDbStories] = useState<PurchasedStory[]>([]);
@@ -155,7 +155,7 @@ export function MyStoriesView() {
           {!loading && !error && merged.length > 0 && (
             <div className="mt-4 space-y-2">
               {merged.map((s) => (
-                <StoryRow key={s.story_id} story={s} onRefresh={load} onOpen={() => { haptics.light(); setSelected(s); }} />
+                <StoryRow key={s.story_id} story={s} onRefresh={load} onOpen={() => { haptics.light(); navigate({ name: "purchased-detail", storyId: s.story_id }); }} />
               ))}
             </div>
           )}
@@ -164,10 +164,7 @@ export function MyStoriesView() {
         </>
       )}
 
-      {/* Detail bottom sheet */}
-      {selected && (
-        <PurchasedDetailSheet story={selected} onClose={() => setSelected(null)} />
-      )}
+
 
       {/* WANT TO LISTEN */}
       {tab === "want" && (

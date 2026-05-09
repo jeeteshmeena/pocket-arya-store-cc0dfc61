@@ -9,6 +9,7 @@ type View =
   | { name: "mystories" }
   | { name: "profile" }
   | { name: "detail"; storyId: string }
+  | { name: "purchased-detail"; storyId: string }
   | { name: "settings" }
   | { name: "checkout" };
 
