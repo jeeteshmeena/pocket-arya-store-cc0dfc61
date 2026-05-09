@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
