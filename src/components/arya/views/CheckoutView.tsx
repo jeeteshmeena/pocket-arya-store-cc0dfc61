@@ -227,58 +227,104 @@ export function CheckoutView() {
         {/* ── SUCCESS ─────────────────────────────────────────── */}
         {phase.name === "success" && (
           <div className="space-y-4 animate-fade-in">
-            {/* Hero confirmation */}
-            <div className="rounded-[20px] bg-gradient-to-br from-emerald-500/10 via-surface to-surface border border-emerald-500/20 p-6 text-center shadow-[0_2px_12px_rgba(16,185,129,0.08)]">
-              <div className="relative inline-block">
-                <div className="absolute inset-0 rounded-full bg-emerald-500/20 animate-splash-ring" />
-                <div className="h-16 w-16 rounded-full bg-emerald-500 grid place-items-center relative shadow-lg shadow-emerald-500/30">
-                  <CheckCircle2 className="h-9 w-9 text-white" strokeWidth={2.5} />
+            {/* Receipt-style hero (perforated edge) */}
+            <div className="relative">
+              <div className="rounded-[24px] bg-surface border border-border/60 shadow-[0_12px_36px_rgba(0,0,0,0.10)] overflow-hidden">
+                {/* Top emerald banner */}
+                <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-500 to-teal-600 px-6 pt-7 pb-8 text-center text-white">
+                  <div className="relative inline-block">
+                    <div className="absolute inset-0 rounded-full bg-white/25 animate-splash-ring" />
+                    <div className="h-[68px] w-[68px] rounded-full bg-white grid place-items-center relative shadow-[0_10px_30px_rgba(0,0,0,0.22)]">
+                      <CheckCircle2 className="h-10 w-10 text-emerald-500" strokeWidth={2.6} />
+                    </div>
+                  </div>
+                  <h2 className="mt-4 font-display font-extrabold text-[22px] tracking-tight">
+                    Thank You for Your Order
+                  </h2>
+                  <p className="mt-1.5 text-[12.5px] text-white/85 max-w-[280px] mx-auto leading-snug">
+                    Your purchase is confirmed and your stories are now in your Library.
+                  </p>
                 </div>
-              </div>
-              <h2 className="mt-4 font-display font-extrabold text-[20px] text-foreground tracking-tight">
-                Payment Successful
-              </h2>
-              <p className="mt-1.5 text-[13px] text-muted-foreground max-w-[280px] mx-auto">
-                Your stories are now in your Library and on the way via Telegram.
-              </p>
-              <div className="mt-4 inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold uppercase tracking-wider">
-                <Sparkles className="h-3 w-3" /> Paid · ₹{phase.amount}
+
+                {/* Perforated divider */}
+                <div className="relative h-5 bg-surface">
+                  <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-background border border-border/60" />
+                  <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-background border border-border/60" />
+                  <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 border-t border-dashed border-border" />
+                </div>
+
+                {/* Receipt body */}
+                <div className="px-5 pt-3 pb-5">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground mb-3">
+                    <Receipt className="h-3.5 w-3.5" /> Receipt
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <ReceiptRow
+                      icon={<CalendarDays className="h-3.5 w-3.5" />}
+                      label="Date"
+                      value={new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+                    />
+                    <ReceiptRow
+                      icon={<Receipt className="h-3.5 w-3.5" />}
+                      label="Order ID"
+                      mono
+                      value={phase.order_id}
+                      onCopy={() => copy("order", phase.order_id)}
+                      copied={copiedKey === "order"}
+                    />
+                    {phase.payment_id && (
+                      <ReceiptRow
+                        icon={<CreditCard className="h-3.5 w-3.5" />}
+                        label="Payment ID"
+                        mono
+                        value={phase.payment_id}
+                        onCopy={() => copy("pay", phase.payment_id!)}
+                        copied={copiedKey === "pay"}
+                      />
+                    )}
+                    <ReceiptRow
+                      icon={<CreditCard className="h-3.5 w-3.5" />}
+                      label="Method"
+                      valueNode={<span className="font-semibold">Razorpay</span>}
+                    />
+                  </div>
+
+                  <div className="my-4 border-t border-dashed border-border" />
+
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Paid</div>
+                      <div className="font-display font-extrabold text-[26px] tracking-tight tabular-nums leading-none mt-1">
+                        ₹{phase.amount}
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider">
+                      <Sparkles className="h-3 w-3" /> Paid
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Order Details */}
+            {/* Order timeline */}
             <div>
-              <SectionLabel>Order Details</SectionLabel>
-              <div className="rounded-[20px] bg-surface border border-border/60 overflow-hidden divide-y divide-border/60 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-                <DetailRow
-                  label="Order ID"
-                  value={phase.order_id}
-                  mono
-                  onCopy={() => copy("order", phase.order_id)}
-                  copied={copiedKey === "order"}
+              <SectionLabel>Order Status</SectionLabel>
+              <div className="rounded-[20px] bg-surface border border-border/60 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <Timeline
+                  steps={[
+                    { label: "Order Placed", time: "Just now", icon: <ShoppingBag className="h-3.5 w-3.5" />, done: true },
+                    { label: "Payment Confirmed", time: "Just now", icon: <CreditCard className="h-3.5 w-3.5" />, done: true },
+                    { label: "Added to Library", time: "Just now", icon: <Library className="h-3.5 w-3.5" />, done: true },
+                    { label: "Episodes Ready", time: "Available now", icon: <Package className="h-3.5 w-3.5" />, done: true },
+                  ]}
                 />
-                {phase.payment_id && (
-                  <DetailRow
-                    label="Payment ID"
-                    value={phase.payment_id}
-                    mono
-                    onCopy={() => copy("pay", phase.payment_id!)}
-                    copied={copiedKey === "pay"}
-                  />
-                )}
-                <DetailRow label="Amount" value={`₹${phase.amount}`} bold />
-                <DetailRow label="Status" valueNode={
-                  <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                    Paid
-                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                  </span>
-                } />
               </div>
             </div>
 
             {/* Purchased items */}
             <div>
-              <SectionLabel>Purchased ({cartSnap.current.length})</SectionLabel>
+              <SectionLabel>Items ({cartSnap.current.length})</SectionLabel>
               <div className="rounded-[20px] bg-surface border border-border/60 overflow-hidden divide-y divide-border/60 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 {cartSnap.current.map((s) => (
                   <div key={s.id} className="flex items-center gap-3 p-3.5">
@@ -288,6 +334,9 @@ export function CheckoutView() {
                       <div className="text-[11px] text-muted-foreground mt-1 truncate">
                         {[s.platform, s.genre].filter(Boolean).join(" · ")}
                       </div>
+                      <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        <Check className="h-3 w-3" strokeWidth={3} /> In your library
+                      </div>
                     </div>
                     <div className="text-[14px] font-bold text-foreground tabular-nums">₹{s.price}</div>
                   </div>
@@ -295,39 +344,18 @@ export function CheckoutView() {
               </div>
             </div>
 
-            {/* Info banner */}
-            <div className="rounded-[18px] border border-amber-500/30 bg-amber-500/[0.06] p-4">
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-xl bg-amber-500/15 grid place-items-center shrink-0">
-                  <Inbox className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[13px] font-bold text-amber-700 dark:text-amber-300">
-                    How to receive your story
-                  </div>
-                  <p className="text-[12px] text-amber-700/80 dark:text-amber-300/80 mt-1 leading-relaxed">
-                    Open the bot below and tap <span className="font-bold">My Stories</span> to access your episodes. Files will be delivered directly to your Telegram.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* CTAs */}
-            <div className="space-y-2.5 pt-1">
+            {/* Single primary CTA */}
+            <div className="pt-1">
               <button
-                onClick={() => { resetCheckout(); navigate({ name: "mystories" }); }}
-                className="w-full h-[54px] rounded-[16px] bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+                onClick={() => { resetCheckout(); replaceView({ name: "mystories" }); }}
+                className="w-full h-[56px] rounded-[16px] bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
               >
                 <Library className="h-5 w-5" />
                 Go to My Library
               </button>
-              <button
-                onClick={() => openTelegramLink(phase.bot_url)}
-                className="w-full h-[50px] rounded-[16px] bg-surface border border-border text-[14px] font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
-              >
-                <Send className="h-4 w-4" />
-                Open Telegram Bot
-              </button>
+              <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
+                A confirmation receipt has been recorded for your account.
+              </p>
             </div>
           </div>
         )}
