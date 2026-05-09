@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Mail, Send, Check, FileText, Shield, HelpCircle, Sparkles, Truck, Receipt, MessageSquare, ChevronDown, Ticket, MessageCircle, Lightbulb } from "lucide-react";
+import { X, Mail, Send, Check, FileText, Shield, HelpCircle, Sparkles, Truck, Receipt, MessageSquare, ChevronDown, Ticket, MessageCircle, Lightbulb, Loader2, CheckCircle2 } from "lucide-react";
 import { FAQ_ITEMS, ABOUT_TEXT, TERMS_TEXT, REFUND_TEXT, PRIVACY_TEXT, DELIVERY_TEXT } from "./legal-content";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
-import { BOT_USERNAME } from "@/lib/api";
+import { BOT_USERNAME, submitSupport } from "@/lib/api";
 
 export type InfoDialogKind = "terms" | "refund" | "faq" | "about" | "privacy" | "delivery" | "contact" | null;
 
@@ -38,6 +38,7 @@ export function InfoDialog({
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<NonNullable<InfoDialogKind> | null>(null);
   const [closing, setClosing] = useState(false);
+  const [supportMode, setSupportMode] = useState<"menu" | "support" | "chat" | "suggestion">("menu");
 
   // Track active tab when opened
   useEffect(() => {
@@ -178,72 +179,71 @@ export function InfoDialog({
                   {ABOUT_TEXT}
                 </p>
               </div>
-            ) : current === "contact" ? (
-              <div className="space-y-3 pb-4">
-                <a
-                  href={`https://t.me/${BOT_USERNAME}?start=support`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98]",
-                    theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
-                  )}
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="h-9 w-9 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                      <Ticket className="h-4.5 w-4.5" />
+                        ) : current === "contact" ? (
+              supportMode !== "menu" ? (
+                <SupportForm type={supportMode} onBack={() => setSupportMode("menu")} theme={theme} />
+              ) : (
+                <div className="space-y-3 pb-4">
+                  <button
+                    onClick={() => setSupportMode("support")}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
+                      theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="h-9 w-9 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <Ticket className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[14px]">Open Support Ticket</div>
+                        <div className="text-[12px] text-muted-foreground">Get help with orders or access</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-semibold text-[14px]">Open Support Ticket</div>
-                      <div className="text-[12px] text-muted-foreground">Get help with orders or access</div>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-                </a>
+                    <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                  </button>
 
-                <a
-                  href={`https://t.me/${BOT_USERNAME}?start=chat`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98]",
-                    theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
-                  )}
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                      <MessageCircle className="h-4.5 w-4.5" />
+                  <button
+                    onClick={() => setSupportMode("chat")}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
+                      theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                        <MessageCircle className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[14px]">Live Chat</div>
+                        <div className="text-[12px] text-muted-foreground">Chat with an agent directly</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-semibold text-[14px]">Live Chat</div>
-                      <div className="text-[12px] text-muted-foreground">Chat with an agent directly</div>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-                </a>
+                    <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                  </button>
 
-                <a
-                  href={`https://t.me/${BOT_USERNAME}?start=suggestion`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98]",
-                    theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
-                  )}
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="h-9 w-9 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                      <Lightbulb className="h-4.5 w-4.5" />
+                  <button
+                    onClick={() => setSupportMode("suggestion")}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-xl border transition active:scale-[0.98] text-left",
+                      theme === "cream" ? "bg-white border-border/60 hover:bg-muted/30" : "bg-surface border-border/60 hover:bg-muted/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="h-9 w-9 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                        <Lightbulb className="h-4.5 w-4.5" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[14px]">Submit Suggestion</div>
+                        <div className="text-[12px] text-muted-foreground">Request features or stories</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-semibold text-[14px]">Submit Suggestion</div>
-                      <div className="text-[12px] text-muted-foreground">Request features or stories</div>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
-                </a>
-              </div>
+                    <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                  </button>
+                </div>
+              )
             ) : (
+
               <LegalSections
                 text={
                   current === "terms"    ? TERMS_TEXT    :
@@ -342,6 +342,82 @@ function AccordionFAQ({ theme }: { theme: string }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function SupportForm({ type, onBack, theme }: { type: "support" | "chat" | "suggestion"; onBack: () => void; theme: string }) {
+  const { tgUser } = useApp();
+  const [msg, setMsg] = useState("");
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!msg.trim() || sending) return;
+    setSending(true);
+    try {
+      await submitSupport({
+        telegram_id: tgUser.telegram_id,
+        username: tgUser.username,
+        first_name: (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.first_name || "Mini App User",
+        type,
+        message: msg
+      });
+      setDone(true);
+      setTimeout(() => onBack(), 3000);
+    } catch (e) {
+      alert("Failed to submit. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const titles = {
+    support: "Open Support Ticket",
+    chat: "Live Chat",
+    suggestion: "Submit Suggestion"
+  };
+
+  if (done) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 space-y-4 animate-fade-in">
+        <div className="h-12 w-12 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
+        <p className={cn("font-semibold text-center", theme === "cream" ? "text-black/80" : "text-foreground")}>Submitted Successfully!</p>
+        <p className="text-[13px] text-muted-foreground text-center">Our team will get back to you soon.</p>
+        <button onClick={onBack} className="mt-2 text-primary font-medium text-[14px]">Go Back</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full animate-fade-in pb-4">
+      <div className="flex items-center mb-4">
+        <button onClick={onBack} className="mr-3 p-1.5 -ml-1.5 rounded-full hover:bg-muted text-muted-foreground"><ChevronDown className="h-5 w-5 rotate-90" /></button>
+        <h3 className={cn("font-bold text-[16px]", theme === "cream" ? "text-black/80" : "text-foreground")}>{titles[type as keyof typeof titles]}</h3>
+      </div>
+      <textarea
+        autoFocus
+        value={msg}
+        onChange={e => setMsg(e.target.value)}
+        placeholder="Type your message here..."
+        className={cn(
+          "w-full flex-1 min-h-[160px] p-4 text-[14px] border rounded-xl outline-none transition-colors resize-none mb-4",
+          theme === "cream" ? "bg-white border-border/60 focus:border-black/20 text-black/80 placeholder:text-black/40" : "bg-muted/30 border-border/60 focus:border-primary/50 text-foreground placeholder:text-muted-foreground"
+        )}
+      />
+      <button 
+        onClick={handleSubmit} 
+        disabled={!msg.trim() || sending}
+        className={cn(
+          "h-12 w-full rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 transition active:scale-[0.98] disabled:opacity-50",
+          theme === "cream" ? "bg-black text-white hover:bg-black/90" : "bg-primary text-primary-foreground hover:bg-primary/90"
+        )}
+      >
+        {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        {sending ? "Sending..." : "Submit"}
+      </button>
     </div>
   );
 }

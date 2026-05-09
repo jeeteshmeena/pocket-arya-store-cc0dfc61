@@ -115,6 +115,19 @@ export async function fetchMyPurchases(
   }
 }
 
+export async function submitSupport(data: {
+  telegram_id: number | null;
+  username: string | null;
+  first_name: string | null;
+  type: string;
+  message: string;
+}): Promise<{ success: boolean; message: string }> {
+  return request<{ success: boolean; message: string }>("/support", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export function openTelegramLink(url: string) {
   try {
     const tg = (window as any).Telegram?.WebApp;
