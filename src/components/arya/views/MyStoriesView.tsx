@@ -1,5 +1,8 @@
 import { useApp } from "@/store/app-store";
-import { Send, Library as LibIcon, ShoppingBag, Loader2, RefreshCw, Heart, X } from "lucide-react";
+import {
+  Send, Library as LibIcon, ShoppingBag, Loader2, RefreshCw, Heart, X,
+  CheckCircle2, Sparkles, Inbox, ChevronRight, Bot,
+} from "lucide-react";
 import { openTelegramLink, BOT_USERNAME, fetchMyPurchases } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 
