@@ -38,6 +38,7 @@ function StoryThumb({ poster, title }: { poster?: string | null; title: string }
 export function MyStoriesView() {
   const { navigate, tgUser, purchased, wishlist, toggleWishlist } = useApp();
   const [tab, setTab] = useState<"mine" | "want">("mine");
+  const [selected, setSelected] = useState<PurchasedStory | null>(null);
 
   // DB purchases
   const [dbStories, setDbStories] = useState<PurchasedStory[]>([]);
