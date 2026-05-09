@@ -12,6 +12,7 @@ import {
   Receipt,
   Copy,
   Check,
+  ShieldCheck,
 } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -177,6 +178,7 @@ export function ProfileView() {
 
       {/* Menu */}
       <div className={cn("mt-4 overflow-hidden", useApp().theme === "cream" ? "space-y-2" : "rounded-2xl bg-surface divide-y divide-border")}>
+        <Item icon={ShieldCheck} label="Admin Panel" onClick={() => navigate({ name: "admin" })} isCream={useApp().theme === "cream"} />
         <Item icon={Gift} label="Refer & Earn" badge="Coming Soon" isCream={useApp().theme === "cream"} />
         <Item icon={HelpCircle} label="FAQ" onClick={() => setDialog("faq")} isCream={useApp().theme === "cream"} />
         <Item

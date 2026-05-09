@@ -53,6 +53,11 @@ export async function fetchStories(): Promise<Story[]> {
   return res.data;
 }
 
+export async function fetchAdminStats(identity: TelegramIdentity): Promise<any> {
+  const res = await request<any>(`/admin/stats?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data;
+}
+
 export async function checkoutCart(
   storyIds: string[],
   identity: TelegramIdentity,

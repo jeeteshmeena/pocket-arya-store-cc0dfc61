@@ -11,6 +11,7 @@ import { DetailView } from "./views/DetailView";
 import { CheckoutView } from "./views/CheckoutView";
 import { PurchasedDetailView } from "./views/PurchasedDetailView";
 import { SupportView } from "./views/SupportView";
+import { AdminView } from "./views/AdminView";
 import { TermsOnboarding } from "./TermsOnboarding";
 import { DeepLinkErrorDialog } from "./DeepLinkErrorDialog";
 import { Splash } from "./Splash";
@@ -46,6 +47,7 @@ function Shell() {
           {view.name === "profile"   && <ProfileView />}
           {view.name === "settings"  && <SettingsView />}
           {view.name === "support"   && <SupportView />}
+          {view.name === "admin"     && <AdminView />}
           {view.name === "detail"    && <DetailView storyId={view.storyId} />}
           {view.name === "purchased-detail" && <PurchasedDetailView storyId={view.storyId} />}
           {view.name === "checkout"  && <CheckoutView />}
