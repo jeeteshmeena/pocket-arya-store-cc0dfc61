@@ -5,13 +5,16 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
 
 export function DetailView({ storyId }: { storyId: string }) {
-  const { back, addToCart, goToCheckout, cart, stories } = useApp();
+  const { back, addToCart, goToCheckout, cart, stories, storiesLoading } = useApp();
   const story = stories.find((s) => s.id === storyId);
   const [expanded, setExpanded] = useState(false);
   const [bannerErr, setBannerErr] = useState(false);
   const [posterErr, setPosterErr] = useState(false);
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+  const [posterLoaded, setPosterLoaded] = useState(false);
 
   if (!story) {
+    if (storiesLoading) return <DetailSkeleton onBack={back} />;
     return (
       <div className="animate-fade-in px-6 pt-24 text-center">
         <p className="text-sm text-muted-foreground">Story not found.</p>
