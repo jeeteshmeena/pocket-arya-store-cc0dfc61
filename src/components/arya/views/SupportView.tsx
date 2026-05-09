@@ -118,7 +118,7 @@ export function SupportView() {
             <button
               onClick={() => {
                 import("@/lib/api").then(({ openTelegramLink }) => {
-                  openTelegramLink("https://t.me/AryaPremiumSupport");
+                  openTelegramLink("https://t.me/ItsNewtonPlanet");
                 });
               }}
               className={cn(

@@ -106,7 +106,7 @@ export async function fetchMyPurchases(
   order_details?: { order_id: string; payment_id: string; amount: number; source: string; paid_at: string } | null;
 }[]> {
   try {
-    const res = await fetch(`/api/my-purchases?telegram_id=${telegramId}`);
+    const res = await fetch(`${BASE_URL}/my-purchases?telegram_id=${telegramId}`);
     if (!res.ok) return [];
     const j = await res.json();
     return Array.isArray(j.data) ? j.data : [];
@@ -153,7 +153,7 @@ export async function fetchMyRequests(telegramId: number): Promise<{
   id: string; type: string; text: string; status: string; created_at: string;
 }[]> {
   try {
-    const res = await fetch(`/api/my-requests?telegram_id=${telegramId}`);
+    const res = await fetch(`${BASE_URL}/my-requests?telegram_id=${telegramId}`);
     if (!res.ok) return [];
     const j = await res.json();
     return Array.isArray(j.data) ? j.data : [];
