@@ -54,6 +54,7 @@ type Ctx = {
   setSearchOpen: (v: boolean) => void;
   view: View;
   navigate: (v: View) => void;
+  replaceView: (v: View) => void;
   back: () => void;
 
   // Checkout
