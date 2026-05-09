@@ -254,6 +254,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     searchOpen, setSearchOpen,
     view,
     navigate: (v) => setHistory((h) => [...h, v]),
+    replaceView: (v) => setHistory(() => [{ name: "home" }, v]),
     back: () => setHistory((h) => (h.length > 1 ? h.slice(0, -1) : h)),
     checkoutState,
     resetCheckout: () => setCheckoutState({ status: "idle" }),
