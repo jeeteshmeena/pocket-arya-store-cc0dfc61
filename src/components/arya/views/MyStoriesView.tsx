@@ -123,13 +123,18 @@ export function MyStoriesView() {
           {!loading && !error && merged.length > 0 && (
             <div className="mt-4 space-y-2">
               {merged.map((s) => (
-                <StoryRow key={s.story_id} story={s} onRefresh={load} />
+                <StoryRow key={s.story_id} story={s} onRefresh={load} onOpen={() => { haptics.light(); setSelected(s); }} />
               ))}
             </div>
           )}
 
 
         </>
+      )}
+
+      {/* Detail bottom sheet */}
+      {selected && (
+        <PurchasedDetailSheet story={selected} onClose={() => setSelected(null)} />
       )}
 
       {/* WANT TO LISTEN */}
