@@ -1,12 +1,14 @@
 import { X, Trash2 } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
+import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 export function CartPanel() {
   const {
     cartOpen, setCartOpen, cart, removeFromCart, navigate,
     goToCheckout,
   } = useApp();
+  const fmt = usePriceFormat();
 
   if (!cartOpen) return null;
   const total = cart.reduce((a, b) => a + b.price, 0);
@@ -50,7 +52,7 @@ export function CartPanel() {
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className={cn("text-sm truncate", useApp().theme === "cream" ? "font-bold text-black" : "font-semibold")}>{s.title}</div>
                   <div className={cn("text-xs", useApp().theme === "cream" ? "text-black/60 font-semibold" : "text-muted-foreground")}>{s.platform} · {s.genre}</div>
-                  <div className={cn("text-sm mt-1", useApp().theme === "cream" ? "font-extrabold text-black" : "font-semibold")}>₹{s.price}</div>
+                  <div className={cn("text-sm mt-1", useApp().theme === "cream" ? "font-extrabold text-black" : "font-semibold")}>{fmt(s.price)}</div>
                 </div>
               </button>
               <button
@@ -67,7 +69,7 @@ export function CartPanel() {
           <div className={cn("p-4 space-y-4", useApp().theme === "cream" ? "bg-[#CCE5FF] border-t-4 border-black" : "border-t border-border")}>
             <div className="flex items-center justify-between">
               <span className={cn("text-sm uppercase tracking-wider", useApp().theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>Total</span>
-              <span className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-2xl text-black" : "font-bold text-lg")}>₹{total}</span>
+              <span className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-2xl text-black" : "font-bold text-lg")}>{fmt(total)}</span>
             </div>
             <button
               onClick={handleCheckout}

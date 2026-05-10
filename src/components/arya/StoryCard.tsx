@@ -13,6 +13,7 @@ import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
 import { StatusBadge } from "./StatusBadge";
 import { trackEvent } from "@/lib/api";
+import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isDisplayableUrl(src?: string | null): boolean {
@@ -212,6 +213,7 @@ export const StoryCard = memo(function StoryCard({
   enablePreview?: boolean;
 }) {
   const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout } = useApp();
+  const fmt = usePriceFormat();
 
   const liked   = inWishlist(story.id);
   const inCart  = cart.some(x => x.id === story.id);
@@ -333,7 +335,7 @@ export const StoryCard = memo(function StoryCard({
             {story.title}
           </div>
           <div className="text-[11.5px] font-bold mt-0.5 text-foreground/75">
-            ₹{story.price}
+            {fmt(story.price)}
           </div>
         </div>
       </div>
@@ -379,6 +381,7 @@ function PreviewPopup({
   onOpen: () => void;
 }) {
   const { theme } = useApp();
+  const fmt = usePriceFormat();
   const { bg, text } = getGenre(story.genre);
   const hasImage = isDisplayableUrl(story.poster);
 
@@ -432,7 +435,7 @@ function PreviewPopup({
           )}
           <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent" />
           <div className="absolute bottom-2 right-3 text-white text-[11px] font-bold drop-shadow">
-            ₹{story.price}
+            {fmt(story.price)}
           </div>
         </div>
 

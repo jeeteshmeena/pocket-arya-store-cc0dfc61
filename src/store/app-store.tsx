@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Story } from "@/lib/data";
 import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
+import { type CurrencyCode, CURRENCY_MAP, type Currency } from "@/lib/currency";
 
 type Theme = "default" | "dark" | "teal" | "cream" | "mint" | "romantic";
 type View =
@@ -25,6 +26,10 @@ type CheckoutState =
 type Ctx = {
   theme: Theme;
   setTheme: (t: Theme) => void;
+
+  // Currency
+  currency: Currency;
+  setCurrency: (code: CurrencyCode) => void;
 
   // Data
   stories: Story[];
@@ -128,6 +133,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<View[]>([{ name: "home" }]);
   const [checkoutState, setCheckoutState] = useState<CheckoutState>({ status: "idle" });
   const [deepLinkError, setDeepLinkError] = useState<string | null>(null);
+
+  // Currency
+  const [currencyCode, setCurrencyCode] = useState<CurrencyCode>(() => {
+    if (typeof window === "undefined") return "INR";
+    return (localStorage.getItem("arya_currency") as CurrencyCode) || "INR";
+  });
+  const currency = CURRENCY_MAP[currencyCode] || CURRENCY_MAP["INR"];
+  const setCurrency = (code: CurrencyCode) => {
+    setCurrencyCode(code);
+    localStorage.setItem("arya_currency", code);
+  };
 
   useEffect(() => {
     if (tgUser.telegram_id) {
@@ -254,6 +270,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     theme,
     setTheme: setThemeState,
+    currency,
+    setCurrency,
     stories,
     storiesLoading,
     storiesError,
@@ -299,7 +317,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     deepLinkError,
     clearDeepLinkError: () => setDeepLinkError(null),
-  }), [theme, stories, storiesLoading, storiesError, tgUser, cart, purchased, wishlist, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
+  }), [theme, currency, stories, storiesLoading, storiesError, tgUser, cart, purchased, wishlist, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }

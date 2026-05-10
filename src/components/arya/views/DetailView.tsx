@@ -3,9 +3,11 @@ import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
+import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 export function DetailView({ storyId }: { storyId: string }) {
   const { back, addToCart, goToCheckout, cart, stories, storiesLoading } = useApp();
+  const fmt = usePriceFormat();
   const story = stories.find((s) => s.id === storyId);
   const [expanded, setExpanded] = useState(false);
   const [bannerErr, setBannerErr] = useState(false);
@@ -207,7 +209,7 @@ export function DetailView({ storyId }: { storyId: string }) {
               {/* Neo-brutalist buttons */}
               <div className="flex-1">
                 <div className="text-[11px] text-black/60 font-bold uppercase tracking-wider">Price</div>
-                <div className="font-display font-extrabold text-xl text-black">₹{story.price}</div>
+                <div className="font-display font-extrabold text-xl text-black">{fmt(story.price)}</div>
               </div>
               <button
                 onClick={() => {
@@ -234,7 +236,7 @@ export function DetailView({ storyId }: { storyId: string }) {
             <>
               <div className="flex-1">
                 <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Price</div>
-                <div className="font-display font-bold text-lg text-foreground">₹{story.price}</div>
+                <div className="font-display font-bold text-lg text-foreground">{fmt(story.price)}</div>
               </div>
               <button
                 onClick={() => {

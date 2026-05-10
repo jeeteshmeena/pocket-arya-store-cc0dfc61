@@ -8,6 +8,7 @@ import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
+import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 // Exact 1184:556 = 46.96... %
 const ASPECT_PERCENT = (556 / 1184) * 100; // = 46.959...%
@@ -140,6 +141,7 @@ function usePreloadImages(slides: Banner[]) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export function HeroSlider() {
   const { addToCart, goToCheckout, navigate, theme, stories } = useApp();
+  const fmt = usePriceFormat();
   const { slides, ready } = useBanners(stories);
   const loadedImages = usePreloadImages(slides);
 
@@ -357,7 +359,7 @@ export function HeroSlider() {
                     isCreamed ? "neo-button bg-white text-black" : "rounded-full bg-white text-black"
                   )}
                 >
-                  Buy Now · ₹{story.price}
+                  Buy Now · {fmt(story.price)}
                 </button>
                 <button
                   id="hero-add-btn"
