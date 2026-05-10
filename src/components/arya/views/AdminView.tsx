@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText, getOptimizedImage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -361,7 +361,7 @@ export function AdminView() {
                     <div key={story.story_id} className={cn("p-3 rounded-xl flex gap-3 items-center", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
                       <div className="w-12 h-12 rounded-md bg-muted flex-shrink-0 overflow-hidden relative">
                         {story.poster_url ? (
-                          <img src={story.poster_url} className="w-full h-full object-cover" />
+                          <img src={getOptimizedImage(story.poster_url) || ""} className="w-full h-full object-cover" />
                         ) : (
                           <FileText className="absolute inset-0 m-auto h-5 w-5 text-muted-foreground" />
                         )}
@@ -395,7 +395,7 @@ export function AdminView() {
                 <div className="space-y-3">
                   {banners.map(banner => (
                     <div key={banner.id} className={cn("p-3 rounded-xl flex gap-3 items-center", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
-                      <img src={banner.image_url} alt="Banner" className="w-20 h-12 object-cover rounded-md bg-muted" />
+                      <img src={getOptimizedImage(banner.image_url) || ""} alt="Banner" className="w-20 h-12 object-cover rounded-md bg-muted" />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs text-muted-foreground truncate">{banner.target_link}</div>
                         <div className="text-xs font-bold text-primary">Order: {banner.order}</div>
@@ -587,7 +587,7 @@ export function AdminView() {
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Poster Image</label>
                   {/* Preview */}
                   {editingStory.poster_url && (
-                    <img src={editingStory.poster_url} alt="Poster Preview" className="w-full h-40 object-cover rounded-xl mb-2 bg-muted" />
+                    <img src={getOptimizedImage(editingStory.poster_url) || ""} alt="Poster Preview" className="w-full h-40 object-cover rounded-xl mb-2 bg-muted" />
                   )}
                   {/* Upload from Phone */}
                   <label className={cn("flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed cursor-pointer text-sm font-semibold transition mb-2", imageUploading ? "opacity-50" : "", theme === "cream" ? "border-black text-black" : "border-border text-muted-foreground hover:border-primary")}>
@@ -633,7 +633,7 @@ export function AdminView() {
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Image URL</label>
                 <input required type="url" value={editingBanner.image_url} onChange={e => setEditingBanner({...editingBanner, image_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://catbox.moe/..." />
-                {editingBanner.image_url && <img src={editingBanner.image_url} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl" />}
+                {editingBanner.image_url && <img src={getOptimizedImage(editingBanner.image_url) || ""} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl" />}
               </div>
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Target Link</label>
@@ -689,7 +689,7 @@ function SupportTicketCard({ ticket, theme, onReply }: { ticket: any, theme: str
 
       {/* Media Preview */}
       {ticket.type === "photo" && ticket.file_url && (
-        <img src={ticket.file_url} alt="User media" className="w-full max-h-48 object-contain rounded-lg mb-2 bg-muted" />
+        <img src={getOptimizedImage(ticket.file_url) || ""} alt="User media" className="w-full max-h-48 object-contain rounded-lg mb-2 bg-muted" />
       )}
       {ticket.type === "video" && ticket.file_url && (
         <video src={ticket.file_url} controls className="w-full max-h-48 rounded-lg mb-2 bg-muted" />

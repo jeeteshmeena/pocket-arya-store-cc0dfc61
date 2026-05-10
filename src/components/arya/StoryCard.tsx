@@ -12,12 +12,12 @@ import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
 import { StatusBadge } from "./StatusBadge";
-import { trackEvent } from "@/lib/api";
+import { trackEvent, getOptimizedImage } from "@/lib/api";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isDisplayableUrl(src?: string | null): boolean {
-  return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image/"));
+  return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image"));
 }
 
 const GENRE_COLORS: Record<string, string> = {
@@ -185,7 +185,7 @@ function LazyImage({ src, alt, className }: { src: string; alt: string; classNam
       {!loaded && <div className="absolute inset-0 shimmer-bg" />}
       {inView && !err && (
         <img
-          src={src}
+          src={getOptimizedImage(src)}
           alt={alt}
           loading="lazy"
           decoding="async"

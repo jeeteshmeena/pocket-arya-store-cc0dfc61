@@ -137,6 +137,15 @@ export async function translateText(text: string, targetLang: "hi" | "en"): Prom
   }
 }
 
+export function getOptimizedImage(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith("/api/image?url=")) return url;
+  if (url.startsWith("http")) {
+    return `/api/image?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 export async function checkoutCart(
   storyIds: string[],
   identity: TelegramIdentity,

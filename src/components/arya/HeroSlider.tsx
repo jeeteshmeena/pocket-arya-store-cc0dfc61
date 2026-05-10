@@ -9,6 +9,7 @@ import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
+import { getOptimizedImage } from "@/lib/api";
 
 // Exact 1184:556 = 46.96... %
 const ASPECT_PERCENT = (556 / 1184) * 100; // = 46.959...%
@@ -129,7 +130,7 @@ function usePreloadImages(slides: Banner[]) {
       if (!s.image) return;
       const img = new Image();
       img.fetchPriority = "high";
-      img.src = s.image;
+      img.src = getOptimizedImage(s.image) || "";
       img.onload = () =>
         setLoadedSet(prev => new Set([...prev, s.id]));
     });
@@ -407,7 +408,7 @@ const SlideImage = memo(function SlideImage({
           <div className="absolute inset-0 shimmer-bg" />
         )}
         <img
-          src={src}
+          src={getOptimizedImage(src) || ""}
           alt={title}
           onError={() => setErr(true)}
           onLoad={() => { /* image painted */ }}

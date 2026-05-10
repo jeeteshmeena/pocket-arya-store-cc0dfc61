@@ -4,6 +4,7 @@ import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
+import { getOptimizedImage } from "@/lib/api";
 
 export function DetailView({ storyId }: { storyId: string }) {
   const { back, addToCart, goToCheckout, cart, stories, storiesLoading } = useApp();
@@ -96,7 +97,7 @@ export function DetailView({ storyId }: { storyId: string }) {
             )}
             {story.banner && !bannerErr ? (
               <img
-                src={story.banner} alt={story.title}
+                src={getOptimizedImage(story.banner) || ""} alt={story.title}
                 onError={() => setBannerErr(true)}
                 onLoad={() => setBannerLoaded(true)}
                 className={cn(
@@ -125,7 +126,7 @@ export function DetailView({ storyId }: { storyId: string }) {
                 )}
                 {story.poster && !posterErr ? (
                   <img
-                    src={story.poster} alt=""
+                    src={getOptimizedImage(story.poster) || ""} alt=""
                     onError={() => setPosterErr(true)}
                     onLoad={() => setPosterLoaded(true)}
                     className={cn(
