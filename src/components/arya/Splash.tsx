@@ -91,39 +91,7 @@ export function Splash() {
         </div>
       </div>
 
-      {/* Wordmark */}
-      <div
-        className="mt-8 text-center transition-all duration-500"
-        style={{
-          opacity: phase >= 2 ? 1 : 0,
-          transform: phase >= 2 ? "translateY(0)" : "translateY(10px)",
-        }}
-      >
-        <div className="font-display font-black text-[30px] leading-none tracking-tight text-foreground">
-          Arya<span style={{ color: "var(--color-primary)" }}>Premium</span>
-        </div>
-        <div className="mt-2 text-[10px] uppercase tracking-[0.42em] text-muted-foreground font-semibold">
-          Stories · Music · More
-        </div>
-      </div>
-
-      {/* Refined progress */}
-      <div
-        className="mt-9 h-[3px] w-24 rounded-full overflow-hidden transition-opacity duration-300"
-        style={{
-          opacity: phase >= 3 ? 1 : 0,
-          background: "color-mix(in oklab, var(--color-foreground) 10%, transparent)",
-        }}
-      >
-        <div
-          className="h-full w-1/3 rounded-full"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent, var(--color-primary), transparent)",
-            animation: phase >= 3 ? "splash-bar 1.4s ease-in-out infinite" : "none",
-          }}
-        />
-      </div>
+      {/* Removed wordmark and progress bar as requested */}
 
       <style>{`
         @keyframes splash-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

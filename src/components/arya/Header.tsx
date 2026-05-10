@@ -14,6 +14,35 @@ const THEME_PRESETS: { id: "default" | "dark" | "teal" | "cream" | "mint" | "rom
   { id: "romantic", label: "Romantic", canvas: "#FFF1F2", accent: "#D6336C" },
 ];
 
+const LOGO_TEXTS = ["AP", "By", "Arya"];
+
+function AnimatedLogoText() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((prev) => (prev + 1) % LOGO_TEXTS.length);
+        setVisible(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span
+      className={cn(
+        "font-display font-bold text-[12px] tracking-tight text-foreground transition-opacity duration-300 min-w-[32px] text-center",
+        visible ? "opacity-100" : "opacity-0"
+      )}
+    >
+      {LOGO_TEXTS[index]}
+    </span>
+  );
+}
+
 function ThemePicker() {
   const { theme, setTheme } = useApp();
   const [open, setOpen] = useState(false);
@@ -144,7 +173,7 @@ export function Header() {
               <span className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-border bg-muted shrink-0">
                 <img src={aryaLogo} alt="Arya" className="h-full w-full object-cover" />
               </span>
-              <span className="font-display font-bold text-[12px] tracking-tight text-foreground">Arya</span>
+              <AnimatedLogoText />
             </button>
 
             <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">

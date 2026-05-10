@@ -219,6 +219,45 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
   );
 }
 
+// ── DARK — Full-width nav with large active pill ──────────────────
+function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  return (
+    <nav
+      className="fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)", paddingTop: "8px" }}
+    >
+      <div className="mx-auto max-w-2xl flex items-stretch justify-around px-2">
+        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+          const active = current === id;
+          return (
+            <button
+              key={id}
+              onClick={() => onNav(id)}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex flex-col items-center justify-center flex-1 py-2 transition-all duration-300",
+                active ? "text-white bg-white/10 rounded-[24px]" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon
+                className="h-[22px] w-[22px] mb-1"
+                strokeWidth={active ? 2.5 : 2}
+              />
+              <span className={cn(
+                "text-[10px] tracking-wide",
+                active ? "font-bold text-white" : "font-medium"
+              )}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 import { haptics } from "@/lib/haptics";
 
 export function BottomNav() {
@@ -229,8 +268,9 @@ export function BottomNav() {
     navigate({ name: id as any });
   };
 
+  if (theme === "dark") return <DarkNav current={current} onNav={onNav} />;
   if (theme === "teal") return <TealNav current={current} onNav={onNav} />;
   if (theme === "mint") return <MintNav current={current} onNav={onNav} />;
-  if (theme === "cream" || theme === "dark" || theme === "romantic") return <PillNav current={current} onNav={onNav} />;
+  if (theme === "cream" || theme === "romantic") return <PillNav current={current} onNav={onNav} />;
   return <DefaultNav current={current} onNav={onNav} />;
 }

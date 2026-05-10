@@ -30,33 +30,19 @@ type Banner = {
 
 // ─── Per-slide cinematic overlays ─────────────────────────────────────────────
 const CINEMATIC_OVERLAYS = [
-  // 0 — Deep noir
+  // 0 — Deep noir (Neutral, fits all themes)
   {
     gradient: "linear-gradient(0deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 40%, rgba(0,0,0,0.12) 100%)",
-    badgeBg:  "rgba(239,68,68,0.95)",
-    badgeText:"#fff",
-    accent:   "#ef4444",
-  },
-  // 1 — Warm cinematic amber
-  {
-    gradient: "linear-gradient(0deg, rgba(40,14,0,0.92) 0%, rgba(90,40,0,0.45) 40%, rgba(0,0,0,0.12) 100%)",
-    badgeBg:  "rgba(251,191,36,0.95)",
+    badgeBg:  "rgba(255,255,255,0.95)",
     badgeText:"#000",
-    accent:   "#fbbf24",
+    accent:   "#fff",
   },
-  // 2 — Cool indigo
+  // 1 — Soft slate (Neutral dark)
   {
-    gradient: "linear-gradient(0deg, rgba(10,10,60,0.92) 0%, rgba(30,30,100,0.45) 40%, rgba(0,0,0,0.12) 100%)",
-    badgeBg:  "rgba(129,140,248,0.95)",
+    gradient: "linear-gradient(0deg, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.45) 40%, rgba(0,0,0,0.12) 100%)",
+    badgeBg:  "rgba(255,255,255,0.95)",
     badgeText:"#000",
-    accent:   "#818cf8",
-  },
-  // 3 — Emerald forest
-  {
-    gradient: "linear-gradient(0deg, rgba(0,30,15,0.92) 0%, rgba(0,60,30,0.45) 40%, rgba(0,0,0,0.12) 100%)",
-    badgeBg:  "rgba(52,211,153,0.95)",
-    badgeText:"#000",
-    accent:   "#34d399",
+    accent:   "#fff",
   },
 ];
 

@@ -289,6 +289,8 @@ export const StoryCard = memo(function StoryCard({
             theme === "cream" ? "neo-card"
             : theme === "teal"
               ? "rounded-[14px] ring-1 ring-white/6 shadow-[0_8px_28px_-10px_rgba(0,0,0,0.65)]"
+            : theme === "dark"
+              ? "rounded-none shadow-[0_4px_20px_-8px_rgba(0,0,0,0.45)]"
               : "rounded-[14px] shadow-[0_4px_20px_-8px_rgba(0,0,0,0.45)]",
             square ? "aspect-square" : wide ? "aspect-[4/5]" : "aspect-square"
           )}
