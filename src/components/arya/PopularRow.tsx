@@ -8,6 +8,8 @@ export function PopularRow() {
   const [popularStories, setPopularStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isDark = theme === "dark" || theme === "teal" || theme === "romantic";
+
   useEffect(() => {
     fetch("/api/popular")
       .then(r => r.json())
@@ -24,19 +26,19 @@ export function PopularRow() {
         <div className="px-4 flex items-center justify-between mb-4">
           <h2 className="text-xl font-black tracking-tight" style={{ 
             fontFamily: "'Outfit', sans-serif",
-            color: theme === "cream" ? "#000" : "#fff" 
+            color: isDark ? "#fff" : "#000" 
           }}>
             Popular on AP
           </h2>
         </div>
-        <div className="flex gap-4 overflow-x-hidden pb-6 px-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="shrink-0 relative flex flex-col" style={{ width: "165px" }}>
-              <div className="relative w-full h-[150px] flex items-end justify-end">
-                <div className="relative z-10 w-[130px] h-[130px] rounded-lg bg-surface animate-pulse" />
+        <div className="flex gap-3 overflow-x-hidden pb-6 px-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="shrink-0 relative flex flex-col" style={{ width: "135px" }}>
+              <div className="relative w-full h-[120px] flex items-end justify-end">
+                <div className="relative z-10 w-[110px] h-[110px] rounded-md bg-surface border border-black/5 dark:border-white/10 animate-pulse" />
               </div>
-              <div className="mt-2 w-[130px] flex justify-center self-end">
-                <div className="h-4 w-16 bg-surface animate-pulse rounded" />
+              <div className="mt-2 w-[110px] flex justify-center self-end">
+                <div className="h-4 w-16 bg-surface border border-black/5 dark:border-white/10 animate-pulse rounded" />
               </div>
             </div>
           ))}
@@ -52,7 +54,7 @@ export function PopularRow() {
       <div className="px-4 flex items-center justify-between mb-4">
         <h2 className="text-xl font-black tracking-tight" style={{ 
           fontFamily: "'Outfit', sans-serif",
-          color: theme === "cream" ? "#000" : "#fff" 
+          color: isDark ? "#fff" : "#000" 
         }}>
           Popular on AP
         </h2>
@@ -63,19 +65,19 @@ export function PopularRow() {
           <div 
             key={story.id} 
             className="snap-start shrink-0 relative flex flex-col cursor-pointer"
-            style={{ width: "155px" }}
+            style={{ width: "135px" }}
             onClick={() => navigate({ name: "detail", storyId: story.id })}
           >
-            <div className="relative w-full h-[140px] flex items-end justify-end">
+            <div className="relative w-full h-[120px] flex items-end justify-end">
               {/* The large background ranking number graphic */}
               <div 
-                className="absolute left-[-10px] bottom-[-5px] font-black italic select-none pointer-events-none"
+                className="absolute left-[-15px] bottom-[-5px] font-black italic select-none pointer-events-none"
                 style={{
-                  fontSize: "120px",
+                  fontSize: "110px",
                   lineHeight: "0.8",
                   fontFamily: "'Outfit', sans-serif",
                   color: "transparent",
-                  WebkitTextStroke: theme === "cream" ? "1.5px rgba(0,0,0,0.3)" : "1.5px rgba(255,255,255,0.3)",
+                  WebkitTextStroke: isDark ? "1.5px rgba(255,255,255,0.4)" : "1.5px rgba(0,0,0,0.4)",
                   zIndex: 0
                 }}
               >
@@ -83,7 +85,7 @@ export function PopularRow() {
               </div>
 
               {/* The image card */}
-              <div className="relative z-10 w-[125px] h-[125px] rounded-md overflow-hidden shadow-lg border border-black/5 dark:border-white/10 bg-surface">
+              <div className="relative z-10 w-[110px] h-[110px] rounded-md overflow-hidden shadow-lg border border-black/5 dark:border-white/10 bg-surface">
                 <img 
                   src={story.poster || story.image} 
                   alt={story.title}
@@ -94,8 +96,8 @@ export function PopularRow() {
             </div>
 
             {/* Category / Genre below the image */}
-            <div className="z-10 mt-2 w-[125px] flex justify-center self-end">
-              <span className={cn("text-[13px] font-bold truncate block", theme === "cream" ? "text-amber-600" : "text-amber-400")}>
+            <div className="z-10 mt-2 w-[110px] flex justify-center self-end">
+              <span className={cn("text-[12px] font-bold truncate block", isDark ? "text-amber-400" : "text-amber-600")}>
                 {story.genre || "Drama"}
               </span>
             </div>
