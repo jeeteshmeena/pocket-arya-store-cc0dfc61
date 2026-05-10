@@ -730,9 +730,28 @@ export function AdminView() {
             </div>
             <form onSubmit={handleSaveBanner} className="space-y-4">
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Image URL</label>
-                <input required type="url" value={editingBanner.image_url} onChange={e => setEditingBanner({...editingBanner, image_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://catbox.moe/..." />
-                {editingBanner.image_url && <img src={getOptimizedImage(editingBanner.image_url) || ""} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl" />}
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Image URL (or Upload)</label>
+                <div className="flex gap-2">
+                  <input type="url" value={editingBanner.image_url} onChange={e => setEditingBanner({...editingBanner, image_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none flex-1", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://catbox.moe/..." />
+                  <label className={cn("px-4 py-3 rounded-xl cursor-pointer text-sm font-bold flex items-center justify-center shrink-0", theme === "cream" ? "bg-black text-white" : "bg-muted text-muted-foreground")}>
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setFormSaving(true);
+                      try {
+                        const compFile = await compressImageClientSide(file);
+                        const result = await uploadAdminImage(tgUser, compFile);
+                        setEditingBanner({...editingBanner, image_url: result.poster_url});
+                      } catch (err: any) {
+                        alert("Upload failed: " + err.message);
+                      } finally {
+                        setFormSaving(false);
+                      }
+                    }} />
+                    <Image className="h-5 w-5" />
+                  </label>
+                </div>
+                {editingBanner.image_url && <img src={getOptimizedImage(editingBanner.image_url) || ""} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl border border-border/50" />}
               </div>
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Target Link</label>
