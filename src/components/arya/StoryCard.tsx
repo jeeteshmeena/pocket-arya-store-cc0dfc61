@@ -212,7 +212,7 @@ export const StoryCard = memo(function StoryCard({
   square?: boolean;
   enablePreview?: boolean;
 }) {
-  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout } = useApp();
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout, appPreferences } = useApp();
   const fmt = usePriceFormat();
 
   const liked   = inWishlist(story.id);
@@ -334,9 +334,11 @@ export const StoryCard = memo(function StoryCard({
           <div className="text-[12.5px] font-semibold truncate text-foreground leading-tight">
             {story.title}
           </div>
-          <div className="text-[11.5px] font-bold mt-0.5 text-foreground/75">
-            {fmt(story.price)}
-          </div>
+          {appPreferences?.showPrices !== false && (
+            <div className="text-[11.5px] font-bold mt-0.5 text-foreground/75">
+              {fmt(story.price)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -380,7 +382,7 @@ function PreviewPopup({
   onBuyNow: () => void;
   onOpen: () => void;
 }) {
-  const { theme } = useApp();
+  const { theme, appPreferences } = useApp();
   const fmt = usePriceFormat();
   const { bg, text } = getGenre(story.genre);
   const hasImage = isDisplayableUrl(story.poster);
@@ -434,9 +436,11 @@ function PreviewPopup({
             </div>
           )}
           <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute bottom-2 right-3 text-white text-[11px] font-bold drop-shadow">
-            {fmt(story.price)}
-          </div>
+          {appPreferences?.showPrices !== false && (
+            <div className="absolute bottom-2 right-3 text-white text-[11px] font-bold drop-shadow">
+              {fmt(story.price)}
+            </div>
+          )}
         </div>
 
         {/* Body */}

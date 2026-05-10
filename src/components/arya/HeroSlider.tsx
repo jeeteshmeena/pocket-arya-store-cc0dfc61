@@ -140,7 +140,7 @@ function usePreloadImages(slides: Banner[]) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export function HeroSlider() {
-  const { addToCart, goToCheckout, navigate, theme, stories } = useApp();
+  const { addToCart, goToCheckout, navigate, theme, stories, appPreferences } = useApp();
   const fmt = usePriceFormat();
   const { slides, ready } = useBanners(stories);
   const loadedImages = usePreloadImages(slides);
@@ -159,9 +159,9 @@ export function HeroSlider() {
   // ── Auto scroll ────────────────────────────────────────────────────────────
   const resetAuto = useCallback(() => {
     if (autoRef.current) clearInterval(autoRef.current);
-    if (n <= 1) return;
+    if (n <= 1 || appPreferences?.autoplayHero === false) return;
     autoRef.current = setInterval(() => setIdx(x => (x + 1) % n), AUTO_INTERVAL);
-  }, [n]);
+  }, [n, appPreferences?.autoplayHero]);
 
   useEffect(() => {
     resetAuto();
