@@ -127,11 +127,51 @@ export function AdminView() {
   const [imageUploading, setImageUploading] = useState(false);
   const [translating, setTranslating] = useState<string | null>(null);
 
+  const compressImageClientSide = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const max_size = 800; // Optimal max dimension for speed
+          
+          if (width > height && width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          } else if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("Canvas not supported"));
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (!blob) return reject(new Error("Compression failed"));
+            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: "image/webp" }));
+          }, "image/webp", 0.75); // Extreme compression efficiency
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingStory) return;
+    const originalFile = e.target.files?.[0];
+    if (!originalFile || !editingStory) return;
     setImageUploading(true);
     try {
+      // Compress BEFORE network upload to fix Vercel/Nginx 502/413 connection drops on large files
+      const file = await compressImageClientSide(originalFile);
       const result = await uploadAdminImage(tgUser, file);
       setEditingStory((s: any) => ({
         ...s,
