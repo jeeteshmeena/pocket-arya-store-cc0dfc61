@@ -84,7 +84,14 @@ export function AdminView() {
     e.preventDefault();
     setFormSaving(true);
     try {
-      await saveAdminStory(tgUser, editingStory);
+      // Strip MongoDB _id and ensure story_id exists before sending
+      const { _id, ...storyToSave } = editingStory;
+      if (!storyToSave.story_id) {
+        alert("story_id is missing. Cannot save.");
+        setFormSaving(false);
+        return;
+      }
+      await saveAdminStory(tgUser, storyToSave);
       await loadData();
       setIsFormOpen(false);
     } catch (err: any) {
@@ -108,13 +115,10 @@ export function AdminView() {
     }
   };
 
-  const handleReplySupport = async (ticketId: string) => {
-    const reply = prompt("Enter your reply to the user:");
-    if (!reply) return;
+  const handleReplySupport = async (ticketId: string, replyText: string) => {
     try {
-      await replyAdminSupport(tgUser, ticketId, reply);
+      await replyAdminSupport(tgUser, ticketId, replyText);
       setSupportTickets(supportTickets.filter(t => t.id !== ticketId));
-      alert("Reply sent!");
     } catch (err: any) {
       alert("Failed to send reply: " + err.message);
     }
@@ -363,18 +367,30 @@ export function AdminView() {
 
             {activeTab === "buyers" && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <h2 className={cn("font-bold text-xl mb-4", theme === "cream" ? "text-black" : "")}>Recent Buyers</h2>
+                <div className="flex justify-between items-center">
+                  <h2 className={cn("font-bold text-xl", theme === "cream" ? "text-black" : "")}>Buyers ({buyers.length})</h2>
+                  <div className="text-sm font-bold text-green-500">Total: ₹{buyers.filter(b=>b.status==="paid").reduce((s:number,b:any)=>s+(b.amount||0),0)}</div>
+                </div>
                 <div className="space-y-3">
-                  {buyers.map((buyer, i) => (
-                    <div key={i} className={cn("p-4 rounded-xl flex justify-between items-center text-sm", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
-                      <div>
-                        <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>{buyer.username}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{new Date(buyer.date).toLocaleString()}</div>
+                  {buyers.length === 0 ? <div className="text-center p-8 text-muted-foreground bg-surface rounded-xl">No orders yet.</div> : buyers.map((buyer, i) => (
+                    <div key={i} className={cn("p-4 rounded-xl text-sm", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>{buyer.first_name || buyer.username} {buyer.username && <span className="text-muted-foreground font-normal">@{buyer.username}</span>}</div>
+                          <div className="text-[10px] text-muted-foreground">ID: {buyer.user_id} • {new Date(buyer.date).toLocaleString()}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-green-500">₹{buyer.amount}</div>
+                          <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold uppercase", buyer.status==="paid" ? "bg-green-500/15 text-green-500" : "bg-yellow-500/15 text-yellow-500")}>{buyer.status}</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-green-500">₹{buyer.amount}</div>
-                        <div className="text-[10px] uppercase text-muted-foreground">{buyer.status}</div>
-                      </div>
+                      {buyer.story_names?.length > 0 && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          <span className="font-bold text-primary">Stories: </span>{buyer.story_names.join(", ")}
+                        </div>
+                      )}
+                      {buyer.payment_id && <div className="text-[10px] text-muted-foreground mt-1">Payment ID: {buyer.payment_id}</div>}
+                      {buyer.source && <div className="text-[10px] text-muted-foreground">Via: {buyer.source}</div>}
                     </div>
                   ))}
                 </div>
@@ -383,22 +399,12 @@ export function AdminView() {
 
             {activeTab === "support" && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <h2 className={cn("font-bold text-xl mb-4", theme === "cream" ? "text-black" : "")}>Open Support Tickets</h2>
+                <h2 className={cn("font-bold text-xl", theme === "cream" ? "text-black" : "")}>Open Tickets ({supportTickets.length})</h2>
                 <div className="space-y-3">
                   {supportTickets.length === 0 ? (
                     <div className="text-center p-8 text-muted-foreground bg-surface rounded-xl">No open tickets.</div>
                   ) : supportTickets.map(ticket => (
-                    <div key={ticket.id} className={cn("p-4 rounded-xl", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>{ticket.username}</div>
-                          <div className="text-[10px] text-muted-foreground">{new Date(ticket.date).toLocaleString()}</div>
-                        </div>
-                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase font-bold">{ticket.type}</span>
-                      </div>
-                      <p className="text-sm mt-2 mb-4 text-foreground/80 bg-background/50 p-3 rounded-lg border border-border/50">{ticket.text}</p>
-                      <button onClick={() => handleReplySupport(ticket.id)} className="w-full py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg">Reply to User</button>
-                    </div>
+                    <SupportTicketCard key={ticket.id} ticket={ticket} theme={theme} onReply={handleReplySupport} />
                   ))}
                 </div>
               </div>
@@ -587,3 +593,66 @@ function StatCard({ title, value, icon: Icon, theme }: { title: string, value: s
     </div>
   );
 }
+
+function SupportTicketCard({ ticket, theme, onReply }: { ticket: any, theme: string, onReply: (id: string, reply: string) => void }) {
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const send = async () => {
+    if (!replyText.trim()) return;
+    setSending(true);
+    await onReply(ticket.id, replyText);
+    setSending(false);
+  };
+
+  return (
+    <div className={cn("p-4 rounded-xl", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <div className={cn("font-bold", theme === "cream" ? "text-black" : "")}>{ticket.first_name || ticket.username}</div>
+          <div className="text-[10px] text-muted-foreground">@{ticket.username} · {new Date(ticket.date).toLocaleString()}</div>
+        </div>
+        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase font-bold">{ticket.type}</span>
+      </div>
+
+      {/* Media Preview */}
+      {ticket.type === "photo" && ticket.file_url && (
+        <img src={ticket.file_url} alt="User media" className="w-full max-h-48 object-contain rounded-lg mb-2 bg-muted" />
+      )}
+      {ticket.type === "video" && ticket.file_url && (
+        <video src={ticket.file_url} controls className="w-full max-h-48 rounded-lg mb-2 bg-muted" />
+      )}
+      {ticket.type === "audio" && ticket.file_url && (
+        <audio src={ticket.file_url} controls className="w-full mb-2" />
+      )}
+      {(ticket.type === "document") && ticket.file_url && (
+        <a href={ticket.file_url} target="_blank" rel="noopener noreferrer" className="block text-xs text-primary underline mb-2">View Document</a>
+      )}
+      {/* Media without URL — show file_id hint */}
+      {["photo","video","audio","document"].includes(ticket.type) && !ticket.file_url && ticket.file_id && (
+        <div className="text-xs text-muted-foreground mb-2 bg-muted/50 p-2 rounded-lg">Media file_id: {ticket.file_id.slice(0,30)}...</div>
+      )}
+
+      {ticket.text && (
+        <p className="text-sm text-foreground/80 bg-background/50 p-3 rounded-lg border border-border/50 mb-3">{ticket.text}</p>
+      )}
+
+      {/* Inline Reply */}
+      <textarea
+        rows={2}
+        placeholder="Type reply..."
+        value={replyText}
+        onChange={e => setReplyText(e.target.value)}
+        className={cn("w-full p-3 rounded-xl text-sm outline-none resize-none mb-2", theme === "cream" ? "bg-[#f0ebe4] border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}
+      />
+      <button
+        onClick={send}
+        disabled={sending || !replyText.trim()}
+        className="w-full py-2.5 text-sm font-bold bg-primary text-primary-foreground rounded-xl disabled:opacity-50"
+      >
+        {sending ? "Sending..." : "Send Reply to User"}
+      </button>
+    </div>
+  );
+}
+
