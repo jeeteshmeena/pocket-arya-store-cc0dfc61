@@ -322,3 +322,34 @@ export async function adminBuyerAction(telegramId: number | null, userId: number
   }
   return res.json();
 }
+
+export async function fetchAdminRequests(identity: TelegramIdentity): Promise<any[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/admin/requests?telegram_id=${identity.telegram_id}`);
+    if (!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j.data) ? j.data : [];
+  } catch { return []; }
+}
+
+export async function updateAdminRequestStatus(
+  identity: TelegramIdentity,
+  requestId: string,
+  status: string,
+  replyText?: string
+): Promise<void> {
+  const res = await fetch(`${BASE_URL}/admin/requests/${requestId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      telegram_id: String(identity.telegram_id),
+      status,
+      reply_text: replyText || null,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || res.statusText);
+  }
+}
+

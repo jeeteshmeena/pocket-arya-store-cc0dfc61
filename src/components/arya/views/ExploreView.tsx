@@ -81,18 +81,18 @@ export function ExploreView() {
 
   return (
     <div className="animate-fade-in flex flex-col min-h-full">
-      {/* Top Bar: Tabs */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md px-4 py-3 border-b border-border flex items-center justify-between gap-3">
-        <div className="flex bg-muted/50 rounded-lg p-1 w-full max-w-[240px]">
-          <button 
+      {/* Tabs bar — flush, no border gap */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md px-4 pt-3 pb-2 border-b border-border/50">
+        <div className="flex bg-muted/50 rounded-xl p-1 w-full">
+          <button
             onClick={() => setViewMode("explore")}
-            className={cn("flex-1 py-1.5 text-sm font-semibold rounded-md transition", viewMode === "explore" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+            className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200", viewMode === "explore" ? "bg-background shadow text-foreground" : "text-muted-foreground")}
           >
             Explore
           </button>
-          <button 
+          <button
             onClick={() => setViewMode("requests")}
-            className={cn("flex-1 py-1.5 text-sm font-semibold rounded-md transition", viewMode === "requests" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+            className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200", viewMode === "requests" ? "bg-background shadow text-foreground" : "text-muted-foreground")}
           >
             Requests
           </button>

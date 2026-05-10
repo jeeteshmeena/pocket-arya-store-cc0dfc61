@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText, getOptimizedImage } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function AdminView() {
   const { back, tgUser, theme } = useApp();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "stories" | "banners" | "buyers" | "support">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "stories" | "banners" | "buyers" | "support" | "requests">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [stories, setStories] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [buyers, setBuyers] = useState<any[]>([]);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [storyRequests, setStoryRequests] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +39,14 @@ export function AdminView() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statsData, storiesData, bannersData, buyersData, supportData, analyticsData] = await Promise.all([
+      const [statsData, storiesData, bannersData, buyersData, supportData, analyticsData, requestsData] = await Promise.all([
         fetchAdminStats(tgUser),
         fetchAdminStories(tgUser),
         fetchAdminBanners(tgUser),
         fetchAdminBuyers(tgUser),
         fetchAdminSupport(tgUser),
-        fetchAnalytics(tgUser)
+        fetchAnalytics(tgUser),
+        fetchAdminRequests(tgUser),
       ]);
       setStats(statsData);
       setStories(storiesData);
@@ -52,6 +54,7 @@ export function AdminView() {
       setBuyers(buyersData);
       setSupportTickets(supportData);
       setAnalytics(analyticsData);
+      setStoryRequests(requestsData);
       setError(null);
     } catch (err: any) {
       setError(err.message || "Failed to load admin data.");
@@ -272,7 +275,7 @@ export function AdminView() {
           </h1>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {["dashboard", "stories", "banners", "buyers", "support"].map((tab) => (
+          {["dashboard", "stories", "banners", "buyers", "requests", "support"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -536,6 +539,23 @@ export function AdminView() {
                         </button>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "requests" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h2 className={cn("font-bold text-xl", theme === "cream" ? "text-black" : "")}>Story Requests ({storyRequests.length})</h2>
+                <div className="space-y-3">
+                  {storyRequests.length === 0 ? (
+                    <div className="text-center p-8 text-muted-foreground bg-surface rounded-xl">No story requests yet.</div>
+                  ) : storyRequests.map(req => (
+                    <StoryRequestCard key={req.id} req={req} theme={theme} tgUser={tgUser} onUpdate={(id, status, reply) => {
+                      updateAdminRequestStatus(tgUser, id, status, reply)
+                        .then(() => setStoryRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r)))
+                        .catch(e => alert("Update failed: " + e.message));
+                    }} />
                   ))}
                 </div>
               </div>
@@ -846,3 +866,67 @@ function SupportTicketCard({ ticket, theme, onReply }: { ticket: any, theme: str
   );
 }
 
+
+function StoryRequestCard({ req, theme, onUpdate }: {
+  req: any; theme: string; tgUser?: any;
+  onUpdate: (id: string, status: string, reply?: string) => void;
+}) {
+  const [replyText, setReplyText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const STATUS_OPTIONS = ["open", "in_progress", "completed", "rejected"];
+  const STATUS_COLORS: Record<string, string> = {
+    open: "bg-amber-500/10 text-amber-500",
+    in_progress: "bg-blue-500/10 text-blue-500",
+    completed: "bg-emerald-500/10 text-emerald-500",
+    rejected: "bg-red-500/10 text-red-500",
+  };
+
+  const handleUpdate = async (newStatus: string) => {
+    setSaving(true);
+    onUpdate(req.id, newStatus, replyText.trim() || undefined);
+    setSaving(false);
+    setReplyText("");
+  };
+
+  return (
+    <div className={cn("p-4 rounded-xl space-y-3", theme === "cream" ? "bg-white border-2 border-black shadow-[2px_2px_0px_#000]" : "bg-surface")}>
+      <div className="flex justify-between items-start gap-2">
+        <div>
+          <div className={cn("font-bold text-sm", theme === "cream" ? "text-black" : "")}>{req.first_name || "Unknown"}</div>
+          <div className="text-[10px] text-muted-foreground">@{req.username || "—"} · {new Date(req.created_at).toLocaleString()}</div>
+        </div>
+        <span className={cn("text-[10px] px-2 py-0.5 rounded-full uppercase font-bold", STATUS_COLORS[req.status] || "bg-muted text-muted-foreground")}>
+          {(req.status || "open").replace("_", " ")}
+        </span>
+      </div>
+      <pre className="text-sm text-foreground/85 bg-background/50 p-3 rounded-lg border border-border/50 whitespace-pre-wrap font-sans">{req.text}</pre>
+      {req.file_url && (
+        <img src={req.file_url} alt="Attached" className="w-full max-h-48 object-cover rounded-lg border border-border/50" />
+      )}
+      <textarea
+        rows={2}
+        placeholder="Optional reply to send to user..."
+        value={replyText}
+        onChange={e => setReplyText(e.target.value)}
+        className={cn("w-full p-3 rounded-xl text-sm outline-none resize-none", theme === "cream" ? "bg-[#f0ebe4] border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}
+      />
+      <div className="flex gap-2 flex-wrap">
+        {STATUS_OPTIONS.map(s => (
+          <button
+            key={s}
+            disabled={saving || req.status === s}
+            onClick={() => handleUpdate(s)}
+            className={cn(
+              "flex-1 min-w-[70px] py-2 text-[11px] font-bold rounded-lg capitalize transition disabled:opacity-40",
+              req.status === s
+                ? cn(STATUS_COLORS[s], "opacity-60")
+                : (theme === "cream" ? "bg-muted border border-black text-black" : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground")
+            )}
+          >
+            {s.replace("_", " ")}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
