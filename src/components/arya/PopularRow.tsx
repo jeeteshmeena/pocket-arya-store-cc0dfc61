@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { StoryCard } from "./StoryCard";
+import { cn } from "@/lib/utils";
 
 export function PopularRow() {
   const { theme, navigate } = useApp();
@@ -57,24 +58,24 @@ export function PopularRow() {
         </h2>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-6 px-4 snap-x hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex gap-3 overflow-x-auto pb-6 px-4 snap-x hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
         {popularStories.map((story, index) => (
           <div 
             key={story.id} 
             className="snap-start shrink-0 relative flex flex-col cursor-pointer"
-            style={{ width: "165px" }}
+            style={{ width: "155px" }}
             onClick={() => navigate({ name: "detail", storyId: story.id })}
           >
-            <div className="relative w-full h-[150px] flex items-end justify-end">
+            <div className="relative w-full h-[140px] flex items-end justify-end">
               {/* The large background ranking number graphic */}
               <div 
-                className="absolute left-[5px] bottom-[-20px] font-black italic select-none pointer-events-none"
+                className="absolute left-[-10px] bottom-[-5px] font-black italic select-none pointer-events-none"
                 style={{
-                  fontSize: "140px",
-                  lineHeight: "1",
+                  fontSize: "120px",
+                  lineHeight: "0.8",
                   fontFamily: "'Outfit', sans-serif",
                   color: "transparent",
-                  WebkitTextStroke: theme === "cream" ? "2px rgba(0,0,0,0.25)" : "2px rgba(255,255,255,0.25)",
+                  WebkitTextStroke: theme === "cream" ? "1.5px rgba(0,0,0,0.3)" : "1.5px rgba(255,255,255,0.3)",
                   zIndex: 0
                 }}
               >
@@ -82,7 +83,7 @@ export function PopularRow() {
               </div>
 
               {/* The image card */}
-              <div className="relative z-10 w-[130px] h-[130px] rounded-lg overflow-hidden shadow-lg border border-black/5 dark:border-white/10 bg-surface">
+              <div className="relative z-10 w-[125px] h-[125px] rounded-md overflow-hidden shadow-lg border border-black/5 dark:border-white/10 bg-surface">
                 <img 
                   src={story.poster || story.image} 
                   alt={story.title}
@@ -93,8 +94,8 @@ export function PopularRow() {
             </div>
 
             {/* Category / Genre below the image */}
-            <div className="z-10 mt-2 w-[130px] flex justify-center self-end">
-              <span className="text-[13px] font-bold truncate block" style={{ color: theme === "cream" ? "#e67e22" : "#f39c12" }}>
+            <div className="z-10 mt-2 w-[125px] flex justify-center self-end">
+              <span className={cn("text-[13px] font-bold truncate block", theme === "cream" ? "text-amber-600" : "text-amber-400")}>
                 {story.genre || "Drama"}
               </span>
             </div>
