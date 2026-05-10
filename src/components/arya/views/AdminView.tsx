@@ -568,7 +568,6 @@ export function AdminView() {
                     <input type="text" value={editingStory.episodes} onChange={e => setEditingStory({...editingStory, episodes: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                   </div>
                 </div>
-                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Platform</label>
