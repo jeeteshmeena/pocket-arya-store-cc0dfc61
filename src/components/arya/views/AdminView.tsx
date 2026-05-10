@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X } from "lucide-react";
+import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText, getOptimizedImage } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -748,7 +748,7 @@ export function AdminView() {
                         setFormSaving(false);
                       }
                     }} />
-                    <Image className="h-5 w-5" />
+                    <ImageIcon className="h-5 w-5" />
                   </label>
                 </div>
                 {editingBanner.image_url && <img src={getOptimizedImage(editingBanner.image_url) || ""} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-xl border border-border/50" />}
