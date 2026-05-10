@@ -264,7 +264,7 @@ export const StoryCard = memo(function StoryCard({
         ref={cardRef}
         className={cn(
           "shrink-0 cursor-pointer select-none card-magnetic",
-          square ? "w-full" : wide ? "w-44" : "w-40"
+          square ? "w-full" : (theme === "dark" ? "w-[115px]" : (wide ? "w-44" : "w-40"))
         )}
         style={{ WebkitTouchCallout: "none" }}
         onContextMenu={enablePreview ? (e => e.preventDefault()) : undefined}
@@ -292,7 +292,7 @@ export const StoryCard = memo(function StoryCard({
             : theme === "dark"
               ? "rounded-none shadow-[0_4px_20px_-8px_rgba(0,0,0,0.45)]"
               : "rounded-[14px] shadow-[0_4px_20px_-8px_rgba(0,0,0,0.45)]",
-            square ? "aspect-square" : wide ? "aspect-[4/5]" : "aspect-square"
+            square ? "aspect-square" : (theme === "dark" ? "aspect-square" : (wide ? "aspect-[4/5]" : "aspect-square"))
           )}
           style={{ willChange: "transform" }}
         >

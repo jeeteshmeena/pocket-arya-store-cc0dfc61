@@ -1,4 +1,5 @@
 import { HeroSlider } from "../HeroSlider";
+import { PopularRow } from "../PopularRow";
 import { Row } from "../Row";
 import { useApp } from "@/store/app-store";
 import { AlertCircle } from "lucide-react";
@@ -128,6 +129,7 @@ export function HomeView() {
   return (
     <div className="pb-6">
       <HeroSlider />
+      <PopularRow />
       {purchased.length > 0 && (
         <Row title="Continue Listening" stories={purchased} />
       )}

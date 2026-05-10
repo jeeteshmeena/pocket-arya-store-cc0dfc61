@@ -121,7 +121,7 @@ export function ExploreView() {
 
           {/* Grid — square cards, no overlap */}
           <div className="flex-1 px-4 pt-2">
-            <div className="grid grid-cols-2 gap-4">
+            <div className={cn("grid gap-4", theme === "dark" ? "grid-cols-3 gap-2" : "grid-cols-2")}>
               {list.map(s => (
                 <StoryCard key={s.id} story={s} square />
               ))}

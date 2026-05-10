@@ -77,7 +77,7 @@ export const Row = memo(function Row({
       {/* Scroll row */}
       <div
         className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-1"
-        style={{ WebkitOverflowScrolling: "touch", minHeight: wide ? 220 : 200 }}
+        style={{ WebkitOverflowScrolling: "touch", minHeight: (wide && theme !== "dark") ? 220 : 180 }}
       >
         {mount
           ? stories.map((s, i) => (
@@ -95,7 +95,10 @@ export const Row = memo(function Row({
           : stories.slice(0, 4).map((s) => (
               <div
                 key={s.id}
-                className={cn("shrink-0 rounded-[14px] shimmer-bg", wide ? "w-44 aspect-[4/5]" : "w-40 aspect-square")}
+                className={cn(
+                  "shrink-0 rounded-[14px] shimmer-bg", 
+                  theme === "dark" ? "w-[115px] aspect-square" : (wide ? "w-44 aspect-[4/5]" : "w-40 aspect-square")
+                )}
                 aria-hidden="true"
               />
             ))}
