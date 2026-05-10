@@ -469,12 +469,30 @@ export function AdminView() {
                           <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold uppercase", buyer.status==="paid" ? "bg-green-500/15 text-green-500" : "bg-yellow-500/15 text-yellow-500")}>{buyer.status}</span>
                         </div>
                       </div>
-                      {buyer.story_names?.length > 0 && (
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          <span className="font-bold text-primary">Stories: </span>{buyer.story_names.join(", ")}
+                      {buyer.payments && buyer.payments.length > 0 ? (
+                        <div className="mt-2 text-xs border border-border/40 rounded-lg overflow-hidden bg-background/50">
+                          <div className="bg-surface p-2 font-bold text-xs border-b border-border/40">Payment History</div>
+                          {buyer.payments.map((p: any, j: number) => (
+                            <div key={j} className="p-2 border-b border-border/10 last:border-0 flex justify-between">
+                              <div>
+                                <div className="font-bold text-primary">{p.story_name}</div>
+                                <div className="text-[10px] text-muted-foreground">{p.method} • {new Date(p.date).toLocaleString()}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-bold">₹{p.amount}</div>
+                                <div className="text-[9px] uppercase font-bold">{p.status}</div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
+                      ) : (
+                        buyer.story_names?.length > 0 && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            <span className="font-bold text-primary">Stories: </span>{buyer.story_names.join(", ")}
+                          </div>
+                        )
                       )}
-                      {buyer.payment_id && <div className="text-[10px] text-muted-foreground mt-1">Payment ID: {buyer.payment_id}</div>}
+                      {buyer.payment_id && <div className="text-[10px] text-muted-foreground mt-2">Payment ID: {buyer.payment_id}</div>}
                       {buyer.source && <div className="text-[10px] text-muted-foreground mb-3">Via: {buyer.source}</div>}
                       
                       <div className="flex gap-2 mt-2 pt-2 border-t border-border/40">

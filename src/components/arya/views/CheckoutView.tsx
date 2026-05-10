@@ -166,7 +166,7 @@ export function CheckoutView() {
           </button>
           <div className="flex-1">
             <h1 className="font-display font-extrabold text-[22px] tracking-tight leading-none">
-              {phase.name === "success" ? "Purchase Confirmed" :
+              {phase.name === "success" ? "Order Confirmed" :
                phase.name === "error"   ? "Payment Failed" :
                phase.name === "loading" ? "Processing"     : "Checkout"}
             </h1>
@@ -292,7 +292,7 @@ export function CheckoutView() {
                     />
                     <ReceiptRow
                       icon={<Receipt className="h-3.5 w-3.5" />}
-                      label="Purchase ID"
+                      label="Order ID"
                       mono
                       value={phase.order_id}
                       onCopy={() => copy("order", phase.order_id)}
