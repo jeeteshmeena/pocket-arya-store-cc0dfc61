@@ -43,8 +43,13 @@ export function CheckoutView() {
   const cartSnap = useRef(cart);
   if (phase.name === "idle") cartSnap.current = cart;
 
-  const total = cartSnap.current.reduce((a, b) => a + b.price, 0);
+  const subtotal = cartSnap.current.reduce((a, b) => a + b.price, 0);
   const itemCount = cartSnap.current.length;
+  
+  // Add 3.54% fee if the user has selected a non-INR currency
+  const isInternational = currency.code !== "INR";
+  const intlFee = isInternational ? Math.round(subtotal * 0.0354) : 0;
+  const total = subtotal + intlFee;
 
   const copy = async (key: string, value: string) => {
     try {
@@ -77,6 +82,7 @@ export function CheckoutView() {
       const order = await createRazorpayOrder(
         cartSnap.current.map((s) => s.id),
         tgUser,
+        isInternational
       );
 
       if (!order.razorpay_order_id || !order.key) {
@@ -203,8 +209,11 @@ export function CheckoutView() {
 
               {/* Bill breakdown */}
               <div className="px-4 py-3 bg-muted/40 border-t border-border/60 space-y-1.5">
-                <Row label={`Subtotal (${itemCount})`} value={fmt(total)} />
-                <Row label="Platform fee" value="0" muted />
+                <Row label={`Subtotal (${itemCount})`} value={fmt(subtotal)} />
+                {isInternational && (
+                  <Row label="International Fee (3.54%)" value={fmt(intlFee)} />
+                )}
+                {!isInternational && <Row label="Platform fee" value="0" muted />}
                 <Row label="Tax" value="Included" muted />
                 <div className="h-px bg-border/70 my-2" />
                 <Row label="Total" value={fmt(total)} bold />

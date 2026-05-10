@@ -163,12 +163,14 @@ export async function checkoutCart(
 export async function createRazorpayOrder(
   storyIds: string[],
   identity: TelegramIdentity,
+  isInternational: boolean = false
 ): Promise<RazorpayOrderResponse> {
   return request<RazorpayOrderResponse>("/create-order", {
     method: "POST",
     body: JSON.stringify({
       story_ids: storyIds,
       telegram_id: identity.telegram_id,
+      is_international: isInternational
     }),
   });
 }
