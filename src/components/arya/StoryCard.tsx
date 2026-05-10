@@ -17,7 +17,7 @@ import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isDisplayableUrl(src?: string | null): boolean {
-  return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/image"));
+  return !!src && (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/api/"));
 }
 
 const GENRE_COLORS: Record<string, string> = {
