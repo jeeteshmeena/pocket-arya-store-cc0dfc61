@@ -141,23 +141,24 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
   }
 
   const od = data.order_details;
-  const isBot = !od || data.source === "bot";
+  const isBot = !od || od.source === "bot";
   
-  // Try to parse paid_at nicely
+  // Try to parse created_at nicely
   let formattedDate = "Unknown Date";
-  if (od && od.paid_at) {
+  const dateStr = od?.created_at || od?.paid_at;
+  if (dateStr) {
     try {
-      const d = new Date(od.paid_at);
+      const d = new Date(dateStr);
       if (!isNaN(d.getTime())) {
         formattedDate = new Intl.DateTimeFormat("en-IN", {
           day: "numeric", month: "short", year: "numeric",
           hour: "numeric", minute: "numeric", hour12: true
         }).format(d);
       } else {
-        formattedDate = od.paid_at;
+        formattedDate = dateStr;
       }
     } catch {
-      formattedDate = od.paid_at;
+      formattedDate = dateStr;
     }
   }
 

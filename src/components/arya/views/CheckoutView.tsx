@@ -166,7 +166,7 @@ export function CheckoutView() {
           </button>
           <div className="flex-1">
             <h1 className="font-display font-extrabold text-[22px] tracking-tight leading-none">
-              {phase.name === "success" ? "Order Confirmed" :
+              {phase.name === "success" ? "Purchase Confirmed" :
                phase.name === "error"   ? "Payment Failed" :
                phase.name === "loading" ? "Processing"     : "Checkout"}
             </h1>
@@ -264,7 +264,7 @@ export function CheckoutView() {
                     </div>
                   </div>
                   <h2 className="mt-4 font-display font-extrabold text-[22px] tracking-tight">
-                    Thank You for Your Order
+                    Thank You for Your Purchase
                   </h2>
                   <p className="mt-1.5 text-[12.5px] text-white/85 max-w-[280px] mx-auto leading-snug">
                     Your purchase is confirmed and your stories are now in your Library.
@@ -292,7 +292,7 @@ export function CheckoutView() {
                     />
                     <ReceiptRow
                       icon={<Receipt className="h-3.5 w-3.5" />}
-                      label="Order ID"
+                      label="Purchase ID"
                       mono
                       value={phase.order_id}
                       onCopy={() => copy("order", phase.order_id)}

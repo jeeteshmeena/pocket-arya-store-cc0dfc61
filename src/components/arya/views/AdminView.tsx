@@ -475,7 +475,48 @@ export function AdminView() {
                         </div>
                       )}
                       {buyer.payment_id && <div className="text-[10px] text-muted-foreground mt-1">Payment ID: {buyer.payment_id}</div>}
-                      {buyer.source && <div className="text-[10px] text-muted-foreground">Via: {buyer.source}</div>}
+                      {buyer.source && <div className="text-[10px] text-muted-foreground mb-3">Via: {buyer.source}</div>}
+                      
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-border/40">
+                        <button 
+                          onClick={async () => {
+                            if(!confirm("Are you sure you want to WIPE this user completely? This deletes all their purchases.")) return;
+                            try {
+                              const { adminBuyerAction } = await import("@/lib/api");
+                              await adminBuyerAction(tgUser, buyer.user_id, "wipe");
+                              setBuyers(buyers.filter((b: any) => b.user_id !== buyer.user_id));
+                              alert("User data wiped successfully.");
+                            } catch (e: any) { alert("Wipe failed: " + e.message); }
+                          }}
+                          className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                        >
+                          Wipe
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if(!confirm("Are you sure you want to BAN this user? They will be blocked from the bot.")) return;
+                            try {
+                              const { adminBuyerAction } = await import("@/lib/api");
+                              await adminBuyerAction(tgUser, buyer.user_id, "ban");
+                              setBuyers(buyers.filter((b: any) => b.user_id !== buyer.user_id));
+                              alert("User banned successfully.");
+                            } catch (e: any) { alert("Ban failed: " + e.message); }
+                          }}
+                          className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded bg-red-500 hover:bg-red-600 text-white"
+                        >
+                          Ban
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Redirect to bot chat with deep link if possible, or just copy ID
+                            navigator.clipboard.writeText(buyer.user_id.toString());
+                            alert("User ID copied: " + buyer.user_id);
+                          }}
+                          className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded bg-primary/10 text-primary hover:bg-primary/20 ml-auto"
+                        >
+                          Copy ID
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

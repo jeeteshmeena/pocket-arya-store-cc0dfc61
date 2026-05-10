@@ -308,3 +308,17 @@ export function trackEvent(
     }
   } catch {}
 }
+
+export async function adminBuyerAction(telegramId: number | null, userId: number | string, action: string) {
+  if (!telegramId) throw new Error("Not authorized");
+  const res = await fetch(`${BASE_URL}/admin/buyers/${userId}/action?telegram_id=${telegramId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action })
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(text || res.statusText);
+  }
+  return res.json();
+}

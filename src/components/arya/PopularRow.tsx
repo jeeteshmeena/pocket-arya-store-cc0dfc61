@@ -34,38 +34,40 @@ export function PopularRow() {
         {popularStories.map((story, index) => (
           <div 
             key={story.id} 
-            className="snap-start shrink-0 relative flex flex-col items-center cursor-pointer"
-            style={{ width: "140px" }}
+            className="snap-start shrink-0 relative flex flex-col cursor-pointer"
+            style={{ width: "130px" }}
             onClick={() => navigate({ name: "detail", storyId: story.id })}
           >
-            {/* The large background ranking number graphic */}
-            <div 
-              className="absolute -left-4 -bottom-6 font-black italic select-none pointer-events-none"
-              style={{
-                fontSize: "120px",
-                lineHeight: "1",
-                fontFamily: "'Outfit', sans-serif",
-                color: "transparent",
-                WebkitTextStroke: theme === "cream" ? "1px rgba(0,0,0,0.1)" : "1px rgba(255,255,255,0.15)",
-                zIndex: 0
-              }}
-            >
-              {index + 1}
-            </div>
+            <div className="relative w-full h-[110px] flex items-end justify-end">
+              {/* The large background ranking number graphic */}
+              <div 
+                className="absolute left-[-4px] bottom-[-18px] font-black italic select-none pointer-events-none"
+                style={{
+                  fontSize: "120px",
+                  lineHeight: "1",
+                  fontFamily: "'Outfit', sans-serif",
+                  color: "transparent",
+                  WebkitTextStroke: theme === "cream" ? "2px rgba(0,0,0,0.25)" : "2px rgba(255,255,255,0.25)",
+                  zIndex: 0
+                }}
+              >
+                {index + 1}
+              </div>
 
-            {/* The image card */}
-            <div className="relative z-10 w-[110px] aspect-square rounded-xl overflow-hidden shadow-lg border border-white/10" style={{ marginLeft: "20px" }}>
-              <img 
-                src={story.poster || story.image} 
-                alt={story.title}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
+              {/* The image card */}
+              <div className="relative z-10 w-[100px] h-[100px] rounded-xl overflow-hidden shadow-lg border border-black/5 dark:border-white/10">
+                <img 
+                  src={story.poster || story.image} 
+                  alt={story.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
             </div>
 
             {/* Category / Genre below the image */}
-            <div className="z-10 mt-3 text-center w-full" style={{ marginLeft: "20px" }}>
-              <span className="text-sm font-bold truncate block px-2" style={{ color: theme === "cream" ? "#e67e22" : "#f39c12" }}>
+            <div className="z-10 mt-2 w-[100px] flex justify-center self-end">
+              <span className="text-[13px] font-bold truncate block" style={{ color: theme === "cream" ? "#e67e22" : "#f39c12" }}>
                 {story.genre || "Drama"}
               </span>
             </div>
