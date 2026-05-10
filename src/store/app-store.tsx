@@ -102,8 +102,8 @@ function readTelegramIdentity(): TelegramIdentity {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "default";
-    return (localStorage.getItem("arya_theme") as Theme) || "default";
+    if (typeof window === "undefined") return "dark";
+    return (localStorage.getItem("arya_theme") as Theme) || "dark";
   });
   const [stories, setStories] = useState<Story[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(true);

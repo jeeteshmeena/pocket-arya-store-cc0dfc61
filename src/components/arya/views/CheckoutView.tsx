@@ -207,27 +207,25 @@ export function CheckoutView() {
                 ))}
               </div>
 
-              {/* Bill breakdown */}
-              <div className="px-4 py-3 bg-muted/40 border-t border-border/60 space-y-1.5">
-                <Row label={`Subtotal (${itemCount})`} value={fmt(subtotal)} />
-                {isInternational && (
+              {/* Bill breakdown (Only show if there are extra fees) */}
+              {isInternational && (
+                <div className="px-4 py-3 bg-muted/40 border-t border-border/60 space-y-1.5">
+                  <Row label={`Subtotal (${itemCount})`} value={fmt(subtotal)} />
                   <Row label="International Fee (3.54%)" value={fmt(intlFee)} />
-                )}
-                {!isInternational && <Row label="Platform fee" value="0" muted />}
-                <Row label="Tax" value="Included" muted />
-                <div className="h-px bg-border/70 my-2" />
-                <Row label="Total" value={fmt(total)} bold />
-              </div>
+                  <div className="h-px bg-border/70 my-2" />
+                  <Row label="Total" value={fmt(total)} bold />
+                </div>
+              )}
             </div>
 
             {/* Trust strip */}
             <div className="flex items-center justify-center gap-2 mb-2 mt-3 text-[11px] text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span className="font-medium">100% secure payment · Encrypted by Razorpay</span>
+              <span className="font-medium">100% secure payment · 256-bit encryption</span>
             </div>
             {currency.code !== "INR" && (
               <div className="text-center text-[10px] text-muted-foreground/80 mb-4 px-4">
-                Note: Your selected display currency is {currency.code}. Razorpay will securely process your payment in INR (₹{total}).
+                Note: Your selected display currency is {currency.code}. The payment gateway will securely process your payment in INR (₹{total}).
               </div>
             )}
           </>
@@ -244,7 +242,7 @@ export function CheckoutView() {
             </div>
             <h2 className="mt-5 font-display font-bold text-[17px] text-foreground">Opening secure payment</h2>
             <p className="mt-1.5 text-[13px] text-muted-foreground max-w-[260px]">
-              Please don't close this screen. We're preparing your Razorpay session.
+              Please don't close this screen. We're preparing your secure payment session.
             </p>
           </div>
         )}
@@ -311,7 +309,7 @@ export function CheckoutView() {
                     <ReceiptRow
                       icon={<CreditCard className="h-3.5 w-3.5" />}
                       label="Method"
-                      valueNode={<span className="font-semibold">Razorpay</span>}
+                      valueNode={<span className="font-semibold">Secure Payment</span>}
                     />
                   </div>
 
@@ -428,7 +426,7 @@ export function CheckoutView() {
             </button>
             <div className="mt-2.5 text-center text-[11px] font-medium text-muted-foreground/80 flex items-center justify-center gap-1.5">
               <ShieldCheck className="h-3 w-3" />
-              <span>Secured by Razorpay · 256-bit encryption</span>
+              <span>Secured with 256-bit encryption</span>
             </div>
           </div>
         </footer>

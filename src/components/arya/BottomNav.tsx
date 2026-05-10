@@ -1,13 +1,13 @@
-import { Home, Compass, Library, User, Headphones, BookOpen } from "lucide-react";
+import { Home, Search, Bookmark, UserRound, Headphones, BookOpen } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
 // ── DEFAULT — Minimal white nav, black active ──────────────────
 const DEFAULT_TABS = [
   { id: "home",      label: "Home",    icon: Home },
-  { id: "explore",   label: "Explore", icon: Compass },
-  { id: "mystories", label: "Library", icon: Library },
-  { id: "profile",   label: "Profile", icon: User },
+  { id: "explore",   label: "Explore", icon: Search },
+  { id: "mystories", label: "Library", icon: Bookmark },
+  { id: "profile",   label: "Profile", icon: UserRound },
 ] as const;
 
 function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
@@ -240,16 +240,8 @@ function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => v
                 active ? "text-white" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {/* Animated background pill for smooth active state without lag */}
-              <div 
-                className={cn(
-                  "absolute inset-0 rounded-[24px] bg-white/10 transition-all duration-300 ease-out",
-                  active ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
-                )}
-                style={{ willChange: "transform, opacity" }}
-              />
               <Icon
-                className="h-[22px] w-[22px] mb-1 relative z-10 transition-colors duration-300"
+                className="h-[24px] w-[24px] mb-1 relative z-10 transition-colors duration-300"
                 strokeWidth={active ? 2.5 : 2}
                 fill={active ? "currentColor" : "none"}
               />
