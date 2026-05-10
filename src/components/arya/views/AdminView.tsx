@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -121,6 +121,51 @@ export function AdminView() {
       setSupportTickets(supportTickets.filter(t => t.id !== ticketId));
     } catch (err: any) {
       alert("Failed to send reply: " + err.message);
+    }
+  };
+
+  const [imageUploading, setImageUploading] = useState(false);
+  const [translating, setTranslating] = useState<string | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingStory) return;
+    setImageUploading(true);
+    try {
+      const result = await uploadAdminImage(tgUser, file);
+      setEditingStory((s: any) => ({
+        ...s,
+        poster_url: result.poster_url || s.poster_url,
+        image: result.file_id || s.image
+      }));
+    } catch (err: any) {
+      alert("Image upload failed: " + err.message);
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleAutoTranslate = async (field: "hi" | "en") => {
+    if (!editingStory) return;
+    setTranslating(field);
+    try {
+      if (field === "hi") {
+        const [nameHi, descHi] = await Promise.all([
+          editingStory.story_name_en ? translateText(editingStory.story_name_en, "hi") : Promise.resolve(editingStory.story_name_hi || ""),
+          editingStory.description ? translateText(editingStory.description, "hi") : Promise.resolve(editingStory.description_hi || "")
+        ]);
+        setEditingStory((s: any) => ({ ...s, story_name_hi: nameHi, description_hi: descHi }));
+      } else {
+        const [nameEn, descEn] = await Promise.all([
+          editingStory.story_name_hi ? translateText(editingStory.story_name_hi, "en") : Promise.resolve(editingStory.story_name_en || ""),
+          editingStory.description_hi ? translateText(editingStory.description_hi, "en") : Promise.resolve(editingStory.description || "")
+        ]);
+        setEditingStory((s: any) => ({ ...s, story_name_en: nameEn, description: descEn }));
+      }
+    } catch {
+      alert("Translation failed. Try again.");
+    } finally {
+      setTranslating(null);
     }
   };
 
@@ -440,18 +485,28 @@ export function AdminView() {
                   </div>
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Name (HI)</label>
-                    <input required type="text" value={editingStory.story_name_hi} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                    <input type="text" value={editingStory.story_name_hi || ""} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                   </div>
+                </div>
+                {/* Auto-translate buttons */}
+                <div className="flex gap-2">
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 disabled:opacity-50">
+                    {translating === "hi" ? "Translating..." : "EN → HI (Auto-fill Hindi)"}
+                  </button>
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("en")} className="flex-1 py-2 text-xs font-bold rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 disabled:opacity-50">
+                    {translating === "en" ? "Translating..." : "HI → EN (Auto-fill English)"}
+                  </button>
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Desc (EN)</label>
-                  <textarea rows={2} required value={editingStory.description} onChange={e => setEditingStory({...editingStory, description: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  <textarea rows={2} value={editingStory.description || ""} onChange={e => setEditingStory({...editingStory, description: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                 </div>
                 <div>
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Desc (HI)</label>
-                  <textarea rows={2} required value={editingStory.description_hi} onChange={e => setEditingStory({...editingStory, description_hi: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
+                  <textarea rows={2} value={editingStory.description_hi || ""} onChange={e => setEditingStory({...editingStory, description_hi: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                 </div>
               </div>
+
 
               <div className="space-y-4 p-4 rounded-xl border border-border bg-background/50">
                 <h3 className="font-bold text-sm text-primary uppercase tracking-wider">Bot & Delivery Data</h3>
@@ -513,23 +568,41 @@ export function AdminView() {
                     <input type="text" value={editingStory.episodes} onChange={e => setEditingStory({...editingStory, episodes: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} />
                   </div>
                 </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Platform</label>
-                    <input type="text" value={editingStory.platform} onChange={e => setEditingStory({...editingStory, platform: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Pocket FM" />
+                    <select value={editingStory.platform || "Pocket FM"} onChange={e => setEditingStory({...editingStory, platform: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}>
+                      {["Pocket FM","Kuku FM","Audible","StoryTel","Other"].map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Language</label>
-                    <input type="text" value={editingStory.language} onChange={e => setEditingStory({...editingStory, language: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Hindi" />
+                    <select value={editingStory.language || "Hindi"} onChange={e => setEditingStory({...editingStory, language: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")}>
+                      {["Hindi","English","Tamil","Telugu","Bengali","Marathi","Gujarati"].map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
                   </div>
                 </div>
+                {/* Image Upload Section */}
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Poster Image URL (Catbox/CDN)</label>
-                  <input type="url" value={editingStory.poster_url} onChange={e => setEditingStory({...editingStory, poster_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://..." />
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Poster Image</label>
+                  {/* Preview */}
+                  {editingStory.poster_url && (
+                    <img src={editingStory.poster_url} alt="Poster Preview" className="w-full h-40 object-cover rounded-xl mb-2 bg-muted" />
+                  )}
+                  {/* Upload from Phone */}
+                  <label className={cn("flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed cursor-pointer text-sm font-semibold transition mb-2", imageUploading ? "opacity-50" : "", theme === "cream" ? "border-black text-black" : "border-border text-muted-foreground hover:border-primary")}>
+                    {imageUploading ? "Uploading & compressing..." : "Upload from Phone / File"}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={imageUploading} />
+                  </label>
+                  {/* Or enter URL */}
+                  <div className="text-xs text-center text-muted-foreground mb-1">— or enter URL —</div>
+                  <input type="url" value={editingStory.poster_url || ""} onChange={e => setEditingStory({...editingStory, poster_url: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="https://catbox.moe/..." />
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Telegram File ID (Image)</label>
-                  <input type="text" value={editingStory.image || ""} onChange={e => setEditingStory({...editingStory, image: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="AgACAgUAAx0..." />
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Telegram File ID (auto-filled on upload)</label>
+                  <input type="text" value={editingStory.image || ""} onChange={e => setEditingStory({...editingStory, image: e.target.value})} className={cn("w-full p-3 rounded-xl text-sm outline-none", theme === "cream" ? "bg-white border-2 border-black text-black" : "bg-background border border-border focus:border-primary")} placeholder="Auto-filled after upload, or paste manually" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Upload image above to auto-get TG file_id. Or paste manually if you already have it.</p>
                 </div>
                 <label className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background cursor-pointer mt-2">
                   <input type="checkbox" checked={editingStory.is_completed} onChange={e => setEditingStory({...editingStory, is_completed: e.target.checked})} className="h-5 w-5 rounded border-gray-300" />

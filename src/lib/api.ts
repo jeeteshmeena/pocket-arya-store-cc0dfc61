@@ -112,6 +112,31 @@ export async function fetchAnalytics(identity: TelegramIdentity): Promise<any> {
   return res.data;
 }
 
+export async function uploadAdminImage(identity: TelegramIdentity, file: File): Promise<{poster_url: string, file_id: string}> {
+  const formData = new FormData();
+  formData.append("telegram_id", String(identity.telegram_id));
+  formData.append("file", file);
+  const res = await fetch(`${BASE_URL}/admin/upload-image`, { method: "POST", body: formData });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Upload failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}
+
+export async function translateText(text: string, targetLang: "hi" | "en"): Promise<string> {
+  if (!text.trim()) return "";
+  try {
+    const fromLang = targetLang === "hi" ? "en" : "hi";
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fromLang}|${targetLang}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data?.responseData?.translatedText || text;
+  } catch {
+    return text;
+  }
+}
+
 export async function checkoutCart(
   storyIds: string[],
   identity: TelegramIdentity,
