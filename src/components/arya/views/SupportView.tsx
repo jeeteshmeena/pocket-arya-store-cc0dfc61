@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { submitSupport } from "@/lib/api";
 
 export function SupportView() {
-  const { theme, setView, tgUser } = useApp();
+  const { theme, navigate, tgUser } = useApp();
   const [supportMode, setSupportMode] = useState<"menu" | "support" | "chat" | "suggestion">("menu");
   const [msg, setMsg] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -66,7 +66,7 @@ export function SupportView() {
         <button 
           onClick={() => {
             if (supportMode !== "menu" && !done) setSupportMode("menu");
-            else setView("profile");
+            else navigate({ name: "profile" });
           }} 
           className="h-9 w-9 -ml-2 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted/50"
         >

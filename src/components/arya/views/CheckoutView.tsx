@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
+import { usePriceFormat } from "@/hooks/usePriceFormat";
 import {
   openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment,
 } from "@/lib/api";
@@ -33,7 +34,8 @@ type Phase =
   | { name: "error"; message: string };
 
 export function CheckoutView() {
-  const { resetCheckout, navigate, replaceView, back, cart, clearCart, purchase, removeFromCart, tgUser } = useApp();
+  const { resetCheckout, navigate, replaceView, back, cart, clearCart, purchase, removeFromCart, tgUser, currency } = useApp();
+  const fmt = usePriceFormat();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -186,7 +188,7 @@ export function CheckoutView() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-[14px] font-bold text-foreground tabular-nums">₹{s.price}</div>
+                      <div className="text-[14px] font-bold text-foreground tabular-nums">{fmt(s.price)}</div>
                       <button
                         onClick={(e) => { e.stopPropagation(); removeFromCart(s.id); }}
                         className="h-8 w-8 grid place-items-center rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition active:scale-90"
@@ -201,19 +203,24 @@ export function CheckoutView() {
 
               {/* Bill breakdown */}
               <div className="px-4 py-3 bg-muted/40 border-t border-border/60 space-y-1.5">
-                <Row label={`Subtotal (${itemCount})`} value={`₹${total}`} />
-                <Row label="Platform fee" value="₹0" muted />
+                <Row label={`Subtotal (${itemCount})`} value={fmt(total)} />
+                <Row label="Platform fee" value="0" muted />
                 <Row label="Tax" value="Included" muted />
                 <div className="h-px bg-border/70 my-2" />
-                <Row label="Total" value={`₹${total}`} bold />
+                <Row label="Total" value={fmt(total)} bold />
               </div>
             </div>
 
             {/* Trust strip */}
-            <div className="flex items-center justify-center gap-2 mb-4 text-[11px] text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 mb-2 mt-3 text-[11px] text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span className="font-medium">100% secure payment · Encrypted by Razorpay</span>
             </div>
+            {currency.code !== "INR" && (
+              <div className="text-center text-[10px] text-muted-foreground/80 mb-4 px-4">
+                Note: Your selected display currency is {currency.code}. Razorpay will securely process your payment in INR (₹{total}).
+              </div>
+            )}
           </>
         )}
 
@@ -305,7 +312,7 @@ export function CheckoutView() {
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Paid</div>
                       <div className="font-display font-extrabold text-[26px] tracking-tight tabular-nums leading-none mt-1">
-                        ₹{phase.amount}
+                        {fmt(phase.amount)}
                       </div>
                     </div>
                     <div className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider">
@@ -408,7 +415,7 @@ export function CheckoutView() {
                 <CreditCard className="h-5 w-5" />
                 <span className="text-[15px]">Pay Securely</span>
               </span>
-              <span className="font-display font-extrabold text-[18px] tracking-tight tabular-nums">₹{total}</span>
+              <span className="font-display font-extrabold text-[18px] tracking-tight tabular-nums">{fmt(total)}</span>
             </button>
             <div className="mt-2.5 text-center text-[11px] font-medium text-muted-foreground/80 flex items-center justify-center gap-1.5">
               <ShieldCheck className="h-3 w-3" />

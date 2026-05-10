@@ -94,7 +94,7 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
       if (found) {
         const catalog = stories.find(s => s.id === storyId);
         if (catalog) {
-          found = { ...found, isCompleted: catalog.isCompleted, episodes: catalog.episodes };
+          found = { ...found, isCompleted: catalog.isCompleted ?? undefined, episodes: catalog.episodes ?? undefined };
         }
       }
 
