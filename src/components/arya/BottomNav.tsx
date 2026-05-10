@@ -1,14 +1,39 @@
-import { Home, Search, Bookmark, UserRound, Headphones, BookOpen } from "lucide-react";
+import { Home, Compass, Library, User } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 
-// ── DEFAULT — Minimal white nav, black active ──────────────────
-const DEFAULT_TABS = [
-  { id: "home",      label: "Home",    icon: Home },
-  { id: "explore",   label: "Explore", icon: Search },
-  { id: "mystories", label: "Library", icon: Bookmark },
-  { id: "profile",   label: "Profile", icon: UserRound },
+// Filled variants for active state (iOS style)
+const HOME_FILLED = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a2 2 0 002 2h3a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h3a2 2 0 002-2v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+  </svg>
+);
+const EXPLORE_FILLED = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5l4-2-4-2v5l-4 2 4 2z" />
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.17 6.83l-2.5 5.83-5.83 2.5 2.5-5.83 5.83-2.5z"/>
+  </svg>
+);
+const LIBRARY_FILLED = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/>
+  </svg>
+);
+const PROFILE_FILLED = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+  </svg>
+);
+
+const TABS = [
+  { id: "home",      label: "Home",    Icon: Home,    IconFilled: HOME_FILLED },
+  { id: "explore",   label: "Explore", Icon: Compass, IconFilled: EXPLORE_FILLED },
+  { id: "mystories", label: "Library", Icon: Library, IconFilled: LIBRARY_FILLED },
+  { id: "profile",   label: "Profile", Icon: User,    IconFilled: PROFILE_FILLED },
 ] as const;
+
+// Legacy alias so other navs still work
+const DEFAULT_TABS = TABS;
 
 function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
   return (
@@ -17,7 +42,7 @@ function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) =
       style={{ paddingBottom: "max(env(safe-area-inset-bottom), 4px)" }}
     >
       <div className="mx-auto max-w-2xl flex items-stretch justify-around">
-        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+        {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
           return (
             <button
@@ -70,7 +95,7 @@ function TealNav({ current, onNav }: { current: string; onNav: (id: string) => v
           boxShadow: "0 16px 40px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
         }}
       >
-        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+        {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
           return (
             <button
@@ -116,7 +141,7 @@ function MintNav({ current, onNav }: { current: string; onNav: (id: string) => v
           boxShadow: "0 18px 44px -16px rgba(31,191,122,0.35), 0 2px 8px rgba(11,31,42,0.06), inset 0 1px 0 #FFFFFF",
         }}
       >
-        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+        {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
           return (
             <button
@@ -180,7 +205,7 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
           boxShadow: "0 18px 48px -12px rgba(0,0,0,0.6), 0 0 30px -10px rgba(232,93,138,0.4), inset 0 1px 0 rgba(255,255,255,0.05)",
         } : undefined}
       >
-        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+        {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
           return (
             <button
@@ -219,36 +244,37 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
   );
 }
 
-// ── DARK — Full-width nav with large active pill ──────────────────
+// ── DARK — Clean iOS-style full-width nav with filled active icons ──
 function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)", paddingTop: "8px" }}
+      className="fixed bottom-0 inset-x-0 z-40"
+      style={{
+        background: "#111111",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 6px)",
+        paddingTop: "8px",
+      }}
     >
       <div className="mx-auto max-w-2xl flex items-stretch justify-around px-2">
-        {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
+        {TABS.map(({ id, label, Icon, IconFilled }) => {
           const active = current === id;
+          const ActiveIcon = IconFilled;
           return (
-             <button
+            <button
               key={id}
               onClick={() => onNav(id)}
               aria-label={label}
               aria-current={active ? "page" : undefined}
-              className={cn(
-                "relative flex flex-col items-center justify-center flex-1 py-2",
-                active ? "text-white" : "text-muted-foreground hover:text-foreground"
-              )}
+              className="relative flex flex-col items-center justify-center flex-1 py-1 gap-0.5 active:opacity-70 transition-opacity"
             >
-              <Icon
-                className="h-[24px] w-[24px] mb-1 relative z-10 transition-colors duration-300"
-                strokeWidth={active ? 2.5 : 2}
-                fill={active ? "currentColor" : "none"}
-              />
-              <span className={cn(
-                "text-[10px] tracking-wide relative z-10 transition-colors duration-300",
-                active ? "font-bold text-white" : "font-medium"
-              )}>
+              {active
+                ? <ActiveIcon className="h-[24px] w-[24px]" style={{ color: "#ffffff" }} />
+                : <Icon className="h-[24px] w-[24px]" strokeWidth={1.8} style={{ color: "rgba(255,255,255,0.45)" }} />}
+              <span
+                className="text-[10px] font-semibold tracking-wide"
+                style={{ color: active ? "#ffffff" : "rgba(255,255,255,0.45)" }}
+              >
                 {label}
               </span>
             </button>
