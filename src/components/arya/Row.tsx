@@ -54,7 +54,7 @@ export const Row = memo(function Row({
   return (
     <section
       ref={ref}
-      className="mt-5"
+      className="mt-3"
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(14px)",

@@ -22,8 +22,8 @@ export function PopularRow() {
 
   if (loading) {
     return (
-      <section className="mt-8 mb-6 relative z-10">
-        <div className="px-4 flex items-center justify-between mb-4">
+      <section className="mt-3 mb-2 relative z-10">
+        <div className="px-4 flex items-center justify-between mb-2">
           <h2 className="text-xl font-black tracking-tight" style={{ 
             fontFamily: "'Outfit', sans-serif",
             color: isDark ? "#fff" : "#000" 
@@ -50,8 +50,8 @@ export function PopularRow() {
   if (popularStories.length === 0) return null;
 
   return (
-    <section className="mt-8 mb-6 relative z-10">
-      <div className="px-4 flex items-center justify-between mb-4">
+    <section className="mt-3 mb-2 relative z-10">
+      <div className="px-4 flex items-center justify-between mb-2">
         <h2 className="text-xl font-black tracking-tight" style={{ 
           fontFamily: "'Outfit', sans-serif",
           color: isDark ? "#fff" : "#000" 
@@ -60,7 +60,7 @@ export function PopularRow() {
         </h2>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-6 px-4 snap-x hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex gap-3 overflow-x-auto pb-3 px-4 snap-x hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
         {popularStories.map((story, index) => (
           <div 
             key={story.id} 

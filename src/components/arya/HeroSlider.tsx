@@ -221,9 +221,9 @@ export function HeroSlider() {
   // ── Loading skeleton ────────────────────────────────────────────────────────
   if (!ready || n === 0) {
     return (
-      <div className="mx-3 mt-3">
+      <div className="mx-3 mt-2">
         <div
-          className="relative w-full rounded-2xl shimmer-bg overflow-hidden"
+          className="relative w-full rounded-xl shimmer-bg overflow-hidden"
           style={{ aspectRatio: "1184/556" }}
         />
       </div>
@@ -247,7 +247,7 @@ export function HeroSlider() {
   };
 
   return (
-    <div className="mx-3 mt-3">
+    <div className="mx-3 mt-2">
       {/*
         Zero-CLS aspect ratio container.
         paddingBottom trick: height = 0, padding creates the box.
@@ -256,7 +256,7 @@ export function HeroSlider() {
       <div
         className={cn(
           "relative w-full overflow-hidden select-none cursor-grab active:cursor-grabbing",
-          isCreamed ? "neo-card" : "rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.55)]"
+          isCreamed ? "neo-card" : "rounded-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.55)]"
         )}
         style={{ aspectRatio: "1184/556" }}
 
