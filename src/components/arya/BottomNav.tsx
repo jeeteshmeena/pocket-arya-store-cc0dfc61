@@ -219,50 +219,46 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
   );
 }
 
-// ── DARK — Floating pill nav (Matches screenshot) ──────────────────
+// ── DARK — Full-width nav with large active pill ──────────────────
 function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
   return (
     <nav
-      className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
-      style={{ bottom: "max(env(safe-area-inset-bottom), 16px)" }}
+      className="fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)", paddingTop: "8px" }}
     >
-      <div
-        className="pointer-events-auto mx-4 px-2 py-2 flex items-center rounded-full"
-        style={{
-          background: "#111111", // Solid dark black pill
-          boxShadow: "0 10px 30px -10px rgba(0,0,0,0.8)",
-          gap: "4px"
-        }}
-      >
+      <div className="mx-auto max-w-2xl flex items-stretch justify-around px-2">
         {DEFAULT_TABS.map(({ id, label, icon: Icon }) => {
           const active = current === id;
           return (
-            <button
+             <button
               key={id}
               onClick={() => onNav(id)}
               aria-label={label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "h-[48px] flex items-center justify-center rounded-full transition-all duration-300 ease-out active:scale-95 overflow-hidden",
-                active ? "bg-white/10 px-5 text-white" : "w-[48px] text-white/50 hover:text-white/80 hover:bg-white/5"
+                "relative flex flex-col items-center justify-center flex-1 py-2",
+                active ? "text-white" : "text-muted-foreground hover:text-foreground"
               )}
-              style={{ willChange: "width, padding" }}
             >
-              <Icon className="h-[20px] w-[20px] shrink-0" strokeWidth={active ? 2.5 : 2} />
-              
-              {/* Text is always mounted but hidden via grid/opacity when inactive for smooth animation */}
+              {/* Animated background pill for smooth active state without lag */}
               <div 
                 className={cn(
-                  "grid transition-all duration-300 ease-out", 
-                  active ? "grid-rows-[1fr] opacity-100 ml-2.5" : "grid-rows-[0fr] opacity-0 ml-0"
+                  "absolute inset-0 rounded-[24px] bg-white/10 transition-all duration-300 ease-out",
+                  active ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
                 )}
-              >
-                <div className="overflow-hidden">
-                  <span className="text-[13px] font-bold tracking-tight whitespace-nowrap block">
-                    {label}
-                  </span>
-                </div>
-              </div>
+                style={{ willChange: "transform, opacity" }}
+              />
+              <Icon
+                className="h-[22px] w-[22px] mb-1 relative z-10 transition-colors duration-300"
+                strokeWidth={active ? 2.5 : 2}
+                fill={active ? "currentColor" : "none"}
+              />
+              <span className={cn(
+                "text-[10px] tracking-wide relative z-10 transition-colors duration-300",
+                active ? "font-bold text-white" : "font-medium"
+              )}>
+                {label}
+              </span>
             </button>
           );
         })}
