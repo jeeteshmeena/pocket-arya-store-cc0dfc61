@@ -277,7 +277,7 @@ export const StoryCard = memo(function StoryCard({
         onClick={() => {
           if (longPressed.current) return;
           // Track engagement for live trending
-          trackEvent(story.id, "open", tgUser?.telegram_id);
+          trackEvent("view_story", { story_id: story.id }, tgUser?.telegram_id);
           navigate({ name: "detail", storyId: story.id });
         }}
       >

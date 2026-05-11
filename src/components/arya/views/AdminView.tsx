@@ -1,9 +1,10 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 export function AdminView() {
   const { back, tgUser, theme } = useApp();
@@ -38,15 +39,22 @@ export function AdminView() {
     loadData();
   }, [tgUser]);
 
-  // Lazy-load location analytics when user opens the analytics tab
+  // Real-time location analytics polling when on the analytics tab
   useEffect(() => {
-    if (activeTab === "analytics" && !locationAnalytics && !locationLoading && tgUser.telegram_id) {
-      setLocationLoading(true);
-      fetchLocationAnalytics(tgUser, 30)
-        .then(d => { setLocationAnalytics(d); setLocationLoading(false); })
-        .catch(() => setLocationLoading(false));
+    let interval: any;
+    if (activeTab === "analytics" && tgUser.telegram_id) {
+      const load = () => {
+        fetchLocationAnalytics(tgUser, 30)
+          .then(d => { setLocationAnalytics(d); setLocationLoading(false); })
+          .catch(() => setLocationLoading(false));
+      };
+      
+      if (!locationAnalytics) setLocationLoading(true);
+      load();
+      interval = setInterval(load, 15000); // 15s real-time refresh
     }
-  }, [activeTab]);
+    return () => clearInterval(interval);
+  }, [activeTab, tgUser.telegram_id]);
 
   const loadData = async () => {
     try {
@@ -629,18 +637,25 @@ export function AdminView() {
 
                     {locationAnalytics.hourly_trend?.length > 0 && (
                       <div className={cn("rounded-2xl p-4 space-y-3", theme === "cream" ? "bg-white border-2 border-black" : "bg-surface border border-border")}>
-                        <p className="font-semibold text-sm flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Activity — Last 48h</p>
-                        <div className="flex items-end gap-0.5 h-16 overflow-x-auto no-scrollbar">
-                          {(() => {
-                            const max = Math.max(...locationAnalytics.hourly_trend.map((h: any) => h.count), 1);
-                            return locationAnalytics.hourly_trend.map((h: any, i: number) => (
-                              <div key={i} title={`${h.label}: ${h.count}`}
-                                className="flex-shrink-0 w-2.5 rounded-t bg-primary/70 hover:bg-primary transition-all"
-                                style={{ height: `${Math.max(3, (h.count / max) * 56)}px` }} />
-                            ));
-                          })()}
+                        <p className="font-semibold text-sm flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Activity - Last 48h</p>
+                        <div className="h-32 w-full mt-4">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={locationAnalytics.hourly_trend} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <Tooltip
+                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))', fontSize: '12px' }}
+                                itemStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
+                                labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }}
+                              />
+                              <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
+                            </AreaChart>
+                          </ResponsiveContainer>
                         </div>
-                        <p className="text-xs text-muted-foreground">{locationAnalytics.hourly_trend.length} hourly data points</p>
                       </div>
                     )}
 

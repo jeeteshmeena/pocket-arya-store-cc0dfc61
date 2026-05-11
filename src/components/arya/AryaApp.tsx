@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { AppProvider, useApp } from "@/store/app-store";
+import { trackEvent } from "@/lib/api";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
 import { CartPanel } from "./CartPanel";
@@ -18,8 +20,18 @@ import { Splash } from "./Splash";
 import { RomanticDecor } from "./RomanticDecor";
 
 function Shell() {
-  const { view, storiesLoading, stories } = useApp();
+  const { view, storiesLoading, stories, tgUser } = useApp();
   const showSplash = storiesLoading && stories.length === 0;
+
+  // Track page views automatically on view change
+  useEffect(() => {
+    trackEvent("page_view", { 
+      page: view.name, 
+      story_id: (view as any).storyId || null,
+      referrer: document.referrer || "direct"
+    }, tgUser?.telegram_id);
+  }, [view.name, (view as any).storyId, tgUser?.telegram_id]);
+
 
   return (
     // Fixed-height container — prevents page scroll, enables app-like behavior

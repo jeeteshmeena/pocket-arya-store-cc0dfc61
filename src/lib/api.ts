@@ -288,17 +288,20 @@ export function loadRazorpay(): Promise<boolean> {
 
 /**
  * Track user engagement — fire-and-forget, never throws.
- * Powers the /api/trending live engine.
- * event: "open" | "search" | "view" | "purchase"
+ * Powers the /api/trending live engine and location analytics.
+ * event: "open" | "search" | "view" | "purchase" | "page_view"
  */
 export function trackEvent(
-  storyId: string,
-  event: "open" | "search" | "view" | "purchase",
-  telegramId?: number | null,
+  event_type: string,
+  event_data: Record<string, any>,
+  telegramId?: number | null | string,
 ) {
-  if (!storyId) return;
   try {
-    const body = JSON.stringify({ story_id: storyId, event, telegram_id: telegramId ?? 0 });
+    const body = JSON.stringify({ 
+      event_type, 
+      event_data, 
+      telegram_id: String(telegramId || "0") 
+    });
     // sendBeacon won't block navigation; falls back to fetch for older browsers
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: "application/json" });
