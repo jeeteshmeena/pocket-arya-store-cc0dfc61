@@ -112,6 +112,11 @@ export async function fetchAnalytics(identity: TelegramIdentity): Promise<any> {
   return res.data;
 }
 
+export async function fetchLocationAnalytics(identity: TelegramIdentity, days: number = 30): Promise<any> {
+  const res = await request<any>(`/admin/location-analytics?telegram_id=${identity.telegram_id}&days=${days}`, { method: "GET" });
+  return res.data;
+}
+
 export async function uploadAdminImage(identity: TelegramIdentity, file: File): Promise<{poster_url: string, file_id: string}> {
   const formData = new FormData();
   formData.append("telegram_id", String(identity.telegram_id));

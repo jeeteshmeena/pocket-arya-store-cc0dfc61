@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function AdminView() {
   const { back, tgUser, theme } = useApp();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "stories" | "banners" | "buyers" | "support" | "requests">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "stories" | "banners" | "buyers" | "support" | "requests" | "analytics">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [stories, setStories] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
@@ -15,6 +15,8 @@ export function AdminView() {
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [storyRequests, setStoryRequests] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [locationAnalytics, setLocationAnalytics] = useState<any>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,16 @@ export function AdminView() {
     }
     loadData();
   }, [tgUser]);
+
+  // Lazy-load location analytics when user opens the analytics tab
+  useEffect(() => {
+    if (activeTab === "analytics" && !locationAnalytics && !locationLoading && tgUser.telegram_id) {
+      setLocationLoading(true);
+      fetchLocationAnalytics(tgUser, 30)
+        .then(d => { setLocationAnalytics(d); setLocationLoading(false); })
+        .catch(() => setLocationLoading(false));
+    }
+  }, [activeTab]);
 
   const loadData = async () => {
     try {
@@ -275,7 +287,7 @@ export function AdminView() {
           </h1>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {["dashboard", "stories", "banners", "buyers", "requests", "support"].map((tab) => (
+          {["dashboard", "stories", "banners", "buyers", "requests", "support", "analytics"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -571,6 +583,81 @@ export function AdminView() {
                     <SupportTicketCard key={ticket.id} ticket={ticket} theme={theme} onReply={handleReplySupport} />
                   ))}
                 </div>
+              </div>
+            )}
+
+            {activeTab === "analytics" && (
+              <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-8">
+                <div className="flex items-center justify-between">
+                  <h2 className={cn("font-bold text-xl flex items-center gap-2", theme === "cream" ? "text-black" : "")}>
+                    <TrendingUp className="h-5 w-5 text-primary" /> Location Analytics
+                  </h2>
+                  <button
+                    onClick={async () => {
+                      setLocationLoading(true);
+                      try { setLocationAnalytics(await fetchLocationAnalytics(tgUser, 30)); } catch(e) {}
+                      setLocationLoading(false);
+                    }}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-semibold"
+                  >
+                    <RefreshCw className={cn("h-3.5 w-3.5", locationLoading && "animate-spin")} /> Refresh
+                  </button>
+                </div>
+
+
+
+                {locationLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-20 w-full rounded-2xl" />
+                    <Skeleton className="h-36 w-full rounded-2xl" />
+                    <Skeleton className="h-36 w-full rounded-2xl" />
+                  </div>
+                ) : locationAnalytics ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className={cn("rounded-2xl p-4 flex flex-col gap-1", theme === "cream" ? "bg-white border-2 border-black" : "bg-surface border border-border")}>
+                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Activity className="h-3.5 w-3.5" /> Total Events</div>
+                        <p className="text-2xl font-bold">{(locationAnalytics.summary?.total_events ?? 0).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">Last 30 days</p>
+                      </div>
+                      <div className={cn("rounded-2xl p-4 flex flex-col gap-1", theme === "cream" ? "bg-white border-2 border-black" : "bg-surface border border-border")}>
+                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs"><Users className="h-3.5 w-3.5" /> Unique Visitors</div>
+                        <p className="text-2xl font-bold">{(locationAnalytics.summary?.unique_visitors ?? 0).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">Distinct users</p>
+                      </div>
+                    </div>
+
+                    {locationAnalytics.hourly_trend?.length > 0 && (
+                      <div className={cn("rounded-2xl p-4 space-y-3", theme === "cream" ? "bg-white border-2 border-black" : "bg-surface border border-border")}>
+                        <p className="font-semibold text-sm flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Activity — Last 48h</p>
+                        <div className="flex items-end gap-0.5 h-16 overflow-x-auto no-scrollbar">
+                          {(() => {
+                            const max = Math.max(...locationAnalytics.hourly_trend.map((h: any) => h.count), 1);
+                            return locationAnalytics.hourly_trend.map((h: any, i: number) => (
+                              <div key={i} title={`${h.label}: ${h.count}`}
+                                className="flex-shrink-0 w-2.5 rounded-t bg-primary/70 hover:bg-primary transition-all"
+                                style={{ height: `${Math.max(3, (h.count / max) * 56)}px` }} />
+                            ));
+                          })()}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{locationAnalytics.hourly_trend.length} hourly data points</p>
+                      </div>
+                    )}
+
+                    <AnalyticsBarSection title="Top Countries" icon={Globe} data={locationAnalytics.countries} theme={theme} />
+                    <AnalyticsBarSection title="Top Cities" icon={MapPin} data={locationAnalytics.cities} theme={theme} />
+                    <AnalyticsBarSection title="Devices" icon={Smartphone} data={locationAnalytics.devices} theme={theme} />
+                    <AnalyticsBarSection title="Browsers" icon={Monitor} data={locationAnalytics.browsers} theme={theme} />
+                    <AnalyticsBarSection title="Operating Systems" icon={Monitor} data={locationAnalytics.os} theme={theme} />
+                    <AnalyticsBarSection title="Traffic Sources" icon={TrendingUp} data={locationAnalytics.referrers} theme={theme} />
+                  </>
+                ) : (
+                  <div className="text-center p-10 text-muted-foreground bg-surface rounded-2xl">
+                    <Globe className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium">No data yet</p>
+                    <p className="text-xs mt-1">Analytics collect as users open the mini app.</p>
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -893,7 +980,7 @@ function StoryRequestCard({ req, theme, onUpdate }: {
       <div className="flex justify-between items-start gap-2">
         <div>
           <div className={cn("font-bold text-sm", theme === "cream" ? "text-black" : "")}>{req.first_name || "Unknown"}</div>
-          <div className="text-[10px] text-muted-foreground">@{req.username || "�"} � {new Date(req.created_at).toLocaleString()}</div>
+          <div className="text-[10px] text-muted-foreground">@{req.username || "�"} � {new Date(req.created_at).toLocaleString()}</div>
         </div>
         <span className={cn("text-[10px] px-2 py-0.5 rounded-full uppercase font-bold", STATUS_COLORS[req.status] || "bg-muted text-muted-foreground")}>
           {(req.status || "open").replace("_", " ")}
@@ -925,6 +1012,37 @@ function StoryRequestCard({ req, theme, onUpdate }: {
           >
             {s.replace("_", " ")}
           </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─── Helper: bar chart section ────────────────────────────────────────────────
+function AnalyticsBarSection({ title, icon: Icon, data, theme }: { title: string; icon: any; data: any[]; theme: string; }) {
+  if (!data?.length) return null;
+  const max = Math.max(...data.map((d: any) => d.count), 1);
+  return (
+    <div className={cn("rounded-2xl p-4 space-y-3", theme === "cream" ? "bg-white border-2 border-black" : "bg-surface border border-border")}>
+      <p className="font-semibold text-sm flex items-center gap-2">
+        <Icon className="h-4 w-4 text-primary" /> {title}
+      </p>
+      <div className="space-y-2">
+        {data.map((item: any) => (
+          <div key={item.name} className="space-y-0.5">
+            <div className="flex justify-between text-xs">
+              <span className="truncate max-w-[70%] font-medium">{item.name}</span>
+              <span className="text-muted-foreground">{item.count.toLocaleString()}</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary/80 rounded-full transition-all duration-500"
+                style={{ width: `${(item.count / max) * 100}%` }}
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>
