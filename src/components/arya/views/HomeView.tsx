@@ -8,18 +8,14 @@ import type { Story } from "@/lib/data";
 
 const BASE_URL = "/api";
 
-// ─── Live trending — fetches /api/trending, falls back to local sort ───────────
-// Uses ref to avoid re-creating callback on every render
 function useLiveTrending(stories: Story[]) {
   const [trending, setTrending] = useState<Story[]>([]);
   const storiesRef = useRef(stories);
   storiesRef.current = stories;
 
   useEffect(() => {
-    if (!stories.length) return; // Wait until stories are loaded
-
+    if (!stories.length) return;
     let cancelled = false;
-
     const compute = async () => {
       try {
         const res = await fetch(`${BASE_URL}/trending?limit=8`);
@@ -30,38 +26,26 @@ function useLiveTrending(stories: Story[]) {
           return;
         }
       } catch {}
-
-      // Fallback: sort by purchase_count (real field now from API)
       if (!cancelled) {
         const local = storiesRef.current;
         const hasCounts = local.some(s => (s.purchase_count ?? 0) > 0);
         const sorted = [...local].sort((a, b) => {
-          // If no engagement data yet, keep DB insertion order (stable)
           if (!hasCounts) return 0;
           return (b.purchase_count ?? 0) - (a.purchase_count ?? 0);
         });
         setTrending(sorted.slice(0, 8));
       }
     };
-
     compute();
-
-    // Refresh every 5 min — keeps trending live without hammering server
     const t = setInterval(compute, 5 * 60 * 1000);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, [stories.length > 0]); // Only re-run when stories go from empty → loaded
+    return () => { cancelled = true; clearInterval(t); };
+  }, [stories.length > 0]);
 
-  // Always return something — never empty when stories exist
   const display = trending.length > 0 ? trending : stories.slice(0, 8);
   return display;
 }
 
-// ─── New Releases — strictly by date desc ─────────────────────────────────────
 function getNewReleases(stories: Story[]): Story[] {
-  // Try date-sorted first
   const withDates = stories.filter(s => !!(s.created_at || s.uploaded_at));
   if (withDates.length >= 2) {
     return [...withDates]
@@ -72,19 +56,13 @@ function getNewReleases(stories: Story[]): Story[] {
       })
       .slice(0, 8);
   }
-  // No dates in DB yet — show last 8 by DB insertion order (reverse = newest)
   return [...stories].slice(-8).reverse();
 }
 
-// ─── Skeleton rows shown while stories load ────────────────────────────────────
 function HomeSkeletons() {
   return (
     <div className="space-y-6 px-4 pt-4">
-      {/* Hero skeleton — exact 1184:556 ratio, no height:0 trick */}
-      <div
-        className="w-full rounded-2xl shimmer-bg"
-        style={{ aspectRatio: "1184/556" }}
-      />
+      <div className="w-full rounded-2xl shimmer-bg" style={{ aspectRatio: "1184/556" }} />
       {[1, 2, 3].map(i => (
         <div key={i} className="space-y-2.5">
           <div className="h-5 w-32 rounded-lg shimmer-bg" />
@@ -99,13 +77,12 @@ function HomeSkeletons() {
   );
 }
 
-// ─── Main view ─────────────────────────────────────────────────────────────────
 export function HomeView() {
-  const { purchased, stories, storiesLoading, storiesError, reloadStories, theme } = useApp();
+  const { purchased, stories, storiesLoading, storiesError, reloadStories, theme, t } = useApp();
 
-  const trending     = useLiveTrending(stories);
-  const newReleases  = getNewReleases(stories);
-  const genres       = Array.from(new Set(stories.map(s => s.genre).filter(Boolean))).sort();
+  const trending    = useLiveTrending(stories);
+  const newReleases = getNewReleases(stories);
+  const genres      = Array.from(new Set(stories.map(s => s.genre).filter(Boolean))).sort();
 
   if (storiesLoading && stories.length === 0) {
     return <HomeSkeletons />;
@@ -120,7 +97,7 @@ export function HomeView() {
           onClick={reloadStories}
           className="mt-4 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
         >
-          Retry
+          {t("common.retry")}
         </button>
       </div>
     );
@@ -131,14 +108,14 @@ export function HomeView() {
       <HeroSlider />
       <PopularRow />
       {purchased.length > 0 && (
-        <Row title="Continue Listening" stories={purchased} />
+        <Row title={t("story.continueListening")} stories={purchased} />
       )}
       {trending.length > 0 && (
-        <Row title="Trending Now" stories={trending} wide />
+        <Row title={t("story.trending")} stories={trending} wide />
       )}
       {newReleases.length > 0 && (
         <Row
-          title={theme === "cream" ? "New & Noteworthy" : "New Releases"}
+          title={theme === "cream" ? t("story.newNoteworthy") : t("story.newReleases")}
           stories={newReleases}
         />
       )}

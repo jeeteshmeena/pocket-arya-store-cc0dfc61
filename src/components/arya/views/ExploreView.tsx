@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { StoryCard } from "../StoryCard";
 import { useApp } from "@/store/app-store";
-import { Search, X, Plus, Image as ImageIcon, Video, FileText, Paperclip, Loader2, CheckCircle2 } from "lucide-react";
+import { Search, X, Plus, Paperclip, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitSupport, fetchMyRequests } from "@/lib/api";
 
@@ -10,22 +10,19 @@ type RequestDoc = {
 };
 
 export function ExploreView() {
-  const { stories, theme, tgUser } = useApp();
+  const { stories, theme, tgUser, t } = useApp();
   const [q, setQ] = useState("");
   const [viewMode, setViewMode] = useState<"explore" | "requests">("explore");
 
-  // Request Form State
   const [reqName, setReqName] = useState("");
   const [reqPlatform, setReqPlatform] = useState("Pocket FM");
   const [reqCustomPlatform, setReqCustomPlatform] = useState("");
   const [reqStatus, setReqStatus] = useState("Completed");
   const [file, setFile] = useState<File | null>(null);
-  
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // My Requests list
   const [myReqs, setMyReqs] = useState<RequestDoc[]>([]);
   const [loadingReqs, setLoadingReqs] = useState(false);
 
@@ -60,20 +57,17 @@ export function ExploreView() {
         file: file
       });
       setDone(true);
-      
-      // Refresh requests list
       if (tgUser.telegram_id) {
         fetchMyRequests(tgUser.telegram_id).then(setMyReqs);
       }
-
       setTimeout(() => {
         setDone(false);
         setReqName("");
         setReqCustomPlatform("");
         setFile(null);
       }, 3000);
-    } catch (e) {
-      alert("Failed to submit request.");
+    } catch {
+      alert(t("explore.failedSubmit"));
     } finally {
       setSending(false);
     }
@@ -81,20 +75,20 @@ export function ExploreView() {
 
   return (
     <div className="animate-fade-in flex flex-col min-h-full">
-      {/* Tabs bar — flush, no border gap */}
+      {/* Tabs */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md px-4 pt-3 pb-2 border-b border-border/50">
         <div className="flex bg-muted/50 rounded-xl p-1 w-full">
           <button
             onClick={() => setViewMode("explore")}
             className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200", viewMode === "explore" ? "bg-background shadow text-foreground" : "text-muted-foreground")}
           >
-            Explore
+            {t("explore.tab")}
           </button>
           <button
             onClick={() => setViewMode("requests")}
             className={cn("flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200", viewMode === "requests" ? "bg-background shadow text-foreground" : "text-muted-foreground")}
           >
-            Requests
+            {t("explore.requests")}
           </button>
         </div>
       </div>
@@ -108,7 +102,7 @@ export function ExploreView() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search explore..."
+                placeholder={t("explore.searchPlaceholder")}
                 className="flex-1 bg-transparent outline-none text-[15px] ml-2 text-foreground placeholder:text-muted-foreground"
               />
               {q && (
@@ -119,7 +113,6 @@ export function ExploreView() {
             </div>
           </div>
 
-          {/* Grid — square cards, no overlap */}
           <div className="flex-1 px-4 pt-2">
             <div className={cn("grid gap-4", theme === "dark" ? "grid-cols-3 gap-2" : "grid-cols-2")}>
               {list.map(s => (
@@ -128,37 +121,37 @@ export function ExploreView() {
             </div>
             {list.length === 0 && (
               <div className="py-16 text-center text-muted-foreground text-[15px]">
-                No stories found.
+                {t("story.noFound")}
               </div>
             )}
           </div>
         </>
       ) : (
         <div className="flex-1 px-4 pt-4 pb-10 space-y-6 animate-fade-in">
-          {/* Form */}
+          {/* Request form */}
           <div className="p-4 rounded-2xl border border-border/60 bg-surface shadow-sm space-y-4">
-            <h2 className="font-bold text-lg mb-2">Request New Story</h2>
-            
+            <h2 className="font-bold text-lg mb-2">{t("explore.requestTitle")}</h2>
+
             {done ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <CheckCircle2 className="h-10 w-10 text-emerald-500 mb-2" />
-                <p className="font-bold">Request Submitted!</p>
+                <p className="font-bold">{t("explore.submitted")}</p>
               </div>
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Story Name</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("explore.storyName")}</label>
                   <input
                     value={reqName}
                     onChange={e => setReqName(e.target.value)}
-                    placeholder="Enter full story name"
+                    placeholder={t("explore.storyNamePlaceholder")}
                     className="w-full h-11 px-3 rounded-lg border border-border/60 bg-background outline-none focus:border-primary/50 text-[14px]"
                   />
                 </div>
 
                 <div className="flex gap-3">
                   <div className="flex-1 space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Platform</label>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("explore.platform")}</label>
                     <select
                       value={reqPlatform}
                       onChange={e => setReqPlatform(e.target.value)}
@@ -171,40 +164,39 @@ export function ExploreView() {
                       <option>Custom</option>
                     </select>
                   </div>
-
                   <div className="flex-1 space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</label>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("explore.status")}</label>
                     <select
                       value={reqStatus}
                       onChange={e => setReqStatus(e.target.value)}
                       className="w-full h-11 px-3 rounded-lg border border-border/60 bg-background outline-none focus:border-primary/50 text-[14px]"
                     >
-                      <option>Completed</option>
-                      <option>Ongoing</option>
+                      <option>{t("story.completed")}</option>
+                      <option>{t("story.ongoing")}</option>
                     </select>
                   </div>
                 </div>
 
                 {reqPlatform === "Custom" && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Custom Platform</label>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("explore.customPlatform")}</label>
                     <input
                       value={reqCustomPlatform}
                       onChange={e => setReqCustomPlatform(e.target.value)}
-                      placeholder="Specify platform"
+                      placeholder={t("explore.customPlatformPlaceholder")}
                       className="w-full h-11 px-3 rounded-lg border border-border/60 bg-background outline-none focus:border-primary/50 text-[14px]"
                     />
                   </div>
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Image (Optional)</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("explore.image")}</label>
                   <div className="flex items-center gap-3">
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={e => setFile(e.target.files?.[0] || null)} 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={e => setFile(e.target.files?.[0] || null)}
+                      className="hidden"
                       accept="image/*"
                     />
                     <button
@@ -212,7 +204,7 @@ export function ExploreView() {
                       className="h-10 px-4 rounded-lg border border-border/60 bg-muted/30 flex items-center gap-2 text-[13px] font-medium hover:bg-muted/50"
                     >
                       <Paperclip className="h-4 w-4 text-muted-foreground" />
-                      {file ? "Change Image" : "Attach Image"}
+                      {file ? t("explore.changeImage") : t("explore.attachImage")}
                     </button>
                     {file && <span className="text-xs truncate flex-1 font-medium">{file.name}</span>}
                   </div>
@@ -224,19 +216,19 @@ export function ExploreView() {
                   className="w-full h-11 mt-2 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-                  Submit Request
+                  {t("explore.submitRequest")}
                 </button>
               </>
             )}
           </div>
 
-          {/* List of past requests */}
+          {/* My Requests list */}
           <div className="space-y-3">
-            <h3 className="font-bold text-lg">My Requests</h3>
+            <h3 className="font-bold text-lg">{t("explore.myRequests")}</h3>
             {loadingReqs ? (
               <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
             ) : myReqs.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">You haven't requested any stories yet.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t("explore.noRequests")}</p>
             ) : (
               <div className="space-y-3">
                 {myReqs.map(r => (

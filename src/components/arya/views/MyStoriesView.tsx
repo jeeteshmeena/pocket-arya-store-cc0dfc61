@@ -67,7 +67,7 @@ function StoryThumb({ poster, title }: { poster?: string | null; title: string }
 }
 
 export function MyStoriesView() {
-  const { navigate, tgUser, purchased, wishlist, toggleWishlist } = useApp();
+  const { navigate, tgUser, purchased, wishlist, toggleWishlist, t } = useApp();
   const [tab, setTab] = useState<"mine" | "want">("mine");
   // const [selected, setSelected] = useState<PurchasedStory | null>(null);
 
@@ -108,7 +108,7 @@ export function MyStoriesView() {
   return (
     <div className="animate-fade-in px-4 pt-3 pb-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display font-bold text-xl">Library</h1>
+        <h1 className="font-display font-bold text-xl">{t("library.title")}</h1>
         {tab === "mine" && (
           <button
             onClick={load}
@@ -123,8 +123,8 @@ export function MyStoriesView() {
 
       {/* Tabs */}
       <div className="mt-4 inline-flex p-1 rounded-full bg-muted w-full">
-        <TabBtn active={tab === "mine"} onClick={() => { haptics.light(); setTab("mine"); }} icon={<LibIcon className="h-4 w-4" />} label={`My Stories${merged.length ? ` · ${merged.length}` : ""}`} />
-        <TabBtn active={tab === "want"} onClick={() => { haptics.light(); setTab("want"); }} icon={<Heart className="h-4 w-4" />} label={`Want to Listen${wishlist.length ? ` · ${wishlist.length}` : ""}`} />
+        <TabBtn active={tab === "mine"} onClick={() => { haptics.light(); setTab("mine"); }} icon={<LibIcon className="h-4 w-4" />} label={`${t("library.purchased")}${merged.length ? ` · ${merged.length}` : ""}`} />
+        <TabBtn active={tab === "want"} onClick={() => { haptics.light(); setTab("want"); }} icon={<Heart className="h-4 w-4" />} label={`${t("story.listen")}${wishlist.length ? ` · ${wishlist.length}` : ""}`} />
       </div>
 
       {/* MY STORIES */}
@@ -133,22 +133,22 @@ export function MyStoriesView() {
           {loading && (
             <div className="mt-16 flex flex-col items-center text-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">Loading purchases…</p>
+              <p className="mt-3 text-sm text-muted-foreground">{t("common.loading")}</p>
             </div>
           )}
           {!loading && error && (
             <div className="mt-8 rounded-2xl bg-surface border border-border p-5 text-center">
               <p className="text-sm text-muted-foreground">{error}</p>
-              <button onClick={load} className="mt-3 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold">Retry</button>
+              <button onClick={load} className="mt-3 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold">{t("common.retry")}</button>
             </div>
           )}
           {!loading && !error && merged.length === 0 && (
             <EmptyState
               icon={<LibIcon className="h-6 w-6 text-muted-foreground" />}
-              title="No purchased stories yet"
-              hint="Bought stories appear here automatically"
+              title={t("library.empty")}
+              hint={t("library.browse")}
               cta={<button onClick={() => navigate({ name: "explore" })} className="mt-4 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" /> Browse Stories
+                <ShoppingBag className="h-4 w-4" /> {t("library.browse")}
               </button>}
             />
           )}
@@ -172,10 +172,10 @@ export function MyStoriesView() {
           {wishlist.length === 0 ? (
             <EmptyState
               icon={<Heart className="h-6 w-6 text-rose-500" />}
-              title="Your wishlist is empty"
-              hint="Tap the ♥ on any story to save it for later"
+              title={t("cart.empty")}
+              hint={t("cart.browse")}
               cta={<button onClick={() => navigate({ name: "explore" })} className="mt-4 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" /> Discover
+                <ShoppingBag className="h-4 w-4" /> {t("explore.tab")}
               </button>}
             />
           ) : (
@@ -243,19 +243,20 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
     }, 1500);
   };
 
+  const { t } = useApp();
   const stateConfig = {
     idle: {
-      label: "Get",
+      label: t("myStories.getFiles"),
       icon: <Send className="h-3.5 w-3.5" />,
       cls: "bg-primary text-primary-foreground",
     },
     sending: {
-      label: "Sending…",
+      label: t("myStories.downloading"),
       icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
       cls: "bg-primary/60 text-primary-foreground cursor-wait",
     },
     delivered: {
-      label: "Delivered!",
+      label: t("common.success"),
       icon: (
         <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
           <polyline points="2,8 6,12 14,4" />
@@ -264,7 +265,7 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
       cls: "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30",
     },
     already: {
-      label: "Resend",
+      label: t("common.retry"),
       icon: <Send className="h-3.5 w-3.5" />,
       cls: "bg-muted text-muted-foreground border border-border",
     },
@@ -290,7 +291,7 @@ function StoryRow({ story, onRefresh, onOpen }: { story: PurchasedStory; onRefre
             <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
               <polyline points="2,6 5,9 10,3" />
             </svg>
-            Purchased
+            {t("library.purchased")}
           </span>
           <span className={cn(
             "text-[9px] px-1.5 py-0.5 rounded-full font-semibold",

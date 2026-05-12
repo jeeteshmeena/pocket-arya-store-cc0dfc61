@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { submitSupport } from "@/lib/api";
 
 export function SupportView() {
-  const { theme, navigate, tgUser } = useApp();
+  const { theme, navigate, tgUser, t } = useApp();
   const [supportMode, setSupportMode] = useState<"menu" | "support" | "chat" | "suggestion">("menu");
   const [msg, setMsg] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -73,9 +73,9 @@ export function SupportView() {
           <ChevronLeft className="h-5 w-5" />
         </button>
         <h1 className="ml-2 font-display font-bold text-[17px] truncate">
-          {supportMode === "menu" ? "Help & Support" :
-           supportMode === "support" ? "Open Ticket" :
-           supportMode === "chat" ? "Live Chat" : "Submit Suggestion"}
+          {supportMode === "menu" ? t("support.title") :
+           supportMode === "support" ? t("support.typeLabel") :
+           supportMode === "chat" ? "Live Chat" : t("explore.submitRequest")}
         </h1>
       </div>
 
@@ -86,16 +86,16 @@ export function SupportView() {
               <CheckCircle2 className="h-8 w-8" />
             </div>
             <p className={cn("font-semibold text-lg text-center", theme === "cream" ? "text-black/80" : "text-foreground")}>
-              Submitted Successfully!
+              {t("support.sent")}
             </p>
             <p className="text-[14px] text-muted-foreground text-center">
-              Our team will get back to you soon.
+              {t("support.sentMsg")}
             </p>
           </div>
         ) : supportMode === "menu" ? (
           <div className="space-y-3">
             <p className="text-muted-foreground text-sm mb-4">
-              How can we help you today? Select an option below.
+              {t("support.messagePlaceholder")}
             </p>
             <button
               onClick={() => setSupportMode("support")}
@@ -110,7 +110,7 @@ export function SupportView() {
                 </div>
                 <div>
                   <div className="font-semibold text-[15px]">Open Support Ticket</div>
-                  <div className="text-[13px] text-muted-foreground mt-0.5">Get help with orders or access</div>
+                  <div className="text-[13px] text-muted-foreground mt-0.5">{t("support.typeLabel")}</div>
                 </div>
               </div>
             </button>
@@ -149,7 +149,7 @@ export function SupportView() {
                   <Lightbulb className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="font-semibold text-[15px]">Submit Suggestion</div>
+                  <div className="font-semibold text-[15px]">{t("explore.submitRequest")}</div>
                   <div className="text-[13px] text-muted-foreground mt-0.5">Request features or stories</div>
                 </div>
               </div>
@@ -164,7 +164,7 @@ export function SupportView() {
             <textarea
               value={msg}
               onChange={e => setMsg(e.target.value)}
-              placeholder="Type your message here..."
+              placeholder={t("support.messagePlaceholder")}
               className={cn(
                 "w-full min-h-[140px] p-4 rounded-xl resize-none outline-none border focus:border-primary/50 transition-colors text-[14px] leading-relaxed",
                 theme === "cream" ? "bg-white border-border/60 shadow-sm" : "bg-muted/30 border-border/60 placeholder:text-muted-foreground/60"
@@ -206,7 +206,7 @@ export function SupportView() {
                 disabled={sending || (!msg.trim() && !file)}
                 className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.98]"
               >
-                {sending ? "Sending..." : "Submit"}
+                {sending ? t("common.loading") : t("support.send")}
               </button>
             </div>
           </div>

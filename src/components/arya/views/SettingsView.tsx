@@ -102,7 +102,7 @@ export function SettingsView() {
 
       {/* ── Theme ── */}
       <section className="mt-5">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">Theme</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">{t("settings.theme")}</div>
         <div className="grid grid-cols-3 gap-2">
           {THEMES.map(t => (
             <ThemeThumb key={t.id} t={t} active={theme === t.id} onClick={() => setTheme(t.id)} />
@@ -153,8 +153,8 @@ export function SettingsView() {
         <div className="px-2 mt-1.5 flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground">
             {typeof window !== "undefined" && localStorage.getItem("arya_currency_manual_override")
-              ? "📌 Manually set — prices show in selected currency"
-              : "🌍 Auto-detected from your location"}
+              ? t("settings.manualSet")
+              : t("settings.autoDetect")}
           </span>
           {typeof window !== "undefined" && localStorage.getItem("arya_currency_manual_override") && (
             <button
@@ -166,7 +166,7 @@ export function SettingsView() {
               }}
               className="text-[10px] font-semibold text-primary underline ml-2"
             >
-              Reset to Auto
+              {t("settings.resetAuto")}
             </button>
           )}
         </div>
@@ -175,15 +175,15 @@ export function SettingsView() {
 
       {/* ── Preferences ── */}
       <section className="mt-6">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">Preferences</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">{t("settings.preferences")}</div>
         <div className="rounded-2xl bg-surface border border-border divide-y divide-border">
           <Toggle 
-            label="Auto-play hero slider" 
+            label={t("settings.autoplay")} 
             checked={appPreferences?.autoplayHero ?? true} 
             onChange={(v) => setAppPreference("autoplayHero", v)} 
           />
           <Toggle 
-            label="Show price in cards" 
+            label={t("settings.showPrices")} 
             checked={appPreferences?.showPrices ?? true} 
             onChange={(v) => setAppPreference("showPrices", v)} 
           />

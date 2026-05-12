@@ -73,7 +73,7 @@ function readTelegramUser(): TelegramUser | null {
 }
 
 export function ProfileView() {
-  const { navigate, purchased, tgUser } = useApp();
+  const { navigate, purchased, tgUser, t } = useApp();
   const [tgProfile, setTgProfile] = useState<TelegramUser | null>(null);
   const [photoFailed, setPhotoFailed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -114,7 +114,7 @@ export function ProfileView() {
   if (loading) {
     return (
       <div className="animate-fade-in px-4 pt-3">
-        <h1 className="font-display font-bold text-xl">Profile</h1>
+        <h1 className="font-display font-bold text-xl">{t("profile.title")}</h1>
         <div className="mt-4 p-4 rounded-2xl bg-surface space-y-3">
           <div className="flex items-center gap-3">
             <Skeleton className="h-14 w-14 rounded-xl" />
@@ -131,7 +131,7 @@ export function ProfileView() {
 
   return (
     <div className="animate-fade-in px-4 pt-3 pb-6">
-      <h1 className={cn("font-display font-bold", useApp().theme === "cream" ? "text-2xl font-extrabold" : "text-xl")}>Profile</h1>
+      <h1 className={cn("font-display font-bold", useApp().theme === "cream" ? "text-2xl font-extrabold" : "text-xl")}>{t("profile.title")}</h1>
 
       {/* Identity card */}
       <div className={cn("mt-4 p-4", useApp().theme === "cream" ? "neo-card bg-[#FFE066]" : "rounded-2xl bg-surface")}>
@@ -154,16 +154,16 @@ export function ProfileView() {
           <div className="flex-1 min-w-0">
             <div className={cn("font-semibold truncate", useApp().theme === "cream" ? "text-black text-lg font-bold" : "")}>{displayName}</div>
             <div className={cn("text-xs truncate", useApp().theme === "cream" ? "text-black/70 font-semibold" : "text-muted-foreground")}>
-              {username ? `@${username}` : "Open inside Telegram to sign in"}
+              {username ? `@${username}` : t("profile.signIn")}
             </div>
             <div className={cn("text-[11px] mt-0.5", useApp().theme === "cream" ? "text-black/70 font-bold uppercase tracking-widest" : "text-muted-foreground")}>
-              {purchased.length} {purchased.length === 1 ? "story" : "stories"} owned
+              {purchased.length} {purchased.length === 1 ? t("story.storyOwned") : t("story.storiesOwned")}
             </div>
           </div>
         </div>
 
         <div className={cn("mt-3 flex items-center gap-2 px-3 py-2", useApp().theme === "cream" ? "bg-white border-2 border-black rounded-xl shadow-[2px_2px_0px_#000]" : "rounded-xl bg-background/60")}>
-          <span className={cn("text-[11px] uppercase tracking-wider", useApp().theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>Telegram ID</span>
+          <span className={cn("text-[11px] uppercase tracking-wider", useApp().theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>{t("profile.telegramId")}</span>
           <span className={cn("ml-auto font-mono text-sm", useApp().theme === "cream" ? "font-bold text-black" : "")}>{telegramId ?? "—"}</span>
           <button
             onClick={copyId}
@@ -178,22 +178,22 @@ export function ProfileView() {
 
       {/* Menu */}
       <div className={cn("mt-4 overflow-hidden", useApp().theme === "cream" ? "space-y-2" : "rounded-2xl bg-surface divide-y divide-border")}>
-        <Item icon={ShieldCheck} label="Admin Panel" onClick={() => navigate({ name: "admin" })} isCream={useApp().theme === "cream"} />
-        <Item icon={Gift} label="Refer & Earn" badge="Coming Soon" isCream={useApp().theme === "cream"} />
-        <Item icon={HelpCircle} label="FAQ" onClick={() => setDialog("faq")} isCream={useApp().theme === "cream"} />
+        <Item icon={ShieldCheck} label={t("profile.adminPanel")} onClick={() => navigate({ name: "admin" })} isCream={useApp().theme === "cream"} />
+        <Item icon={Gift} label={t("profile.referEarn")} badge={t("common.comingSoon")} isCream={useApp().theme === "cream"} />
+        <Item icon={HelpCircle} label={t("profile.faq")} onClick={() => setDialog("faq")} isCream={useApp().theme === "cream"} />
         <Item
           icon={LifeBuoy}
-          label="Contact Us"
+          label={t("profile.contactUs")}
           onClick={() => navigate({ name: "support" })}
           isCream={useApp().theme === "cream"}
         />
-        <Item icon={ScrollText} label="Terms & Conditions" onClick={() => setDialog("terms")} isCream={useApp().theme === "cream"} />
-        <Item icon={FileText} label="Privacy Policy" onClick={() => setDialog("privacy")} isCream={useApp().theme === "cream"} />
-        <Item icon={FileText} label="Delivery Policy" onClick={() => setDialog("delivery")} isCream={useApp().theme === "cream"} />
-        <Item icon={Receipt} label="Refund Policy" onClick={() => setDialog("refund")} isCream={useApp().theme === "cream"} />
-        <Item icon={Settings} label="Settings" onClick={() => navigate({ name: "settings" })} isCream={useApp().theme === "cream"} />
-        <Item icon={FileText} label="About" onClick={() => setDialog("about")} isCream={useApp().theme === "cream"} />
-        <Item icon={LogOut} label="Sign out" onClick={() => {
+        <Item icon={ScrollText} label={t("profile.terms")} onClick={() => setDialog("terms")} isCream={useApp().theme === "cream"} />
+        <Item icon={FileText} label={t("profile.privacy")} onClick={() => setDialog("privacy")} isCream={useApp().theme === "cream"} />
+        <Item icon={FileText} label={t("profile.delivery")} onClick={() => setDialog("delivery")} isCream={useApp().theme === "cream"} />
+        <Item icon={Receipt} label={t("profile.refund")} onClick={() => setDialog("refund")} isCream={useApp().theme === "cream"} />
+        <Item icon={Settings} label={t("profile.settings")} onClick={() => navigate({ name: "settings" })} isCream={useApp().theme === "cream"} />
+        <Item icon={FileText} label={t("profile.about")} onClick={() => setDialog("about")} isCream={useApp().theme === "cream"} />
+        <Item icon={LogOut} label={t("profile.signOut")} onClick={() => {
           try { (window as any).Telegram?.WebApp?.close(); } catch {}
         }} isCream={useApp().theme === "cream"} />
       </div>
