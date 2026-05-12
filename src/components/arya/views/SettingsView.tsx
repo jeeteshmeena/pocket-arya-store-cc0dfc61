@@ -150,8 +150,28 @@ export function SettingsView() {
             ▼
           </div>
         </div>
-        <div className="px-2 mt-1.5 text-[10px] text-muted-foreground">All prices will be automatically converted from INR.</div>
+        <div className="px-2 mt-1.5 flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground">
+            {typeof window !== "undefined" && localStorage.getItem("arya_currency_manual_override")
+              ? "📌 Manually set — prices show in selected currency"
+              : "🌍 Auto-detected from your location"}
+          </span>
+          {typeof window !== "undefined" && localStorage.getItem("arya_currency_manual_override") && (
+            <button
+              onClick={() => {
+                localStorage.removeItem("arya_currency_manual_override");
+                localStorage.removeItem("arya_currency");
+                localStorage.removeItem("arya_currency_set");
+                window.location.reload();
+              }}
+              className="text-[10px] font-semibold text-primary underline ml-2"
+            >
+              Reset to Auto
+            </button>
+          )}
+        </div>
       </section>
+
 
       {/* ── Preferences ── */}
       <section className="mt-6">

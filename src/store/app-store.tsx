@@ -166,15 +166,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [deepLinkError, setDeepLinkError] = useState<string | null>(null);
 
   // Currency
+  // Always start fresh (no cached INR), IP detection will set the real currency
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>(() => {
     if (typeof window === "undefined") return "INR";
-    return (localStorage.getItem("arya_currency") as CurrencyCode) || "INR";
+    // ONLY respect stored currency if user manually overrode it via Settings
+    const hasManualOverride = localStorage.getItem("arya_currency_manual_override");
+    if (hasManualOverride) {
+      return (localStorage.getItem("arya_currency") as CurrencyCode) || "INR";
+    }
+    // New & existing users: start with INR, IP detection will override below
+    return "INR";
   });
   const currency = CURRENCY_MAP[currencyCode] || CURRENCY_MAP["INR"];
+
+  // setCurrency is called from Settings dropdown -> marks as intentional manual override
   const setCurrency = (code: CurrencyCode) => {
     setCurrencyCode(code);
     localStorage.setItem("arya_currency", code);
-    localStorage.setItem("arya_currency_set", "1");
+    localStorage.setItem("arya_currency_manual_override", "1");
+    localStorage.removeItem("arya_currency_set"); // clean up old flag
   };
 
   // i18n
@@ -188,19 +198,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   const t = (key: string) => TRANSLATIONS[language]?.[key] || TRANSLATIONS["en"]?.[key] || key;
 
-  // Auto-detect Currency from IP (only once, if user hasn't explicitly set it)
+  // AUTO-DETECT CURRENCY FROM IP — runs on EVERY app load
+  // Skipped ONLY when user has set arya_currency_manual_override via Settings
   useEffect(() => {
-    const isCurrencySet = localStorage.getItem("arya_currency_set");
-    if (!isCurrencySet) {
-      fetchAppContext().then((ctx) => {
+    const hasManualOverride = localStorage.getItem("arya_currency_manual_override");
+    if (hasManualOverride) return; // User chose manually — respect their choice
+
+    fetchAppContext()
+      .then((ctx) => {
         if (ctx.currency && CURRENCY_MAP[ctx.currency as CurrencyCode]) {
-          // Do not set arya_currency_set here, so if they clear cache or we want to re-detect we can,
-          // but actually setting state is enough. Once they manually change it, arya_currency_set = 1.
+          // Force apply for ALL users — including existing ones stuck on INR
           setCurrencyCode(ctx.currency as CurrencyCode);
           localStorage.setItem("arya_currency", ctx.currency);
+          localStorage.removeItem("arya_currency_set"); // clean legacy flag
         }
-      }).catch(console.error);
-    }
+      })
+      .catch(() => { /* silent fallback */ });
   }, []);
 
   useEffect(() => {
