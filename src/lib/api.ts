@@ -195,6 +195,31 @@ export async function createRazorpayOrder(
   });
 }
 
+export async function createRazorpayPaymentLink(
+  storyIds: string[],
+  identity: TelegramIdentity
+): Promise<{ success: boolean; payment_link_id?: string; payment_link_url?: string }> {
+  return request("/create-payment-link", {
+    method: "POST",
+    body: JSON.stringify({
+      story_ids: storyIds,
+      telegram_id: identity.telegram_id,
+      username: identity.username
+    }),
+  });
+}
+
+export async function checkRazorpayPaymentLink(
+  id: string,
+  telegramId: number | null
+): Promise<{ success: boolean; status?: string; checkout_url?: string }> {
+  return request(`/check-payment-link?id=${encodeURIComponent(id)}`, {
+    method: "POST",
+    body: JSON.stringify({ telegram_id: telegramId }),
+  });
+}
+
+
 export async function createOxapayOrder(
   storyIds: string[],
   identity: TelegramIdentity

@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
 import {
-  openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment, createOxapayOrder
+  openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment, createOxapayOrder,
+  createRazorpayPaymentLink, checkRazorpayPaymentLink
 } from "@/lib/api";
 
 // ── Thumbnail with fallback ────────────────────────────────────────
@@ -98,87 +99,54 @@ export function CheckoutView() {
         return;
       }
 
-      if (!(window as any).Razorpay) {
-        await new Promise<void>((res, rej) => {
-          const s = document.createElement("script");
-          s.src = "https://checkout.razorpay.com/v1/checkout.js";
-          s.onload = () => res();
-          s.onerror = () => rej(new Error("Razorpay script failed to load"));
-          document.head.appendChild(s);
-        });
-      }
+      if (paymentMethod === "razorpay") {
+        let order: { success: boolean; payment_link_id?: string; payment_link_url?: string } | null = null;
+        try {
+          order = await createRazorpayPaymentLink(
+            cartSnap.current.map((s) => s.id),
+            tgUser
+          );
+        } catch (err: any) {
+          setPhase({ name: "error", message: err?.message || "Razorpay unavailable." });
+          return;
+        }
 
-      const order = await createRazorpayOrder(
-        cartSnap.current.map((s) => s.id),
-        tgUser,
-        isInternational
-      );
+        if (!order?.success || !order.payment_link_url || !order.payment_link_id) {
+          setPhase({ name: "error", message: "Failed to create payment invoice." });
+          return;
+        }
 
-      if (!order.razorpay_order_id || !order.key) {
-        throw new Error("Invalid order received from server.");
-      }
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg?.openLink) {
+          tg.openLink(order.payment_link_url);
+        } else {
+          window.open(order.payment_link_url, "_blank");
+        }
 
-      await new Promise<void>((resolve, reject) => {
-        const descRaw = cartSnap.current.map((s) => s.title).join(", ");
-        const descStr = descRaw.length > 200 ? descRaw.substring(0, 197) + "..." : descRaw;
-
-        const rzp = new (window as any).Razorpay({
-          key:         order.key,
-          amount:      order.amount,
-          currency:    order.currency,
-          name:        "SliceURL",
-          description: descStr || "Digital Access",
-          order_id:    order.razorpay_order_id,
-          prefill:     { 
-            name: tgUser.username || "Arya User",
-            email: "support@aryabot.com",
-            contact: "9999999999"
-          },
-          theme:       { color: "#111111" },
-          callback_url: window.location.origin + "/api/razorpay-callback",
-          redirect:    true,
-
-          handler: async (resp: any) => {
-            try {
-              const verified = await verifyRazorpayPayment({
-                razorpay_order_id:   resp.razorpay_order_id,
-                razorpay_payment_id: resp.razorpay_payment_id,
-                razorpay_signature:  resp.razorpay_signature,
-                story_ids:   cartSnap.current.map((s) => s.id),
-                telegram_id: tgUser.telegram_id,
-                username:    tgUser.username,
-              });
-
-              const paidAmount = total;
+        // Start polling for payment success
+        const checkInterval = setInterval(async () => {
+          try {
+            const check = await checkRazorpayPaymentLink(order!.payment_link_id!, tgUser.telegram_id);
+            if (check?.status === "paid") {
+              clearInterval(checkInterval);
               purchase(cartSnap.current);
               clearCart();
               setPhase({
                 name:       "success",
-                order_id:   verified.order_id ?? order.receipt,
-                payment_id: resp.razorpay_payment_id,
-                bot_url:    verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
-                amount:     paidAmount,
+                order_id:   order!.payment_link_id!,
+                payment_id: "link",
+                bot_url:    check.checkout_url || `https://t.me/${BOT_USERNAME}`,
+                amount:     total,
               });
               import("@/lib/haptics").then(m => m.haptics.heavy());
-              resolve();
-            } catch (e: any) {
-              reject(new Error(e.message || "Payment verification failed"));
             }
-          },
+          } catch {}
+        }, 5000);
 
-          modal: {
-            backdropclose: false,
-            escape: false,
-            ondismiss: () => { setPhase({ name: "idle" }); resolve(); },
-          },
-        });
-
-        rzp.on("payment.failed", (resp: any) => {
-          reject(new Error(resp?.error?.description || "Payment failed"));
-        });
-
-        rzp.open();
-      });
+        // Also timeout after 10 mins
+        setTimeout(() => clearInterval(checkInterval), 600000);
+        return;
+      }
 
     } catch (e: any) {
       const raw = e.message || "Something went wrong. Please try again.";
