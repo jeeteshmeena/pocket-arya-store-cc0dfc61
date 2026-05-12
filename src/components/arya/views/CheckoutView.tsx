@@ -159,8 +159,8 @@ export function CheckoutView() {
   };
 
   return (
-    <div className="relative">
-      <main className="flex-1 overflow-y-auto pb-6 px-4 pt-3 animate-fade-in">
+    <div className="relative h-full flex flex-col">
+      <main className="flex-1 overflow-y-auto pb-[180px] px-4 pt-3 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
           <button
