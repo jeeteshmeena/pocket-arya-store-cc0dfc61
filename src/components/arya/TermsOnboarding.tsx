@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { TERMS_TEXT } from "./legal-content";
+import { useApp } from "@/store/app-store";
 
 const STORAGE_KEY = "arya_tc_accepted";
 
 export function TermsOnboarding() {
+  const { t } = useApp();
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
 
@@ -61,9 +63,9 @@ export function TermsOnboarding() {
 
         {/* Header */}
         <div className="px-5 pb-3 shrink-0">
-          <h2 className="font-display font-bold text-lg">Terms & Conditions</h2>
+          <h2 className="font-display font-bold text-lg">{t("profile.terms")}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Please review and accept to continue using Arya Premium.
+            {t("settings.preferences")}
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export function TermsOnboarding() {
             onClick={accept}
             className="w-full h-12 rounded-full bg-primary text-primary-foreground font-bold text-sm active:scale-[0.98] transition"
           >
-            Accept & Continue
+            {t("common.submit")}
           </button>
         </div>
       </div>

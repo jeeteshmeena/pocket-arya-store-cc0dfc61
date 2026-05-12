@@ -44,7 +44,7 @@ function AnimatedLogoText() {
 }
 
 function ThemePicker() {
-  const { theme, setTheme } = useApp();
+  const { theme, setTheme, t } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const current = THEME_PRESETS.find((t) => t.id === theme) ?? THEME_PRESETS[0];
@@ -77,7 +77,7 @@ function ThemePicker() {
           className="absolute right-0 top-11 z-50 w-[260px] rounded-2xl bg-surface border border-border shadow-[0_20px_48px_-12px_rgba(0,0,0,0.25)] p-3 animate-popup-enter"
         >
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1 mb-2">
-            App Theme
+            {t("settings.theme")}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {THEME_PRESETS.map((t) => {
@@ -113,7 +113,7 @@ function ThemePicker() {
 
 
 export function Header() {
-  const { cart, setCartOpen, stories, navigate } = useApp();
+  const { cart, setCartOpen, stories, navigate, t } = useApp();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -187,7 +187,7 @@ export function Header() {
                 )}
               >
                 <Search className={cn("h-4 w-4 shrink-0", useApp().theme === "cream" ? "text-black" : "text-muted-foreground")} />
-                <span className={cn("text-sm truncate", useApp().theme === "cream" ? "text-black font-semibold" : "text-muted-foreground")}>Search...</span>
+                <span className={cn("text-sm truncate", useApp().theme === "cream" ? "text-black font-semibold" : "text-muted-foreground")}>{t("common.search")}</span>
               </button>
 
               <ThemePicker />
@@ -226,7 +226,7 @@ export function Header() {
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search stories..."
+                placeholder={t("explore.searchPlaceholder")}
                 className="flex-1 bg-transparent outline-none text-[15px]"
                 onKeyDown={e => {
                   if (e.key === "Enter" && query.trim()) {
@@ -270,7 +270,7 @@ export function Header() {
             )}
 
             {query.trim() && suggestions.length === 0 && (
-              <div className="text-center py-12 text-[15px] text-muted-foreground animate-fade-in">No results found for "{query}"</div>
+              <div className="text-center py-12 text-[15px] text-muted-foreground animate-fade-in">{t("story.noFound")}</div>
             )}
 
             {query.trim() && suggestions.length > 0 && (

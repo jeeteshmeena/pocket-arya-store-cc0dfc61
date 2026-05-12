@@ -11,7 +11,7 @@ import {
 import { useApp } from "@/store/app-store";
 
 export function DeepLinkErrorDialog() {
-  const { deepLinkError, clearDeepLinkError } = useApp();
+  const { deepLinkError, clearDeepLinkError, t } = useApp();
   const open = deepLinkError !== null;
 
   return (
@@ -21,15 +21,14 @@ export function DeepLinkErrorDialog() {
           <div className="mx-auto h-12 w-12 grid place-items-center rounded-full bg-destructive/10 mb-2">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <AlertDialogTitle className="font-display text-center">Story not found</AlertDialogTitle>
+          <AlertDialogTitle className="font-display text-center">{t("story.noFound")}</AlertDialogTitle>
           <AlertDialogDescription className="text-center">
-            The story you’re looking for{deepLinkError ? ` (“${deepLinkError}”)` : ""} isn’t available anymore.
-            It may have been removed or the link is invalid.
+            {t("story.noFound")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogAction onClick={clearDeepLinkError} className="w-full rounded-full">
-            Browse stories
+            {t("library.browse")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

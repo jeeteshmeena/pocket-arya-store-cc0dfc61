@@ -6,7 +6,7 @@ import { usePriceFormat } from "@/hooks/usePriceFormat";
 export function CartPanel() {
   const {
     cartOpen, setCartOpen, cart, removeFromCart, navigate,
-    goToCheckout,
+    goToCheckout, t
   } = useApp();
   const fmt = usePriceFormat();
 
@@ -28,14 +28,14 @@ export function CartPanel() {
       <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={() => setCartOpen(false)} />
       <aside className={cn("absolute right-0 top-0 h-full w-[88%] max-w-sm flex flex-col animate-slide-in-right shadow-2xl", useApp().theme === "cream" ? "bg-white border-l-4 border-black" : "bg-surface text-foreground border-l border-border")}>
         <div className={cn("h-14 px-4 flex items-center justify-between", useApp().theme === "cream" ? "border-b-4 border-black bg-[#FFE066]" : "border-b border-border")}>
-          <div className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-black text-xl" : "font-bold")}>Your Cart</div>
+          <div className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-black text-xl" : "font-bold")}>{t("cart.title")}</div>
           <button onClick={() => setCartOpen(false)} className={cn("h-9 w-9 grid place-items-center transition active:scale-95", useApp().theme === "cream" ? "neo-button bg-white text-black" : "rounded-full hover:bg-surface")}>
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4">
           {cart.length === 0 && (
-            <div className={cn("text-center text-sm pt-20 font-semibold", useApp().theme === "cream" ? "text-black/60" : "text-muted-foreground")}>Your cart is empty</div>
+            <div className={cn("text-center text-sm pt-20 font-semibold", useApp().theme === "cream" ? "text-black/60" : "text-muted-foreground")}>{t("cart.empty")}</div>
           )}
           {cart.map((s) => (
             <div key={s.id} className={cn("flex gap-3 p-2 relative animate-cart-item-in", useApp().theme === "cream" ? "neo-card bg-white" : "rounded-xl bg-surface")}>
@@ -68,7 +68,7 @@ export function CartPanel() {
         {cart.length > 0 && (
           <div className={cn("p-4 space-y-4", useApp().theme === "cream" ? "bg-[#CCE5FF] border-t-4 border-black" : "border-t border-border")}>
             <div className="flex items-center justify-between">
-              <span className={cn("text-sm uppercase tracking-wider", useApp().theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>Total</span>
+              <span className={cn("text-sm uppercase tracking-wider", useApp().theme === "cream" ? "font-bold text-black/60" : "text-muted-foreground")}>{t("cart.total")}</span>
               <span className={cn("font-display", useApp().theme === "cream" ? "font-extrabold text-2xl text-black" : "font-bold text-lg")}>{fmt(total)}</span>
             </div>
             <button
@@ -78,7 +78,7 @@ export function CartPanel() {
                 useApp().theme === "cream" ? "neo-button bg-primary text-primary-foreground text-lg" : "rounded-full bg-primary text-primary-foreground font-semibold"
               )}
             >
-              Checkout →
+              {t("cart.checkout")} →
             </button>
           </div>
         )}

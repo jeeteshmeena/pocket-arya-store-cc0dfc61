@@ -481,7 +481,7 @@ function PreviewPopup({
                   : "bg-surface border border-border text-foreground hover:bg-muted"
               )}
             >
-              {inCart ? <><Check className="h-4 w-4" /> In Cart</> : <><ShoppingCart className="h-4 w-4" />{t("story.addToCart")}</>}
+              {inCart ? <><Check className="h-4 w-4" /> {t("story.inCart")}</> : <><ShoppingCart className="h-4 w-4" />{t("story.addToCart")}</>}
             </button>
             <button
               onClick={onBuyNow}
