@@ -14,7 +14,7 @@ import {
 // ── Thumbnail with fallback ────────────────────────────────────────
 function Thumb({ poster, title, size = 48 }: { poster?: string | null; title: string; size?: number }) {
   const [err, setErr] = useState(false);
-  const cls = "rounded-xl object-cover shrink-0 ring-1 ring-border/60";
+  const cls = "rounded-none object-cover shrink-0 ring-1 ring-border/60";
   const dim = { height: size, width: size };
   if (poster && !err) {
     return <img src={poster} alt={title} onError={() => setErr(true)} className={cls} style={dim} />;
@@ -255,7 +255,7 @@ export function CheckoutView() {
                   <div className="h-5 w-5 rounded-full bg-current grid place-items-center opacity-60">
                     <span className="text-surface font-extrabold text-[11px] leading-none mb-[1px]">₿</span>
                   </div>
-                  <span className="text-[13px] font-bold opacity-60">{t("checkout.crypto")}</span>
+                  <span className="text-[13px] font-bold opacity-60">Crypto (Zero Fees)</span>
                 </button>
               </div>
             </div>
