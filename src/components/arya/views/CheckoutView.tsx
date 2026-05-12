@@ -461,10 +461,10 @@ export function CheckoutView() {
                 {t("common.tryAgain")}
               </button>
               <button
-                onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
+                onClick={() => openTelegramLink(`https://t.me/ItsNewtonPlanet`)}
                 className="w-full h-[48px] rounded-[16px] bg-surface border border-border text-[13px] font-semibold text-foreground hover:bg-muted inline-flex items-center justify-center gap-2 active:scale-[0.98] transition"
               >
-                <Send className="h-4 w-4" /> Contact @{BOT_USERNAME}
+                <Send className="h-4 w-4" /> Contact @ItsNewtonPlanet
               </button>
             </div>
           </div>

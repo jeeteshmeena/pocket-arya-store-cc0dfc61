@@ -66,7 +66,7 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     "checkout.summary": "Order Summary",
     "checkout.paymentMethod": "Payment Method",
     "checkout.upi": "UPI / Card",
-    "checkout.crypto": "Crypto (No KYC)",
+    "checkout.crypto": "Crypto (Zero Fees)",
     "checkout.processing": "Processing...",
     "checkout.successTitle": "Payment Successful!",
     "checkout.successMsg": "Your stories are now unlocked. Go to Library to access them.",
