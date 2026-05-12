@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/store/app-store";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
 import {
-  openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment,
+  openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment, createOxapayOrder
 } from "@/lib/api";
 
 // ── Thumbnail with fallback ────────────────────────────────────────
@@ -38,6 +38,7 @@ export function CheckoutView() {
   const fmt = usePriceFormat();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "crypto">("razorpay");
 
   // Snapshot cart at mount so success screen still shows items
   const cartSnap = useRef(cart);
@@ -68,6 +69,18 @@ export function CheckoutView() {
     try {
       const tg = (window as any).Telegram?.WebApp;
       if (tg) { tg.expand(); tg.disableClosingConfirmation?.(); }
+
+      if (paymentMethod === "crypto") {
+        const order = await createOxapayOrder(
+          cartSnap.current.map((s) => s.id),
+          tgUser
+        );
+        if (!order.success || !order.payLink) {
+          throw new Error("Failed to create crypto invoice.");
+        }
+        window.location.href = order.payLink;
+        return;
+      }
 
       if (!(window as any).Razorpay) {
         await new Promise<void>((res, rej) => {
@@ -217,6 +230,37 @@ export function CheckoutView() {
                 <Row label="Tax" value="Included" muted />
                 <div className="h-px bg-border/70 my-2" />
                 <Row label="Total" value={fmt(total)} bold />
+              </div>
+            </div>
+
+            {/* Payment Method Selector */}
+            <div className="mb-4 mt-2">
+              <SectionLabel>Payment Method</SectionLabel>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setPaymentMethod("razorpay")}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
+                    paymentMethod === "razorpay" 
+                      ? "border-primary bg-primary/5 text-primary" 
+                      : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <CreditCard className="h-6 w-6 mb-2" />
+                  <span className="text-[13px] font-bold">UPI / Cards</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod("crypto")}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
+                    paymentMethod === "crypto" 
+                      ? "border-primary bg-primary/5 text-primary" 
+                      : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <div className="h-6 w-6 mb-2 rounded-full bg-current grid place-items-center">
+                    <span className="text-surface font-extrabold text-[13px] leading-none mb-[1px]">₿</span>
+                  </div>
+                  <span className="text-[13px] font-bold">Crypto (No KYC)</span>
+                </button>
               </div>
             </div>
 

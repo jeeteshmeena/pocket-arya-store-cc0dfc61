@@ -180,6 +180,20 @@ export async function createRazorpayOrder(
   });
 }
 
+export async function createOxapayOrder(
+  storyIds: string[],
+  identity: TelegramIdentity
+): Promise<{ success: boolean; payLink?: string; trackId?: string; detail?: string }> {
+  return request("/create-oxapay-order", {
+    method: "POST",
+    body: JSON.stringify({
+      story_ids: storyIds,
+      telegram_id: identity.telegram_id,
+      username: identity.username
+    }),
+  });
+}
+
 export async function verifyRazorpayPayment(data: {
   razorpay_order_id: string;
   razorpay_payment_id: string;
