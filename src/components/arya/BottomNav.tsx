@@ -36,6 +36,7 @@ const TABS = [
 const DEFAULT_TABS = TABS;
 
 function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  const { t } = useApp();
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-40 bg-background border-t border-border"
@@ -44,11 +45,12 @@ function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) =
       <div className="mx-auto max-w-2xl flex items-stretch justify-around">
         {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
+          const localizedLabel = id === "mystories" ? t("nav.library") : t(`nav.${id}`);
           return (
             <button
               key={id}
               onClick={() => onNav(id)}
-              aria-label={label}
+              aria-label={localizedLabel}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 pt-3 pb-2 gap-1 transition-colors duration-150",
@@ -69,7 +71,7 @@ function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) =
                 "text-[10px] tracking-wide",
                 active ? "font-bold text-foreground" : "font-medium text-muted-foreground"
               )}>
-                {label}
+                {localizedLabel}
               </span>
             </button>
           );
@@ -81,6 +83,7 @@ function DefaultNav({ current, onNav }: { current: string; onNav: (id: string) =
 
 // ── TEAL — Premium dark dock with glow indicator (unique) ─────────
 function TealNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  const { t } = useApp();
   return (
     <nav
       className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
@@ -97,11 +100,12 @@ function TealNav({ current, onNav }: { current: string; onNav: (id: string) => v
       >
         {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
+          const localizedLabel = id === "mystories" ? t("nav.library") : t(`nav.${id}`);
           return (
             <button
               key={id}
               onClick={() => onNav(id)}
-              aria-label={label}
+              aria-label={localizedLabel}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative h-12 flex flex-col items-center justify-center transition-all duration-300 active:scale-90 px-3.5",
@@ -116,7 +120,7 @@ function TealNav({ current, onNav }: { current: string; onNav: (id: string) => v
               )}
               <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.6 : 1.8} />
               <span className={cn("text-[9px] mt-0.5 tracking-wider uppercase font-semibold", active ? "opacity-100" : "opacity-70")}>
-                {label}
+                {localizedLabel}
               </span>
             </button>
           );
@@ -128,6 +132,7 @@ function TealNav({ current, onNav }: { current: string; onNav: (id: string) => v
 
 // ── MINT — Soft floating dock with leaf-curve indicator (unique) ──
 function MintNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  const { t } = useApp();
   return (
     <nav
       className="fixed inset-x-0 z-40 flex justify-center pointer-events-none"
@@ -143,11 +148,12 @@ function MintNav({ current, onNav }: { current: string; onNav: (id: string) => v
       >
         {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
+          const localizedLabel = id === "mystories" ? t("nav.library") : t(`nav.${id}`);
           return (
             <button
               key={id}
               onClick={() => onNav(id)}
-              aria-label={label}
+              aria-label={localizedLabel}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative h-12 flex items-center justify-center transition-all duration-300 active:scale-90",
@@ -166,7 +172,7 @@ function MintNav({ current, onNav }: { current: string; onNav: (id: string) => v
             >
               <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.6 : 1.9} />
               {active && (
-                <span className="text-[12px] font-bold tracking-tight whitespace-nowrap">{label}</span>
+                <span className="text-[12px] font-bold tracking-tight whitespace-nowrap">{localizedLabel}</span>
               )}
             </button>
           );
@@ -178,7 +184,7 @@ function MintNav({ current, onNav }: { current: string; onNav: (id: string) => v
 
 // ── PILL — Floating glass pill nav (Cream, Dark, Romantic) ──
 function PillNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
-  const { theme } = useApp();
+  const { theme, t } = useApp();
   const isCream = theme === "cream";
   const isDark = theme === "dark";
   const isRomantic = theme === "romantic";
@@ -207,11 +213,12 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
       >
         {DEFAULT_TABS.map(({ id, label, Icon }) => {
           const active = current === id;
+          const localizedLabel = id === "mystories" ? t("nav.library") : t(`nav.${id}`);
           return (
             <button
               key={id}
               onClick={() => onNav(id)}
-              aria-label={label}
+              aria-label={localizedLabel}
               aria-current={active ? "page" : undefined}
               className={cn(
                 "h-12 flex items-center gap-2.5 transition-all duration-300 active:scale-95",
@@ -233,7 +240,7 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
               <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.5 : 1.8} />
               {active && (
                 <span className="text-[13px] font-bold tracking-tight whitespace-nowrap">
-                  {label}
+                  {localizedLabel}
                 </span>
               )}
             </button>
@@ -246,6 +253,7 @@ function PillNav({ current, onNav }: { current: string; onNav: (id: string) => v
 
 // ── DARK — Clean iOS-style full-width nav with filled active icons ──
 function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => void }) {
+  const { t } = useApp();
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-40"
@@ -260,11 +268,12 @@ function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => v
         {TABS.map(({ id, label, Icon, IconFilled }) => {
           const active = current === id;
           const ActiveIcon = IconFilled;
+          const localizedLabel = id === "mystories" ? t("nav.library") : t(`nav.${id}`);
           return (
             <button
               key={id}
               onClick={() => onNav(id)}
-              aria-label={label}
+              aria-label={localizedLabel}
               aria-current={active ? "page" : undefined}
               className="relative flex flex-col items-center justify-center flex-1 py-1 gap-0.5 active:opacity-70 transition-opacity"
             >
@@ -275,7 +284,7 @@ function DarkNav({ current, onNav }: { current: string; onNav: (id: string) => v
                 className="text-[10px] font-semibold tracking-wide"
                 style={{ color: active ? "#ffffff" : "rgba(255,255,255,0.45)" }}
               >
-                {label}
+                {localizedLabel}
               </span>
             </button>
           );

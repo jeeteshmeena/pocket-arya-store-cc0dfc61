@@ -165,6 +165,10 @@ export async function checkoutCart(
   return res;
 }
 
+export async function fetchAppContext(): Promise<{ ip: string; country: string; currency: string }> {
+  return request("/app-context");
+}
+
 export async function createRazorpayOrder(
   storyIds: string[],
   identity: TelegramIdentity,

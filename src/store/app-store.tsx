@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Story } from "@/lib/data";
-import { fetchStories, checkoutCart, openTelegramLink, type TelegramIdentity } from "@/lib/api";
+import { fetchStories, checkoutCart, openTelegramLink, fetchAppContext, type TelegramIdentity } from "@/lib/api";
 import { type CurrencyCode, CURRENCY_MAP, type Currency } from "@/lib/currency";
+import { type LanguageCode, TRANSLATIONS } from "@/lib/i18n";
 
 type Theme = "default" | "dark" | "teal" | "cream" | "mint" | "romantic";
 type View =
@@ -30,6 +31,11 @@ type Ctx = {
   // Currency
   currency: Currency;
   setCurrency: (code: CurrencyCode) => void;
+
+  // i18n
+  language: LanguageCode;
+  setLanguage: (lang: LanguageCode) => void;
+  t: (key: string) => string;
 
   // Preferences
   appPreferences: {
@@ -168,7 +174,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setCurrency = (code: CurrencyCode) => {
     setCurrencyCode(code);
     localStorage.setItem("arya_currency", code);
+    localStorage.setItem("arya_currency_set", "1");
   };
+
+  // i18n
+  const [language, setLanguageState] = useState<LanguageCode>(() => {
+    if (typeof window === "undefined") return "en";
+    return (localStorage.getItem("arya_language") as LanguageCode) || "en";
+  });
+  const setLanguage = (lang: LanguageCode) => {
+    setLanguageState(lang);
+    localStorage.setItem("arya_language", lang);
+  };
+  const t = (key: string) => TRANSLATIONS[language]?.[key] || TRANSLATIONS["en"]?.[key] || key;
+
+  // Auto-detect Currency from IP (only once, if user hasn't explicitly set it)
+  useEffect(() => {
+    const isCurrencySet = localStorage.getItem("arya_currency_set");
+    if (!isCurrencySet) {
+      fetchAppContext().then((ctx) => {
+        if (ctx.currency && CURRENCY_MAP[ctx.currency as CurrencyCode]) {
+          // Do not set arya_currency_set here, so if they clear cache or we want to re-detect we can,
+          // but actually setting state is enough. Once they manually change it, arya_currency_set = 1.
+          setCurrencyCode(ctx.currency as CurrencyCode);
+          localStorage.setItem("arya_currency", ctx.currency);
+        }
+      }).catch(console.error);
+    }
+  }, []);
 
   useEffect(() => {
     if (tgUser.telegram_id) {
@@ -297,6 +330,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTheme: setThemeState,
     currency,
     setCurrency,
+    language,
+    setLanguage,
+    t,
     appPreferences,
     setAppPreference,
     stories,
@@ -344,7 +380,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     deepLinkError,
     clearDeepLinkError: () => setDeepLinkError(null),
-  }), [theme, currency, appPreferences, stories, storiesLoading, storiesError, tgUser, cart, purchased, wishlist, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
+  }), [theme, currency, language, appPreferences, stories, storiesLoading, storiesError, tgUser, cart, purchased, wishlist, cartOpen, searchOpen, view, checkoutState, deepLinkError]);
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }

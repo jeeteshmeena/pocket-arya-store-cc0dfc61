@@ -2,6 +2,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { CURRENCIES, type CurrencyCode } from "@/lib/currency";
+import { LANGUAGE_NAMES, type LanguageCode } from "@/lib/i18n";
 import { useState } from "react";
 
 type ThemeId = "default" | "dark" | "teal" | "cream" | "mint" | "romantic";
@@ -88,7 +89,7 @@ function ThemeThumb({ t, active, onClick }: { t: ThemePreset; active: boolean; o
 }
 
 export function SettingsView() {
-  const { back, theme, setTheme, currency, setCurrency, appPreferences, setAppPreference } = useApp();
+  const { back, theme, setTheme, currency, setCurrency, language, setLanguage, t, appPreferences, setAppPreference } = useApp();
 
   return (
     <div className="animate-fade-in px-4 pt-3 pb-8">
@@ -96,7 +97,7 @@ export function SettingsView() {
         <button onClick={back} className="h-9 w-9 grid place-items-center rounded-full hover:bg-muted">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="font-display font-bold text-xl">Settings</h1>
+        <h1 className="font-display font-bold text-xl">{t("settings.title")}</h1>
       </div>
 
       {/* ── Theme ── */}
@@ -109,9 +110,30 @@ export function SettingsView() {
         </div>
       </section>
 
+      {/* ── Language ── */}
+      <section className="mt-6">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">{t("settings.language")}</div>
+        <div className="relative">
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value as LanguageCode)}
+            className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:border-primary pr-10"
+          >
+            {Object.entries(LANGUAGE_NAMES).map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-muted-foreground">
+            ▼
+          </div>
+        </div>
+      </section>
+
       {/* ── Currency ── */}
       <section className="mt-6">
-        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">Currency</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">{t("settings.currency")}</div>
         <div className="relative">
           <select
             value={currency.code}

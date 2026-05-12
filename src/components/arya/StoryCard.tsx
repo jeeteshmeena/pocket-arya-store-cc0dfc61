@@ -100,11 +100,12 @@ const HeartBtn = memo(function HeartBtn({
 
 // ─── Cart button with hover tooltip ───────────────────────────────────────────
 const CartBtn = memo(function CartBtn({
-  inCart, onAdd, theme,
+  inCart, onAdd, theme, addLabel,
 }: {
   inCart: boolean;
   onAdd: (e: React.MouseEvent) => void;
   theme: string;
+  addLabel?: string;
 }) {
   const [show, setShow] = useState(false);
 
@@ -125,7 +126,7 @@ const CartBtn = memo(function CartBtn({
           transition: "opacity 180ms ease, transform 180ms ease",
         }}
       >
-        Add to Cart
+        {addLabel || "Add to Cart"}
       </span>
 
       <button
@@ -212,7 +213,7 @@ export const StoryCard = memo(function StoryCard({
   square?: boolean;
   enablePreview?: boolean;
 }) {
-  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout, appPreferences } = useApp();
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout, appPreferences, t } = useApp();
   const fmt = usePriceFormat();
 
   const liked   = inWishlist(story.id);
@@ -328,7 +329,7 @@ export const StoryCard = memo(function StoryCard({
           />
 
           <HeartBtn liked={liked} onToggle={handleHeart} />
-          <CartBtn inCart={inCart} onAdd={handleAdd} theme={theme} />
+          <CartBtn inCart={inCart} onAdd={handleAdd} theme={theme} addLabel={t("story.addToCart")} />
         </div>
 
         {/* ── Label ── */}
@@ -384,7 +385,7 @@ function PreviewPopup({
   onBuyNow: () => void;
   onOpen: () => void;
 }) {
-  const { theme, appPreferences } = useApp();
+  const { theme, appPreferences, t } = useApp();
   const fmt = usePriceFormat();
   const { bg, text } = getGenre(story.genre);
   const hasImage = isDisplayableUrl(story.poster);
@@ -480,7 +481,7 @@ function PreviewPopup({
                   : "bg-surface border border-border text-foreground hover:bg-muted"
               )}
             >
-              {inCart ? <><Check className="h-4 w-4" /> In Cart</> : <><ShoppingCart className="h-4 w-4" /> Add to Cart</>}
+              {inCart ? <><Check className="h-4 w-4" /> In Cart</> : <><ShoppingCart className="h-4 w-4" />{t("story.addToCart")}</>}
             </button>
             <button
               onClick={onBuyNow}
@@ -491,7 +492,7 @@ function PreviewPopup({
                   : "bg-foreground text-background"
               )}
             >
-              <Zap className="h-4 w-4" strokeWidth={2.5} /> Buy Now
+              <Zap className="h-4 w-4" strokeWidth={2.5} /> {t("story.buyNow")}
             </button>
           </div>
 
@@ -500,7 +501,7 @@ function PreviewPopup({
             onClick={onOpen}
             className="mt-2 w-full h-9 rounded-[10px] inline-flex items-center justify-center gap-1 text-[12px] font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition"
           >
-            View story details <ChevronRight className="h-3.5 w-3.5" />
+            {t("story.listen")} <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

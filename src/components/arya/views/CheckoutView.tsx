@@ -34,7 +34,7 @@ type Phase =
   | { name: "error"; message: string };
 
 export function CheckoutView() {
-  const { resetCheckout, navigate, replaceView, back, cart, clearCart, purchase, removeFromCart, tgUser, currency } = useApp();
+  const { resetCheckout, navigate, replaceView, back, cart, clearCart, purchase, removeFromCart, tgUser, currency, t } = useApp();
   const fmt = usePriceFormat();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -181,7 +181,7 @@ export function CheckoutView() {
             <h1 className="font-display font-extrabold text-[22px] tracking-tight leading-none">
               {phase.name === "success" ? "Order Confirmed" :
                phase.name === "error"   ? "Payment Failed" :
-               phase.name === "loading" ? "Processing"     : "Checkout"}
+               phase.name === "loading" ? "Processing"     : t("checkout.title")}
             </h1>
             {phase.name === "idle" && itemCount > 0 && (
               <p className="text-[12px] text-muted-foreground mt-1">
@@ -191,10 +191,10 @@ export function CheckoutView() {
           </div>
         </div>
 
-        {/* ── IDLE: Order Summary ─────────────────────────────── */}
+            {/* IDLE: Order Summary */}
         {(phase.name === "idle" || phase.name === "loading") && cartSnap.current.length > 0 && (
           <>
-            <SectionLabel>Order Summary</SectionLabel>
+            <SectionLabel>{t("checkout.summary")}</SectionLabel>
             <div className="rounded-[20px] bg-surface border border-border/60 overflow-hidden mb-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
               <div className="divide-y divide-border/60">
                 {cartSnap.current.map((s) => (
@@ -466,7 +466,7 @@ export function CheckoutView() {
             >
               <span className="flex items-center gap-2.5">
                 <CreditCard className="h-5 w-5" />
-                <span className="text-[15px]">Pay Securely</span>
+                <span className="text-[15px]">{t("checkout.pay")}</span>
               </span>
               <span className="font-display font-extrabold text-[18px] tracking-tight tabular-nums">{fmt(total)}</span>
             </button>
@@ -485,13 +485,13 @@ export function CheckoutView() {
             <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
               <ShoppingBag className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="mt-3 font-semibold text-foreground">Your cart is empty</p>
+            <p className="mt-3 font-semibold text-foreground">{t("cart.empty")}</p>
             <p className="mt-1 text-[12px] text-muted-foreground">Browse stories and add them to checkout.</p>
             <button
               onClick={() => navigate({ name: "explore" })}
               className="mt-5 h-11 px-6 rounded-full bg-foreground text-background text-sm font-semibold"
             >
-              Browse Stories
+              {t("cart.browse")}
             </button>
           </div>
         </div>
