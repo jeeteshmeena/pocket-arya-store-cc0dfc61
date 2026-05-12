@@ -135,6 +135,8 @@ export function CheckoutView() {
             contact: "9999999999"
           },
           theme:       { color: "#111111" },
+          callback_url: window.location.origin + "/api/razorpay-callback",
+          redirect:    true,
 
           handler: async (resp: any) => {
             try {
