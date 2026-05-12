@@ -71,14 +71,30 @@ export function CheckoutView() {
       if (tg) { tg.expand(); tg.disableClosingConfirmation?.(); }
 
       if (paymentMethod === "crypto") {
-        const order = await createOxapayOrder(
-          cartSnap.current.map((s) => s.id),
-          tgUser
-        );
-        if (!order.success || !order.payLink) {
-          throw new Error("Failed to create crypto invoice.");
+        let order: { success: boolean; payLink?: string; trackId?: string; detail?: string } | null = null;
+        try {
+          order = await createOxapayOrder(
+            cartSnap.current.map((s) => s.id),
+            tgUser
+          );
+        } catch (err: any) {
+          const msg = err?.response?.detail || err?.message || "Crypto payment unavailable.";
+          setPhase({ name: "error", message: msg });
+          return;
         }
-        window.location.href = order.payLink;
+        if (!order?.success || !order.payLink) {
+          setPhase({ name: "error", message: order?.detail || "Failed to create crypto invoice." });
+          return;
+        }
+        // Open in Telegram's built-in browser (correct way inside WebApp)
+        const tgApp = (window as any).Telegram?.WebApp;
+        if (tgApp?.openLink) {
+          tgApp.openLink(order.payLink);
+        } else {
+          window.open(order.payLink, "_blank");
+        }
+        // Keep loading state to prevent double-tap, show info
+        setPhase({ name: "loading" });
         return;
       }
 

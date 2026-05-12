@@ -37,8 +37,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Request failed (${res.status}): ${text || res.statusText}`);
+    // Try to parse JSON body for FastAPI detail messages
+    try {
+      const errJson = await res.json();
+      const detail = errJson?.detail || errJson?.message || res.statusText;
+      const err: any = new Error(`${detail}`);
+      err.response = errJson;
+      err.status = res.status;
+      throw err;
+    } catch (e: any) {
+      if (e.status) throw e;
+      const text = await res.text().catch(() => "");
+      throw new Error(`Request failed (${res.status}): ${text || res.statusText}`);
+    }
   }
   const json = (await res.json()) as { success?: boolean } & Record<string, unknown>;
   if (json && json.success === false) {
