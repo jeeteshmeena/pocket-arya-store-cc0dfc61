@@ -271,17 +271,17 @@ export function CheckoutView() {
                   <span className="text-[13px] font-bold">{t("checkout.upi")}</span>
                 </button>
                 <button
-                  onClick={() => setPaymentMethod("crypto")}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
-                    paymentMethod === "crypto" 
-                      ? "border-primary bg-primary/5 text-primary" 
-                      : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
-                  }`}
+                  onClick={() => {
+                    const tg = (window as any).Telegram?.WebApp;
+                    if (tg?.showAlert) tg.showAlert("Crypto payments are coming soon!");
+                    else alert("Crypto payments are coming soon!");
+                  }}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition border-border/60 bg-surface hover:bg-muted text-muted-foreground`}
                 >
-                  <div className="h-6 w-6 mb-2 rounded-full bg-current grid place-items-center">
+                  <div className="h-6 w-6 mb-2 rounded-full bg-current grid place-items-center opacity-60">
                     <span className="text-surface font-extrabold text-[13px] leading-none mb-[1px]">₿</span>
                   </div>
-                  <span className="text-[13px] font-bold">{t("checkout.crypto")}</span>
+                  <span className="text-[13px] font-bold opacity-60">{t("checkout.crypto")}</span>
                 </button>
               </div>
             </div>
