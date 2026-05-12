@@ -39,7 +39,7 @@ export function CheckoutView() {
   const fmt = usePriceFormat();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay-native" | "razorpay-link" | "crypto">("razorpay-native");
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay-link" | "crypto">("razorpay-link");
 
   // Snapshot cart at mount so success screen still shows items
   const cartSnap = useRef(cart);
@@ -149,90 +149,7 @@ export function CheckoutView() {
         return;
       }
 
-      // 2. NATIVE CHECKOUT FLOW (UPI / QR) -> In-App overlay
-      if (paymentMethod === "razorpay-native") {
-        if (!(window as any).Razorpay) {
-          await new Promise<void>((res, rej) => {
-            const s = document.createElement("script");
-            s.src = "https://checkout.razorpay.com/v1/checkout.js";
-            s.onload = () => res();
-            s.onerror = () => rej(new Error("Razorpay script failed to load"));
-            document.head.appendChild(s);
-          });
-        }
 
-        const order = await createRazorpayOrder(
-          cartSnap.current.map((s) => s.id),
-          tgUser,
-          isInternational
-        );
-
-        if (!order.razorpay_order_id || !order.key) {
-          throw new Error("Invalid order received from server.");
-        }
-
-        await new Promise<void>((resolve, reject) => {
-          const descRaw = cartSnap.current.map((s) => s.title).join(", ");
-          const descStr = descRaw.length > 200 ? descRaw.substring(0, 197) + "..." : descRaw;
-
-          const rzp = new (window as any).Razorpay({
-            key:         order.key,
-            amount:      order.amount,
-            currency:    order.currency,
-            name:        "SliceURL",
-            description: descStr || "Digital Access",
-            order_id:    order.razorpay_order_id,
-            prefill:     { 
-              name: tgUser.username || "Arya User",
-              email: "support@aryabot.com",
-              contact: "9999999999"
-            },
-            theme:       { color: "#111111" },
-            // NO callback_url or redirect -> keeps UPI native inside the mini app
-
-            handler: async (resp: any) => {
-              try {
-                const verified = await verifyRazorpayPayment({
-                  razorpay_order_id:   resp.razorpay_order_id,
-                  razorpay_payment_id: resp.razorpay_payment_id,
-                  razorpay_signature:  resp.razorpay_signature,
-                  story_ids:   cartSnap.current.map((s) => s.id),
-                  telegram_id: tgUser.telegram_id,
-                  username:    tgUser.username,
-                });
-
-                const paidAmount = total;
-                purchase(cartSnap.current);
-                clearCart();
-                setPhase({
-                  name:       "success",
-                  order_id:   verified.order_id ?? order.receipt,
-                  payment_id: resp.razorpay_payment_id,
-                  bot_url:    verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
-                  amount:     paidAmount,
-                });
-                import("@/lib/haptics").then(m => m.haptics.heavy());
-                resolve();
-              } catch (e: any) {
-                reject(new Error(e.message || "Payment verification failed"));
-              }
-            },
-
-            modal: {
-              backdropclose: false,
-              escape: false,
-              ondismiss: () => { setPhase({ name: "idle" }); resolve(); },
-            },
-          });
-
-          rzp.on("payment.failed", (resp: any) => {
-            reject(new Error(resp?.error?.description || "Payment failed"));
-          });
-
-          rzp.open();
-        });
-        return;
-      }
 
     } catch (e: any) {
       const raw = e.message || "Something went wrong. Please try again.";
@@ -243,7 +160,7 @@ export function CheckoutView() {
 
   return (
     <div className="relative">
-      <main className="flex-1 overflow-y-auto pb-[160px] px-4 pt-3 animate-fade-in">
+      <main className="flex-1 overflow-y-auto pb-6 px-4 pt-3 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-2 mb-5">
           <button
@@ -286,7 +203,7 @@ export function CheckoutView() {
                       <div className="text-[14px] font-bold text-foreground tabular-nums">{fmt(s.price)}</div>
                       <button
                         onClick={(e) => { e.stopPropagation(); removeFromCart(s.id); }}
-                        className="h-8 w-8 grid place-items-center rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition active:scale-90"
+                        className="h-8 w-8 grid place-items-center rounded-full text-red-500 hover:bg-red-500/10 transition active:scale-90"
                         aria-label="Remove item"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -302,8 +219,8 @@ export function CheckoutView() {
                 {isInternational && (
                   <Row label="International Fee (3.54%)" value={fmt(intlFee)} />
                 )}
-                {!isInternational && <Row label="Platform fee" value="0" muted />}
-                <Row label="Tax" value="Included" muted />
+                {!isInternational && <Row label="Platform fee" value="Free" muted />}
+                <Row label="Tax" value="₹0" muted />
                 <div className="h-px bg-border/70 my-2" />
                 <Row label="Total" value={fmt(total)} bold />
               </div>
@@ -312,18 +229,7 @@ export function CheckoutView() {
             {/* Payment Method Selector */}
             <div className="mb-4 mt-2">
               <SectionLabel>{t("checkout.paymentMethod")}</SectionLabel>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPaymentMethod("razorpay-native")}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
-                    paymentMethod === "razorpay-native" 
-                      ? "border-primary bg-primary/5 text-primary" 
-                      : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <CreditCard className="h-6 w-6 mb-2" />
-                  <span className="text-[13px] font-bold">UPI / QR</span>
-                </button>
+              <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={() => setPaymentMethod("razorpay-link")}
                   className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
@@ -332,8 +238,8 @@ export function CheckoutView() {
                       : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
                   }`}
                 >
-                  <Library className="h-6 w-6 mb-2" />
-                  <span className="text-[13px] font-bold">Cards / Wallets</span>
+                  <CreditCard className="h-6 w-6 mb-2" />
+                  <span className="text-[13px] font-bold">UPI / Cards / Wallets</span>
                 </button>
               </div>
               
