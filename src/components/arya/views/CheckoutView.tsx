@@ -129,7 +129,11 @@ export function CheckoutView() {
           name:        "SliceURL",
           description: descStr || "Digital Access",
           order_id:    order.razorpay_order_id,
-          prefill:     { name: tgUser.username || "" },
+          prefill:     { 
+            name: tgUser.username || "Arya User",
+            email: "support@aryabot.com",
+            contact: "9999999999"
+          },
           theme:       { color: "#111111" },
 
           handler: async (resp: any) => {
