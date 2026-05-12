@@ -39,7 +39,7 @@ export function CheckoutView() {
   const fmt = usePriceFormat();
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "crypto">("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay-native" | "razorpay-link" | "crypto">("razorpay-native");
 
   // Snapshot cart at mount so success screen still shows items
   const cartSnap = useRef(cart);
@@ -99,7 +99,8 @@ export function CheckoutView() {
         return;
       }
 
-      if (paymentMethod === "razorpay") {
+      // 1. PAYMENT LINKS FLOW (Cards, Wallets, Netbanking, International) -> External Browser
+      if (paymentMethod === "razorpay-link") {
         let order: { success: boolean; payment_link_id?: string; payment_link_url?: string } | null = null;
         try {
           order = await createRazorpayPaymentLink(
@@ -145,6 +146,91 @@ export function CheckoutView() {
 
         // Also timeout after 10 mins
         setTimeout(() => clearInterval(checkInterval), 600000);
+        return;
+      }
+
+      // 2. NATIVE CHECKOUT FLOW (UPI / QR) -> In-App overlay
+      if (paymentMethod === "razorpay-native") {
+        if (!(window as any).Razorpay) {
+          await new Promise<void>((res, rej) => {
+            const s = document.createElement("script");
+            s.src = "https://checkout.razorpay.com/v1/checkout.js";
+            s.onload = () => res();
+            s.onerror = () => rej(new Error("Razorpay script failed to load"));
+            document.head.appendChild(s);
+          });
+        }
+
+        const order = await createRazorpayOrder(
+          cartSnap.current.map((s) => s.id),
+          tgUser,
+          isInternational
+        );
+
+        if (!order.razorpay_order_id || !order.key) {
+          throw new Error("Invalid order received from server.");
+        }
+
+        await new Promise<void>((resolve, reject) => {
+          const descRaw = cartSnap.current.map((s) => s.title).join(", ");
+          const descStr = descRaw.length > 200 ? descRaw.substring(0, 197) + "..." : descRaw;
+
+          const rzp = new (window as any).Razorpay({
+            key:         order.key,
+            amount:      order.amount,
+            currency:    order.currency,
+            name:        "SliceURL",
+            description: descStr || "Digital Access",
+            order_id:    order.razorpay_order_id,
+            prefill:     { 
+              name: tgUser.username || "Arya User",
+              email: "support@aryabot.com",
+              contact: "9999999999"
+            },
+            theme:       { color: "#111111" },
+            // NO callback_url or redirect -> keeps UPI native inside the mini app
+
+            handler: async (resp: any) => {
+              try {
+                const verified = await verifyRazorpayPayment({
+                  razorpay_order_id:   resp.razorpay_order_id,
+                  razorpay_payment_id: resp.razorpay_payment_id,
+                  razorpay_signature:  resp.razorpay_signature,
+                  story_ids:   cartSnap.current.map((s) => s.id),
+                  telegram_id: tgUser.telegram_id,
+                  username:    tgUser.username,
+                });
+
+                const paidAmount = total;
+                purchase(cartSnap.current);
+                clearCart();
+                setPhase({
+                  name:       "success",
+                  order_id:   verified.order_id ?? order.receipt,
+                  payment_id: resp.razorpay_payment_id,
+                  bot_url:    verified.checkout_url ?? `https://t.me/${BOT_USERNAME}`,
+                  amount:     paidAmount,
+                });
+                import("@/lib/haptics").then(m => m.haptics.heavy());
+                resolve();
+              } catch (e: any) {
+                reject(new Error(e.message || "Payment verification failed"));
+              }
+            },
+
+            modal: {
+              backdropclose: false,
+              escape: false,
+              ondismiss: () => { setPhase({ name: "idle" }); resolve(); },
+            },
+          });
+
+          rzp.on("payment.failed", (resp: any) => {
+            reject(new Error(resp?.error?.description || "Payment failed"));
+          });
+
+          rzp.open();
+        });
         return;
       }
 
@@ -228,26 +314,40 @@ export function CheckoutView() {
               <SectionLabel>{t("checkout.paymentMethod")}</SectionLabel>
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => setPaymentMethod("razorpay")}
+                  onClick={() => setPaymentMethod("razorpay-native")}
                   className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
-                    paymentMethod === "razorpay" 
+                    paymentMethod === "razorpay-native" 
                       ? "border-primary bg-primary/5 text-primary" 
                       : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
                   }`}
                 >
                   <CreditCard className="h-6 w-6 mb-2" />
-                  <span className="text-[13px] font-bold">{t("checkout.upi")}</span>
+                  <span className="text-[13px] font-bold">UPI / QR</span>
                 </button>
+                <button
+                  onClick={() => setPaymentMethod("razorpay-link")}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
+                    paymentMethod === "razorpay-link" 
+                      ? "border-primary bg-primary/5 text-primary" 
+                      : "border-border/60 bg-surface hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <Library className="h-6 w-6 mb-2" />
+                  <span className="text-[13px] font-bold">Cards / Wallets</span>
+                </button>
+              </div>
+              
+              <div className="mt-3">
                 <button
                   onClick={() => {
                     const tg = (window as any).Telegram?.WebApp;
                     if (tg?.showAlert) tg.showAlert("Crypto payments are coming soon!");
                     else alert("Crypto payments are coming soon!");
                   }}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition border-border/60 bg-surface hover:bg-muted text-muted-foreground`}
+                  className={`w-full flex items-center justify-center gap-2 p-3.5 rounded-[18px] border-2 transition border-border/60 bg-surface hover:bg-muted text-muted-foreground`}
                 >
-                  <div className="h-6 w-6 mb-2 rounded-full bg-current grid place-items-center opacity-60">
-                    <span className="text-surface font-extrabold text-[13px] leading-none mb-[1px]">₿</span>
+                  <div className="h-5 w-5 rounded-full bg-current grid place-items-center opacity-60">
+                    <span className="text-surface font-extrabold text-[11px] leading-none mb-[1px]">₿</span>
                   </div>
                   <span className="text-[13px] font-bold opacity-60">{t("checkout.crypto")}</span>
                 </button>
