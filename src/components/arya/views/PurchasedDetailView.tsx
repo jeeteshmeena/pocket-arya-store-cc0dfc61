@@ -62,7 +62,7 @@ function CopyIcon(props: any) {
 import { InfoDialog, type InfoDialogKind } from "../InfoDialog";
 
 export function PurchasedDetailView({ storyId }: { storyId: string }) {
-  const { navigate, tgUser, purchased, theme, stories } = useApp();
+  const { navigate, tgUser, purchased, theme, stories, t } = useApp();
   const [data, setData] = useState<PurchasedStory | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -134,7 +134,7 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
         <h2 className="font-bold text-lg mb-2">Order Not Found</h2>
         <p className="text-muted-foreground text-sm mb-6">We couldn't find the details for this purchase.</p>
         <button onClick={() => navigate({ name: "mystories" })} className="h-10 px-6 rounded-full bg-primary text-primary-foreground font-semibold">
-          Go Back
+          {t("common.back")}
         </button>
       </div>
     );
@@ -169,7 +169,7 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
         <button onClick={() => navigate({ name: "mystories" })} className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <span className="ml-2 font-semibold text-[15px]">Order Details</span>
+        <span className="ml-2 font-semibold text-[15px]">{t("checkout.summary")}</span>
       </div>
 
       {/* Hero Poster & Title */}
@@ -234,8 +234,8 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
           )}
           
           {sending ? "Opening Telegram..." : 
-           delivered ? "Sent to Bot! Check Telegram" : 
-           "Get Episodes on Telegram"}
+           delivered ? t("common.success") + " ✓ Check Telegram" : 
+           t("myStories.getFiles")}
         </button>
         <p className="text-center text-[12px] text-muted-foreground mt-3 font-medium">
           Episodes will be delivered securely via AryaBot.
@@ -299,7 +299,7 @@ export function PurchasedDetailView({ storyId }: { storyId: string }) {
 
       {/* Support */}
       <div className="px-5 py-6">
-        <h3 className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Need Help?</h3>
+        <h3 className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground mb-3">{t("checkout.contactSupport")}</h3>
         <button onClick={handleSupport} className="w-full flex items-center justify-between p-4 rounded-xl border border-border/60 bg-surface hover:bg-muted/50 transition active:scale-[0.98]">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-blue-500/10 text-blue-500 grid place-items-center">

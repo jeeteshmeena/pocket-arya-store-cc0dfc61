@@ -195,13 +195,13 @@ export function CheckoutView() {
           </button>
           <div className="flex-1">
             <h1 className="font-display font-extrabold text-[22px] tracking-tight leading-none">
-              {phase.name === "success" ? "Order Confirmed" :
-               phase.name === "error"   ? "Payment Failed" :
-               phase.name === "loading" ? "Processing"     : t("checkout.title")}
+              {phase.name === "success" ? t("checkout.orderPlaced") :
+               phase.name === "error"   ? t("checkout.error") :
+               phase.name === "loading" ? t("checkout.processing")     : t("checkout.title")}
             </h1>
             {phase.name === "idle" && itemCount > 0 && (
               <p className="text-[12px] text-muted-foreground mt-1">
-                {itemCount} {itemCount === 1 ? "item" : "items"} · ready to purchase
+              {itemCount} {itemCount === 1 ? t("cart.item") : t("cart.items")} · {t("checkout.summary")}
               </p>
             )}
           </div>
@@ -251,7 +251,7 @@ export function CheckoutView() {
 
             {/* Payment Method Selector */}
             <div className="mb-4 mt-2">
-              <SectionLabel>Payment Method</SectionLabel>
+              <SectionLabel>{t("checkout.paymentMethod")}</SectionLabel>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setPaymentMethod("razorpay")}
@@ -262,7 +262,7 @@ export function CheckoutView() {
                   }`}
                 >
                   <CreditCard className="h-6 w-6 mb-2" />
-                  <span className="text-[13px] font-bold">UPI / Cards</span>
+                  <span className="text-[13px] font-bold">{t("checkout.upi")}</span>
                 </button>
                 <button
                   onClick={() => setPaymentMethod("crypto")}
@@ -275,7 +275,7 @@ export function CheckoutView() {
                   <div className="h-6 w-6 mb-2 rounded-full bg-current grid place-items-center">
                     <span className="text-surface font-extrabold text-[13px] leading-none mb-[1px]">₿</span>
                   </div>
-                  <span className="text-[13px] font-bold">Crypto (No KYC)</span>
+                  <span className="text-[13px] font-bold">{t("checkout.crypto")}</span>
                 </button>
               </div>
             </div>
@@ -302,9 +302,9 @@ export function CheckoutView() {
                 <Loader2 className="h-7 w-7 animate-spin text-primary" />
               </div>
             </div>
-            <h2 className="mt-5 font-display font-bold text-[17px] text-foreground">Opening secure payment</h2>
+            <h2 className="mt-5 font-display font-bold text-[17px] text-foreground">{t("checkout.processing")}</h2>
             <p className="mt-1.5 text-[13px] text-muted-foreground max-w-[260px]">
-              Please don't close this screen. Preparing your payment session.
+              {t("common.loading")}
             </p>
           </div>
         )}
@@ -324,10 +324,10 @@ export function CheckoutView() {
                     </div>
                   </div>
                   <h2 className="mt-4 font-display font-extrabold text-[22px] tracking-tight">
-                    Thank You for Your Purchase
+                    {t("checkout.successTitle")}
                   </h2>
                   <p className="mt-1.5 text-[12.5px] text-white/85 max-w-[280px] mx-auto leading-snug">
-                    Your purchase is confirmed and your stories are now in your Library.
+                    {t("checkout.successMsg")}
                   </p>
                 </div>
 
@@ -398,9 +398,9 @@ export function CheckoutView() {
               <div className="rounded-[20px] bg-surface border border-border/60 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <Timeline
                   steps={[
-                    { label: "Order Placed", time: "Just now", icon: <ShoppingBag className="h-3.5 w-3.5" />, done: true },
-                    { label: "Payment Confirmed", time: "Just now", icon: <CreditCard className="h-3.5 w-3.5" />, done: true },
-                    { label: "Added to Library", time: "Just now", icon: <Library className="h-3.5 w-3.5" />, done: true },
+                    { label: t("checkout.orderPlaced"), time: "Just now", icon: <ShoppingBag className="h-3.5 w-3.5" />, done: true },
+                    { label: t("checkout.successTitle"), time: "Just now", icon: <CreditCard className="h-3.5 w-3.5" />, done: true },
+                    { label: t("story.goToLibrary"), time: "Just now", icon: <Library className="h-3.5 w-3.5" />, done: true },
                     { label: "Episodes Ready", time: "Available now", icon: <Package className="h-3.5 w-3.5" />, done: true },
                   ]}
                 />
@@ -420,7 +420,7 @@ export function CheckoutView() {
                         {[s.platform, s.genre].filter(Boolean).join(" · ")}
                       </div>
                       <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                        <Check className="h-3 w-3" strokeWidth={3} /> In your library
+                        <Check className="h-3 w-3" strokeWidth={3} /> {t("library.purchased")}
                       </div>
                     </div>
                     <div className="text-[14px] font-bold text-foreground tabular-nums">₹{s.price}</div>
@@ -436,7 +436,7 @@ export function CheckoutView() {
                 className="w-full h-[56px] rounded-[16px] bg-foreground text-background font-bold inline-flex items-center justify-center gap-2 active:scale-[0.98] transition shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
               >
                 <Library className="h-5 w-5" />
-                Go to My Library
+                {t("checkout.goToLibrary")}
               </button>
               <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
                 A confirmation receipt has been recorded for your account.
@@ -451,14 +451,14 @@ export function CheckoutView() {
             <div className="h-16 w-16 rounded-full bg-red-500/15 grid place-items-center mb-4">
               <AlertCircle className="h-9 w-9 text-red-500" />
             </div>
-            <h2 className="font-display font-bold text-[18px] text-foreground">Payment Failed</h2>
+            <h2 className="font-display font-bold text-[18px] text-foreground">{t("checkout.error")}</h2>
             <p className="mt-2 text-[13px] text-muted-foreground max-w-[280px]">{phase.message}</p>
             <div className="mt-6 w-full space-y-2.5">
               <button
                 onClick={() => setPhase({ name: "idle" })}
                 className="w-full h-[52px] rounded-[16px] bg-foreground text-background font-bold active:scale-[0.98] transition shadow-md"
               >
-                Try Again
+                {t("common.tryAgain")}
               </button>
               <button
                 onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}

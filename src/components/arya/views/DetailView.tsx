@@ -7,7 +7,7 @@ import { usePriceFormat } from "@/hooks/usePriceFormat";
 import { getOptimizedImage } from "@/lib/api";
 
 export function DetailView({ storyId }: { storyId: string }) {
-  const { back, addToCart, goToCheckout, cart, stories, storiesLoading } = useApp();
+  const { back, addToCart, goToCheckout, cart, stories, storiesLoading, t } = useApp();
   const fmt = usePriceFormat();
   const story = stories.find((s) => s.id === storyId);
   const [expanded, setExpanded] = useState(false);
@@ -22,7 +22,7 @@ export function DetailView({ storyId }: { storyId: string }) {
       <div className="animate-fade-in px-6 pt-24 text-center">
         <p className="text-sm text-muted-foreground">Story not found.</p>
         <button onClick={back} className="mt-4 h-10 px-5 rounded-full bg-foreground text-background text-sm font-semibold">
-          Go back
+          {t("common.back")}
         </button>
       </div>
     );
@@ -181,8 +181,8 @@ export function DetailView({ storyId }: { storyId: string }) {
 
         {/* Meta chips — Episodes, Files, Platform (Visible in all themes) */}
         <div className={cn("mt-5 grid gap-2", (filesLabel || story.size) ? "grid-cols-3" : "grid-cols-2")}>
-          <Meta label="Platform"  value={story.platform} />
-          <Meta label="Episodes"  value={String(story.episodes ?? "—")} />
+          <Meta label={t("story.platform")}  value={story.platform} />
+          <Meta label={t("story.episodes_label")}  value={String(story.episodes ?? "—")} />
           {(filesLabel || story.size) && (
             <Meta label={filesLabel ? "Files" : "Size"} value={(filesLabel ?? story.size) as string} />
           )}
@@ -224,13 +224,13 @@ export function DetailView({ storyId }: { storyId: string }) {
                   inCart && "bg-secondary text-black"
                 )}
               >
-                {inCart ? "In Cart ✓" : "+ Cart"}
+                {inCart ? t("story.inCart") + " ✓" : "+ Cart"}
               </button>
               <button
                 onClick={handleBuyNow}
                 className="neo-button h-11 px-5 bg-primary text-primary-foreground text-sm flex items-center justify-center gap-2"
               >
-                Buy Now
+                {t("story.buyNow")}
               </button>
             </>
           ) : (
@@ -253,13 +253,13 @@ export function DetailView({ storyId }: { storyId: string }) {
                     : "border-border text-foreground hover:border-foreground"
                 )}
               >
-                {inCart ? "In Cart ✓" : "Add to Cart"}
+                {inCart ? t("story.inCart") + " ✓" : t("story.addToCart")}
               </button>
               <button
                 onClick={handleBuyNow}
                 className="h-11 px-5 rounded-full bg-foreground text-background text-sm font-bold active:scale-95 transition"
               >
-                Buy Now
+                {t("story.buyNow")}
               </button>
             </>
           )}
