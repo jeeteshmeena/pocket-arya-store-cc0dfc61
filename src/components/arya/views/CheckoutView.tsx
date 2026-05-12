@@ -229,7 +229,7 @@ export function CheckoutView() {
             {/* Payment Method Selector */}
             <div className="mb-4 mt-2">
               <SectionLabel>{t("checkout.paymentMethod")}</SectionLabel>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setPaymentMethod("razorpay-link")}
                   className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition ${
@@ -239,23 +239,21 @@ export function CheckoutView() {
                   }`}
                 >
                   <CreditCard className="h-6 w-6 mb-2" />
-                  <span className="text-[13px] font-bold">UPI / Cards / Wallets</span>
+                  <span className="text-[12px] font-bold text-center leading-tight">UPI / Cards<br/>/ Wallets</span>
                 </button>
-              </div>
-              
-              <div className="mt-3">
+                
                 <button
                   onClick={() => {
                     const tg = (window as any).Telegram?.WebApp;
                     if (tg?.showAlert) tg.showAlert("Crypto payments are coming soon!");
                     else alert("Crypto payments are coming soon!");
                   }}
-                  className={`w-full flex items-center justify-center gap-2 p-3.5 rounded-[18px] border-2 transition border-border/60 bg-surface hover:bg-muted text-muted-foreground`}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-[18px] border-2 transition border-border/60 bg-surface hover:bg-muted text-muted-foreground`}
                 >
-                  <div className="h-5 w-5 rounded-full bg-current grid place-items-center opacity-60">
-                    <span className="text-surface font-extrabold text-[11px] leading-none mb-[1px]">₿</span>
+                  <div className="h-6 w-6 mb-2 rounded-full bg-current grid place-items-center opacity-60">
+                    <span className="text-surface font-extrabold text-[13px] leading-none mb-[1px]">₿</span>
                   </div>
-                  <span className="text-[13px] font-bold opacity-60">Crypto (Zero Fees)</span>
+                  <span className="text-[12px] font-bold text-center leading-tight opacity-60">Crypto<br/>(Zero Fees)</span>
                 </button>
               </div>
             </div>
