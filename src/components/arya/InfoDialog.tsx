@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Mail, Send, Check, FileText, Shield, HelpCircle, Sparkles, Truck, Receipt, MessageSquare, ChevronDown, Ticket, MessageCircle, Lightbulb, Loader2, CheckCircle2 } from "lucide-react";
 import { FAQ_ITEMS, ABOUT_TEXT, TERMS_ITEMS, REFUND_ITEMS, PRIVACY_ITEMS, DELIVERY_ITEMS } from "./legal-content";
 import { useApp } from "@/store/app-store";
@@ -96,105 +97,106 @@ export function InfoDialog({
     return meta.title;
   };
 
-  return (
-    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center">
-      {/* Backdrop — smooth fade */}
-      <div
-        onClick={handleClose}
-        className="absolute inset-0 bg-black/55 backdrop-blur-md"
-        style={{ animation: closing ? "info-backdrop-out 0.24s ease both" : "info-backdrop-in 0.28s ease both" }}
-      />
+    typeof document !== "undefined" ? createPortal(
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+        {/* Backdrop — smooth fade */}
+        <div
+          onClick={handleClose}
+          className="absolute inset-0 bg-black/55 backdrop-blur-md"
+          style={{ animation: closing ? "info-backdrop-out 0.24s ease both" : "info-backdrop-in 0.28s ease both" }}
+        />
 
-      {/* Sheet — smooth slide+scale */}
-      <div
-        ref={sheetRef}
-        className={cn(
-          "relative w-full sm:max-w-lg max-h-[88vh] flex flex-col bg-card text-card-foreground overflow-hidden",
-          "rounded-t-[28px] sm:rounded-[28px]",
-          "shadow-[0_-30px_80px_rgba(0,0,0,0.40)] sm:shadow-[0_30px_80px_rgba(0,0,0,0.40)]",
-        )}
-        style={{
-          animation: closing
-            ? "info-sheet-out 0.28s cubic-bezier(0.4,0,1,1) both"
-            : "info-sheet-in 0.42s cubic-bezier(0.16,1,0.3,1) both",
-        }}
-      >
-        {/* Drag handle (mobile) */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
-          <div className="h-1.5 w-12 rounded-full bg-foreground/15" />
-        </div>
+        {/* Sheet — smooth slide+scale */}
+        <div
+          ref={sheetRef}
+          className={cn(
+            "relative w-full sm:max-w-lg max-h-[88vh] flex flex-col bg-card text-card-foreground overflow-hidden",
+            "rounded-t-[28px] sm:rounded-[28px]",
+            "shadow-[0_-30px_80px_rgba(0,0,0,0.40)] sm:shadow-[0_30px_80px_rgba(0,0,0,0.40)]",
+          )}
+          style={{
+            animation: closing
+              ? "info-sheet-out 0.28s cubic-bezier(0.4,0,1,1) both"
+              : "info-sheet-in 0.42s cubic-bezier(0.16,1,0.3,1) both",
+          }}
+        >
+          {/* Drag handle (mobile) */}
+          <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+            <div className="h-1.5 w-12 rounded-full bg-foreground/15" />
+          </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-4 shrink-0">
-          <h2 className="font-display font-extrabold text-[22px] tracking-tight truncate">
-            {getHeaderTitle()}
-          </h2>
-          <button
-            onClick={handleClose}
-            aria-label="Close"
-            className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground rounded-full transition-colors shrink-0"
+          {/* Header */}
+          <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-4 shrink-0">
+            <h2 className="font-display font-extrabold text-[22px] tracking-tight truncate">
+              {getHeaderTitle()}
+            </h2>
+            <button
+              onClick={handleClose}
+              aria-label="Close"
+              className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground rounded-full transition-colors shrink-0"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Tabs (only when paired, like Terms ↔ Privacy) */}
+          {tabs && (
+            <div className="px-5 pb-5 shrink-0 border-b border-border/40">
+              <div className="inline-flex p-1 rounded-xl bg-muted w-full h-[46px]">
+                {tabs.map((t) => {
+                  const m = META[t];
+                  const active = activeTab === t;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => { import("@/lib/haptics").then(h => h.haptics.light()); setActiveTab(t); }}
+                      className={cn(
+                        "flex-1 h-full rounded-lg inline-flex items-center justify-center gap-2 text-[14px] font-semibold transition-all",
+                        active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {m.icon}
+                      <span className="truncate">{m.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Scrollable content */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+24px)] scroll-smooth"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            key={current /* re-trigger fade on tab switch */}
           >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Tabs (only when paired, like Terms ↔ Privacy) */}
-        {tabs && (
-          <div className="px-5 pb-5 shrink-0 border-b border-border/40">
-            <div className="inline-flex p-1 rounded-xl bg-muted w-full h-[46px]">
-              {tabs.map((t) => {
-                const m = META[t];
-                const active = activeTab === t;
-                return (
-                  <button
-                    key={t}
-                    onClick={() => { import("@/lib/haptics").then(h => h.haptics.light()); setActiveTab(t); }}
-                    className={cn(
-                      "flex-1 h-full rounded-lg inline-flex items-center justify-center gap-2 text-[14px] font-semibold transition-all",
-                      active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {m.icon}
-                    <span className="truncate">{m.title}</span>
-                  </button>
-                );
-              })}
+            <div style={{ animation: "info-content-in 0.32s cubic-bezier(0.16,1,0.3,1) both" }}>
+              {current === "faq" ? (
+                <AccordionFAQ theme={theme} />
+              ) : current === "about" ? (
+                <div className={cn("p-5 rounded-2xl border", theme === "cream" ? "neo-card bg-white" : "bg-surface border-border/60")}>
+                  <p className={cn("text-[13.5px] whitespace-pre-line leading-relaxed", theme === "cream" ? "font-medium text-black/80" : "text-muted-foreground")}>
+                    {ABOUT_TEXT}
+                  </p>
+                </div>
+              ) : (
+                <LegalSections
+                  items={
+                    current === "terms"    ? TERMS_ITEMS    :
+                    current === "refund"   ? REFUND_ITEMS   :
+                    current === "privacy"  ? PRIVACY_ITEMS  :
+                    current === "delivery" ? DELIVERY_ITEMS : []
+                  }
+                  themeMode={theme === "cream" ? "cream" : "default"}
+                />
+              )}
             </div>
           </div>
-        )}
-
-        {/* Scrollable content */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+24px)] scroll-smooth"
-          style={{ WebkitOverflowScrolling: "touch" }}
-          key={current /* re-trigger fade on tab switch */}
-        >
-          <div style={{ animation: "info-content-in 0.32s cubic-bezier(0.16,1,0.3,1) both" }}>
-            {current === "faq" ? (
-              <AccordionFAQ theme={theme} />
-            ) : current === "about" ? (
-              <div className={cn("p-5 rounded-2xl border", theme === "cream" ? "neo-card bg-white" : "bg-surface border-border/60")}>
-                <p className={cn("text-[13.5px] whitespace-pre-line leading-relaxed", theme === "cream" ? "font-medium text-black/80" : "text-muted-foreground")}>
-                  {ABOUT_TEXT}
-                </p>
-              </div>
-            ) : (
-              <LegalSections
-                items={
-                  current === "terms"    ? TERMS_ITEMS    :
-                  current === "refund"   ? REFUND_ITEMS   :
-                  current === "privacy"  ? PRIVACY_ITEMS  :
-                  current === "delivery" ? DELIVERY_ITEMS : []
-                }
-                themeMode={theme === "cream" ? "cream" : "default"}
-              />
-            )}
-          </div>
         </div>
-      </div>
-    </div>
-  );
+      </div>,
+      document.body
+    ) : null
 }
 
 // ── Displays legal items in a card list matching the screenshot ──
