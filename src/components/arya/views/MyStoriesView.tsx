@@ -53,7 +53,7 @@ function CopyField({ label, value }: { label: string; value: string }) {
 
 function StoryThumb({ poster, title }: { poster?: string | null; title: string }) {
   const [err, setErr] = useState(false);
-  const src = poster?.startsWith("/api/image/") || poster?.startsWith("http") ? poster : null;
+  const src = poster?.startsWith("/api/") || poster?.startsWith("http") ? poster : null;
   if (src && !err) {
     return <img src={src} alt={title} onError={() => setErr(true)} className="h-16 w-16 rounded-xl object-cover shrink-0" />;
   }

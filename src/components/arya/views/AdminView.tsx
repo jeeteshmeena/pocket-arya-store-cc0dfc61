@@ -587,19 +587,127 @@ export function AdminView() {
         )}
       </div>
 
-      {/* Forms Modal */}
+      {/* Forms Modal Renderings */}
       {isFormOpen && editingStory && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          {/* Form UI omitted for brevity, logic remains connected */}
-          <div className="w-full max-w-lg max-h-[90vh] bg-white rounded-t-[32px] sm:rounded-[32px] p-6 text-black shadow-2xl relative">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Edit Story</h2>
-              <button onClick={() => setIsFormOpen(false)} className="p-2"><X className="w-6 h-6"/></button>
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] p-6 bg-white shadow-2xl relative">
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white py-2 z-10 border-b border-gray-100">
+              <h2 className="text-xl font-black">{(editingStory?.story_id || "").startsWith("story_") ? "Add Story" : "Edit Story"}</h2>
+              <button onClick={() => setIsFormOpen(false)} className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><X className="h-5 w-5" /></button>
             </div>
-            <form onSubmit={handleSave} className="space-y-4 overflow-y-auto max-h-[70vh] pb-10">
-              <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className="w-full p-4 rounded-xl bg-gray-50 border border-gray-200 outline-none" placeholder="Story Name" />
-              <input required type="number" value={editingStory.price} onChange={e => setEditingStory({...editingStory, price: Number(e.target.value)})} className="w-full p-4 rounded-xl bg-gray-50 border border-gray-200 outline-none" placeholder="Price" />
-              <button type="submit" className="w-full py-4 bg-black text-white rounded-xl font-bold mt-4">{formSaving ? "Saving..." : "Save Story"}</button>
+            <form onSubmit={handleSave} className="space-y-5">
+              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
+                <h3 className="font-black text-sm uppercase tracking-wider">Basic Details</h3>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Story ID</label>
+                  <input required type="text" value={editingStory.story_id || ""} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" disabled={!(editingStory?.story_id || "").startsWith("story_")} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name (EN)</label>
+                    <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name (HI)</label>
+                    <input type="text" value={editingStory.story_name_hi || ""} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-blue-50 text-blue-600 disabled:opacity-50">EN → HI</button>
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("en")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-emerald-50 text-emerald-600 disabled:opacity-50">HI → EN</button>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Desc (EN)</label>
+                  <textarea rows={2} value={editingStory.description || ""} onChange={e => setEditingStory({...editingStory, description: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium resize-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Desc (HI)</label>
+                  <textarea rows={2} value={editingStory.description_hi || ""} onChange={e => setEditingStory({...editingStory, description_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium resize-none" />
+                </div>
+              </div>
+
+              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
+                <h3 className="font-black text-sm uppercase tracking-wider">Pricing & Metadata</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Price (₹)</label>
+                    <input required type="number" value={editingStory.price} onChange={e => setEditingStory({...editingStory, price: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Discount (₹)</label>
+                    <input required type="number" value={editingStory.discount_price} onChange={e => setEditingStory({...editingStory, discount_price: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                     <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Status</label>
+                     <select value={editingStory.status} onChange={e => setEditingStory({...editingStory, status: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium">
+                       <option value="available">Available</option>
+                       <option value="coming_soon">Coming Soon</option>
+                       <option value="hidden">Hidden</option>
+                     </select>
+                  </div>
+                  <div>
+                     <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Platform</label>
+                     <select value={editingStory.platform || "Pocket FM"} onChange={e => setEditingStory({...editingStory, platform: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium">
+                       {["Pocket FM","Kuku FM","Audible","StoryTel","Other"].map(p => <option key={p} value={p}>{p}</option>)}
+                     </select>
+                  </div>
+                </div>
+                <div>
+                   <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Poster Image</label>
+                   {editingStory.poster_url && <img src={getOptimizedImage(editingStory.poster_url) || ""} className="w-full h-40 object-cover rounded-[16px] mb-3" />}
+                   <label className={cn("flex items-center justify-center gap-2 w-full py-3.5 rounded-[16px] border-2 border-dashed border-gray-300 cursor-pointer text-sm font-bold transition hover:bg-gray-100", imageUploading && "opacity-50")}>
+                     {imageUploading ? "Processing..." : "Upload File"}
+                     <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={imageUploading} />
+                   </label>
+                   <input type="url" value={editingStory.poster_url || ""} onChange={e => setEditingStory({...editingStory, poster_url: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 mt-2 font-medium" placeholder="Or enter URL" />
+                </div>
+              </div>
+
+              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
+                <h3 className="font-black text-sm uppercase tracking-wider">Bot Config</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Bot ID</label>
+                    <input type="number" value={editingStory.bot_id || ""} onChange={e => setEditingStory({...editingStory, bot_id: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 font-medium" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Bot Username</label>
+                    <input type="text" value={editingStory.bot_username || ""} onChange={e => setEditingStory({...editingStory, bot_username: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 font-medium" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Start ID</label>
+                    <input type="number" value={editingStory.start_id || ""} onChange={e => setEditingStory({...editingStory, start_id: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 font-medium" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">End ID</label>
+                    <input type="number" value={editingStory.end_id || ""} onChange={e => setEditingStory({...editingStory, end_id: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 font-medium" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Source Ch ID</label>
+                    <input type="number" value={editingStory.source || ""} onChange={e => setEditingStory({...editingStory, source: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 font-medium" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Delivery Ch ID</label>
+                    <input type="number" value={editingStory.channel_id || ""} onChange={e => setEditingStory({...editingStory, channel_id: Number(e.target.value)})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 font-medium" />
+                  </div>
+                </div>
+                <div>
+                  <label className="flex items-center gap-3 p-3 rounded-[16px] border border-gray-200 bg-white cursor-pointer mt-2">
+                    <input type="checkbox" checked={editingStory.is_completed} onChange={e => setEditingStory({...editingStory, is_completed: e.target.checked})} className="h-5 w-5 rounded border-gray-300 accent-black" />
+                    <span className="text-sm font-bold">Mark as Story Completed</span>
+                  </label>
+                </div>
+              </div>
+
+              <button disabled={formSaving} type="submit" className="w-full py-4 font-black text-lg rounded-[20px] bg-[#111827] text-white shadow-xl hover:bg-black active:scale-[0.98] transition">
+                {formSaving ? "Saving..." : "Save Story"}
+              </button>
             </form>
           </div>
         </div>
