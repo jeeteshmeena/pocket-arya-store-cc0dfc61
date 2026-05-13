@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp, Home, Grid, MessageSquare, Clock, Settings as SettingsIcon, Link2, Calendar, Share2, Download, Search, ShoppingBag } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie } from "recharts";
@@ -31,6 +31,12 @@ export function AdminView() {
   const [editingBanner, setEditingBanner] = useState<any>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [translating, setTranslating] = useState<string | null>(null);
+
+  // Manual Purchase State
+  const [isManualFormOpen, setIsManualFormOpen] = useState(false);
+  const [manualForm, setManualForm] = useState({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 });
+  const [manualSaving, setManualSaving] = useState(false);
+  const [moreSubTab, setMoreSubTab] = useState<"buyers" | "support">("buyers");
 
   useEffect(() => {
     if (!tgUser?.telegram_id) {
@@ -127,6 +133,25 @@ export function AdminView() {
       await replyAdminSupport(tgUser, ticketId, replyText);
       setSupportTickets(supportTickets.filter(t => t.id !== ticketId));
     } catch (err: any) { alert("Failed: " + err.message); }
+  };
+
+  const handleManualPurchase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tgUser) return;
+    setManualSaving(true);
+    try {
+      await manualAdminPurchase(tgUser, { ...manualForm, user_id: parseInt(manualForm.user_id) || manualForm.user_id });
+      alert("Story successfully added to user's account!");
+      setIsManualFormOpen(false);
+      // Refresh buyers list
+      fetchAdminBuyers(tgUser).then(d => setBuyers(d));
+      // Refresh stats
+      fetchAdminStats(tgUser).then(d => setStats(d?.data || d));
+    } catch (e: any) {
+      alert("Failed: " + e.message);
+    } finally {
+      setManualSaving(false);
+    }
   };
 
   const compressImageClientSide = async (file: File): Promise<File> => {
@@ -338,17 +363,17 @@ export function AdminView() {
                     {stats?.recent_orders?.slice(0,3).map((o: any, i: number) => (
                       <div key={i} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full border-[3px] border-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600 bg-emerald-50">
-                            {o.username ? o.username.substring(0,2).toUpperCase() : 'US'}
+                          <div className="h-10 w-10 rounded-full border-2 border-gray-100 flex items-center justify-center text-xs font-bold text-gray-700 bg-gray-50 shrink-0">
+                            {(o.first_name || o.username || "U")[0]?.toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-bold text-sm">{o.username || o.user_id}</div>
-                            <div className="text-xs text-gray-500">Due in 2 days</div>
+                            <div className="font-bold text-sm">{o.first_name || o.username || "User"}</div>
+                            <div className="text-[10px] text-gray-500">{o.story_names?.[0] || o.username || `Order #${(o.order_id || "").slice(-6)}`}</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-sm">₹{o.total_amount || o.amount || 0}</div>
-                          <div className="text-[10px] font-bold text-emerald-500 uppercase bg-emerald-50 px-2 py-0.5 rounded-md inline-block mt-1">{o.status}</div>
+                          <div className="font-bold text-sm">₹{(o.amount || 0).toLocaleString()}</div>
+                          <div className={cn("text-[10px] font-bold mt-0.5 uppercase", o.status === "paid" ? "text-emerald-500" : "text-gray-400")}>{o.status}</div>
                         </div>
                       </div>
                     ))}
@@ -568,56 +593,76 @@ export function AdminView() {
               </div>
             )}
 
-            {activeTab === "buyers" && (
-               <div className="space-y-4 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="flex justify-between items-center mb-2">
-                     <h2 className="font-bold text-xl text-black">Orders & Buyers</h2>
-                     <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold transition">
-                       <Plus className="h-3.5 w-3.5" /> Manual Add
-                     </button>
-                  </div>
-                  <div className="space-y-4">
-                    {buyers.map((buyer, i) => (
-                      <div key={i} className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex gap-3 items-center">
-                            <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100">
-                              {buyer.photo_url ? <img src={buyer.photo_url} className="w-full h-full object-cover" /> : (buyer.first_name || buyer.username || "U")[0].toUpperCase()}
+            {(activeTab === "buyers" || activeTab === "support") && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* More Sub-Nav */}
+                <div className="flex gap-2 p-3 bg-white border-b border-gray-100">
+                  <button onClick={() => setMoreSubTab("buyers")} className={cn("flex-1 py-2 text-xs font-bold rounded-xl transition", moreSubTab === "buyers" ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:text-black")}>Orders & Buyers</button>
+                  <button onClick={() => setMoreSubTab("support")} className={cn("flex-1 py-2 text-xs font-bold rounded-xl transition", moreSubTab === "support" ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:text-black")}>Support {supportTickets.length > 0 && <span className="ml-1 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">{supportTickets.length}</span>}</button>
+                </div>
+
+                {moreSubTab === "buyers" && (
+                  <div className="space-y-4 p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h2 className="font-bold text-xl text-black">Orders & Buyers</h2>
+                      <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold transition">
+                        <Plus className="h-3.5 w-3.5" /> Manual Add
+                      </button>
+                    </div>
+                    {buyers.length === 0 && <div className="text-center p-10 text-gray-400">No buyers yet</div>}
+                    <div className="space-y-4">
+                      {buyers.map((buyer, i) => (
+                        <div key={i} className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex gap-3 items-center">
+                              <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
+                                {buyer.photo_url ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" /> : <span>{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>}
+                              </div>
+                              <div>
+                                <div className="font-bold text-sm text-gray-900">{buyer.first_name || buyer.username || "Unknown"}</div>
+                                <div className="text-[10px] text-gray-500 font-mono">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
+                                <div className="text-[10px] text-gray-400 mt-0.5 capitalize">{buyer.source || "app"}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-bold text-sm text-gray-900">{buyer.first_name || buyer.username || "Unknown"}</div>
-                              <div className="text-[10px] text-gray-500 font-mono">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
+                            <div className="text-right shrink-0 pl-2">
+                              <div className="font-black text-gray-900">₹{(buyer.amount || 0).toLocaleString()}</div>
+                              <span className={cn("text-[9px] px-2 py-0.5 rounded-full uppercase mt-1 inline-block font-black tracking-wider", buyer.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600")}>{buyer.status}</span>
                             </div>
                           </div>
-                          <div className="text-right">
-                             <div className="font-black text-gray-900">₹{buyer.amount}</div>
-                             <span className={cn("text-[9px] px-2 py-0.5 rounded uppercase mt-1 inline-block font-black tracking-wider", buyer.status==="paid" ? "bg-[#ccff00] text-black" : "bg-gray-100 text-gray-600")}>{buyer.status}</span>
+                          {buyer.payments && buyer.payments.length > 0 && (
+                            <div className="bg-gray-50 rounded-2xl p-3 mb-3 border border-gray-100">
+                              {buyer.payments.map((p: any, j: number) => (
+                                <div key={j} className="flex justify-between items-center text-xs py-2 border-b border-gray-100 last:border-0">
+                                  <div className="flex-1 pr-2">
+                                    <span className="font-semibold text-gray-800 line-clamp-1">{p.story_name}</span>
+                                    <div className="text-[10px] text-gray-400 mt-0.5">{p.method} • {p.status}</div>
+                                  </div>
+                                  <div className="text-right font-bold text-gray-900 whitespace-nowrap">₹{p.amount}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <button className="flex-1 py-2 bg-gray-50 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition border border-gray-100">View Full History</button>
                           </div>
                         </div>
-                        {buyer.payments && buyer.payments.length > 0 && (
-                          <div className="bg-gray-50 rounded-2xl p-3 mb-4 border border-gray-100">
-                            {buyer.payments.map((p:any, j:number) => (
-                               <div key={j} className="flex justify-between items-center text-xs py-2 border-b border-gray-200 last:border-0">
-                                  <div className="flex-1 pr-2"><span className="font-bold text-gray-800 line-clamp-1">{p.story_name}</span></div>
-                                  <div className="text-right font-bold text-gray-900 whitespace-nowrap">₹{p.amount}</div>
-                               </div>
-                            ))}
-                          </div>
-                        )}
-                        <button className="w-full py-2.5 bg-gray-50 text-gray-900 text-xs font-bold rounded-xl hover:bg-gray-100 transition border border-gray-200">View Full History</button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-               </div>
-            )}
+                )}
 
-            {activeTab === "support" && (
-               <div className="space-y-4 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                 <h2 className="text-xl font-bold mb-4">Support & Settings</h2>
-                 {supportTickets.length === 0 ? <div className="text-center p-8 text-gray-400">No tickets</div> : supportTickets.map(ticket => (
-                    <SupportTicketCard key={ticket.id} ticket={ticket} onReply={handleReplySupport} />
-                 ))}
-               </div>
+                {moreSubTab === "support" && (
+                  <div className="space-y-4 p-4">
+                    <h2 className="text-xl font-bold mb-2">Support Tickets</h2>
+                    {supportTickets.length === 0 
+                      ? <div className="text-center p-10 text-gray-400"><MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-20" /><p>No open tickets</p></div>
+                      : supportTickets.map(ticket => (
+                        <SupportTicketCard key={ticket.id} ticket={ticket} onReply={handleReplySupport} />
+                      ))
+                    }
+                  </div>
+                )}
+              </div>
             )}
           </>
         )}
@@ -798,12 +843,12 @@ export function AdminView() {
         </div>
       )}
 
-      {/* SliceURL-style Bottom Nav */}
+      {/* Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 pb-[max(env(safe-area-inset-bottom),12px)] shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
         <NavBtn active={activeTab === "dashboard"} icon={Home} label="Home" onClick={() => setActiveTab("dashboard")} />
         <NavBtn active={activeTab === "analytics"} icon={Activity} label="Analytics" onClick={() => setActiveTab("analytics")} />
         <NavBtn active={activeTab === "store"} icon={ShoppingBag} label="Store" onClick={() => setActiveTab("store")} />
-        <NavBtn active={activeTab === "buyers" || activeTab === "support"} icon={SettingsIcon} label="More" onClick={() => setActiveTab("buyers")} />
+        <NavBtn active={activeTab === "buyers" || activeTab === "support"} icon={SettingsIcon} label="More" onClick={() => { setActiveTab("buyers"); setMoreSubTab("buyers"); }} />
       </div>
     </div>
   );
@@ -940,12 +985,28 @@ function Heatmap({ data }: any) {
 
 function SupportTicketCard({ ticket, onReply }: any) {
   const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+  const send = async () => {
+    if (!reply.trim()) return;
+    setSending(true);
+    try { await onReply(ticket.id, reply); setReply(""); } 
+    finally { setSending(false); }
+  };
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-      <div className="font-bold mb-2">{ticket.username}</div>
-      <p className="text-sm text-gray-600 mb-3 bg-gray-50 p-3 rounded-xl">{ticket.text}</p>
-      <input type="text" value={reply} onChange={e=>setReply(e.target.value)} placeholder="Type reply..." className="w-full p-3 rounded-xl bg-gray-50 border border-gray-200 text-sm mb-2 outline-none" />
-      <button onClick={() => { onReply(ticket.id, reply); setReply(""); }} className="w-full py-2 bg-black text-white text-xs font-bold rounded-xl">Reply</button>
+    <div className="bg-white p-5 rounded-[20px] shadow-sm border border-gray-100">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm shrink-0">
+          {(ticket.first_name || ticket.username || "U")[0].toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-sm">{ticket.first_name || ticket.username || "User"}</div>
+          <div className="text-[10px] text-gray-400">@{ticket.username || ""} • {ticket.type || "support"}</div>
+        </div>
+        <span className="text-[9px] bg-gray-100 px-2 py-1 rounded-lg font-bold text-gray-500 uppercase">{ticket.status || "open"}</span>
+      </div>
+      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-[14px] mb-3">{ticket.text}</p>
+      <textarea rows={2} value={reply} onChange={e=>setReply(e.target.value)} placeholder="Type reply..." className="w-full p-3 rounded-[14px] bg-gray-50 border border-gray-200 text-sm mb-2 outline-none resize-none focus:border-gray-300" />
+      <button onClick={send} disabled={sending || !reply.trim()} className="w-full py-2.5 bg-black text-white text-xs font-bold rounded-[14px] disabled:opacity-50 transition">{sending ? "Sending..." : "Reply to User"}</button>
     </div>
   );
 }
