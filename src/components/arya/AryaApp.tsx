@@ -32,12 +32,40 @@ function Shell() {
     }, tgUser?.telegram_id);
   }, [view.name, (view as any).storyId, tgUser?.telegram_id]);
 
+  // Track session duration
+  useEffect(() => {
+    if (!tgUser?.telegram_id) return;
+    const startTime = Date.now();
+    
+    const sendPing = () => {
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+      if (duration > 5) { // Only ping if they stayed more than 5s
+        trackEvent("session_duration", { duration }, tgUser.telegram_id);
+      }
+    };
+
+    // Ping every 30 seconds
+    const interval = setInterval(sendPing, 30000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") sendPing();
+    };
+
+    window.addEventListener("beforeunload", sendPing);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", sendPing);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [tgUser?.telegram_id]);
 
   return (
     // Fixed-height container — prevents page scroll, enables app-like behavior
     <div className="fixed inset-0 bg-background text-foreground flex flex-col overflow-hidden">
       <RomanticDecor />
-      <Header />
+      {view.name !== "admin" && <Header />}
 
       {/*
         The ONLY scrollable region.
@@ -46,13 +74,13 @@ function Shell() {
       */}
       <main
         className="flex-1 overflow-y-auto"
-        style={{
+        style={view.name === "admin" ? { WebkitOverflowScrolling: "touch" } : {
           paddingTop: "56px",   /* header */
           paddingBottom: "calc(env(safe-area-inset-bottom) + 64px)", /* bottom nav */
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl h-full">
           {view.name === "home"      && <HomeView />}
           {view.name === "explore"   && <ExploreView />}
           {view.name === "mystories" && <MyStoriesView />}
@@ -66,7 +94,7 @@ function Shell() {
         </div>
       </main>
 
-      <BottomNav />
+      {view.name !== "admin" && <BottomNav />}
       <CartPanel />
       <TermsOnboarding />
       <DeepLinkErrorDialog />
