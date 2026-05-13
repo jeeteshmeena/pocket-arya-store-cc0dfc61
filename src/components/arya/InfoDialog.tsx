@@ -20,6 +20,8 @@ const META: Record<NonNullable<InfoDialogKind>, { title: string; icon: React.Rea
 const TAB_GROUP: Partial<Record<NonNullable<InfoDialogKind>, NonNullable<InfoDialogKind>[]>> = {
   terms:   ["terms", "privacy"],
   privacy: ["terms", "privacy"],
+  delivery: ["delivery", "refund"],
+  refund:   ["delivery", "refund"],
 };
 
 /* ── Premium Bottom-Sheet (smooth) ── */
