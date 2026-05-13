@@ -8,7 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, 
 
 export function AdminView() {
   const { back, tgUser } = useApp();
-  const [activeTab, setActiveTab] = useState<"analytics" | "store" | "buyers" | "support">("analytics");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "analytics" | "store" | "buyers" | "support">("dashboard");
   const [storeSubTab, setStoreSubTab] = useState<"stories" | "banners" | "requests">("stories");
 
   const [stats, setStats] = useState<any>(null);
@@ -251,6 +251,112 @@ export function AdminView() {
           </div>
         ) : (
           <>
+            {activeTab === "dashboard" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 p-4">
+                
+                {/* Total Revenue Card - Dark Theme */}
+                <div className="bg-[#1a1a1a] text-white p-6 rounded-[28px] shadow-xl relative overflow-hidden">
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+                  <div className="flex justify-between items-start mb-2 relative z-10">
+                    <span className="text-sm text-gray-400 font-medium">Total Revenue</span>
+                    <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" /> +12.5%
+                    </span>
+                  </div>
+                  <div className="text-4xl font-black tracking-tight mb-6 relative z-10">₹{stats?.total_revenue?.toLocaleString() || 0}</div>
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-md">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Sales</div>
+                      <div className="font-bold">₹{buyers?.reduce((s:number,b:any)=>s+(b.amount||0),0).toLocaleString() || 0}</div>
+                    </div>
+                    <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-md">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>Stories</div>
+                      <div className="font-bold">{stats?.total_stories || 0} Total</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* KPI Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div className="h-10 w-10 rounded-full bg-[#f3f4f6] flex items-center justify-center mb-4 text-[#111827]">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-black">{stats?.total_users?.toLocaleString() || 0}</div>
+                      <div className="text-xs text-gray-500 font-medium mt-1">Total Users</div>
+                      <div className="text-[10px] text-emerald-500 font-bold mt-2 flex items-center gap-1"><TrendingUp className="w-3 h-3"/> Active Now</div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div className="h-10 w-10 rounded-full bg-[#f3f4f6] flex items-center justify-center mb-4 text-[#111827]">
+                      <Banknote className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-black">{stats?.recent_orders?.length || 0}</div>
+                      <div className="text-xs text-gray-500 font-medium mt-1">New Orders</div>
+                      <div className="text-[10px] text-rose-500 font-bold mt-2 flex items-center gap-1"><Activity className="w-3 h-3"/> Pending: {storyRequests?.length||0}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Overview Chart */}
+                <div className="bg-white p-5 rounded-[28px] shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="font-bold text-lg">Overview</h2>
+                      <p className="text-xs text-gray-500">Weekly Performance</p>
+                    </div>
+                    <button className="p-2 rounded-full bg-[#f3f4f6] text-gray-600"><Monitor className="w-4 h-4" /></button>
+                  </div>
+                  <div className="h-32 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { day: "Mon", val: 2400 }, { day: "Tue", val: 1398 }, { day: "Wed", val: 9800 },
+                        { day: "Thu", val: 3908 }, { day: "Fri", val: 4800 }, { day: "Sat", val: 3800 }, { day: "Sun", val: 4300 }
+                      ]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={10} />
+                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                        <Bar dataKey="val" radius={[6, 6, 6, 6]}>
+                          {[...Array(7)].map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={index === 2 ? '#111827' : '#e5e7eb'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <button onClick={()=>setActiveTab("analytics")} className="w-full mt-4 py-3 bg-[#111827] text-white rounded-xl text-sm font-bold">View Full Report</button>
+                </div>
+
+                {/* Recent Projects / Orders */}
+                <div>
+                  <div className="flex justify-between items-end mb-4 px-1">
+                    <h2 className="font-bold text-lg">Recent Orders</h2>
+                    <button onClick={()=>setActiveTab("buyers")} className="text-xs font-bold text-gray-500">View All</button>
+                  </div>
+                  <div className="space-y-3">
+                    {stats?.recent_orders?.slice(0,3).map((o: any, i: number) => (
+                      <div key={i} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full border-[3px] border-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600 bg-emerald-50">
+                            {o.username ? o.username.substring(0,2).toUpperCase() : 'US'}
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm">{o.username || o.user_id}</div>
+                            <div className="text-xs text-gray-500">Due in 2 days</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-sm">₹{o.total_amount || o.amount || 0}</div>
+                          <div className="text-[10px] font-bold text-emerald-500 uppercase bg-emerald-50 px-2 py-0.5 rounded-md inline-block mt-1">{o.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === "analytics" && (
               <div className="animate-in fade-in duration-500 bg-[#f9f9f9] min-h-full pb-4">
                 
@@ -343,6 +449,11 @@ export function AdminView() {
                   <div>
                     <h3 className="font-bold text-[15px] flex items-center gap-2 mb-5"><MapPin className="h-4 w-4" /> Top Cities</h3>
                     <BarList data={locationAnalytics?.cities} showFlag parentData={locationAnalytics?.countries} />
+                  </div>
+                  <div className="h-px bg-gray-100 w-full" />
+                  <div>
+                    <h3 className="font-bold text-[15px] flex items-center gap-2 mb-5"><FileText className="h-4 w-4" /> Top Pages</h3>
+                    <BarList data={locationAnalytics?.pages} />
                   </div>
                 </div>
 
@@ -496,10 +607,10 @@ export function AdminView() {
 
       {/* SliceURL-style Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 pb-[max(env(safe-area-inset-bottom),12px)] shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+        <NavBtn active={activeTab === "dashboard"} icon={Home} label="Home" onClick={() => setActiveTab("dashboard")} />
         <NavBtn active={activeTab === "analytics"} icon={Activity} label="Analytics" onClick={() => setActiveTab("analytics")} />
         <NavBtn active={activeTab === "store"} icon={ShoppingBag} label="Store" onClick={() => setActiveTab("store")} />
-        <NavBtn active={activeTab === "buyers"} icon={Users} label="CRM" onClick={() => setActiveTab("buyers")} />
-        <NavBtn active={activeTab === "support"} icon={SettingsIcon} label="Settings" onClick={() => setActiveTab("support")} />
+        <NavBtn active={activeTab === "buyers" || activeTab === "support"} icon={SettingsIcon} label="More" onClick={() => setActiveTab("buyers")} />
       </div>
     </div>
   );
