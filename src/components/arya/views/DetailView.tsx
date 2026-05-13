@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, CheckCircle2 } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
@@ -15,6 +15,7 @@ export function DetailView({ storyId }: { storyId: string }) {
   const [posterErr, setPosterErr] = useState(false);
   const [bannerLoaded, setBannerLoaded] = useState(false);
   const [posterLoaded, setPosterLoaded] = useState(false);
+  const [demoState, setDemoState] = useState<"sending" | "success" | null>(null);
 
   if (!story) {
     if (storiesLoading) return <DetailSkeleton onBack={back} />;
@@ -201,17 +202,29 @@ export function DetailView({ storyId }: { storyId: string }) {
         {/* Demo Button */}
         <button
           onClick={() => {
+            if (demoState) return;
             import("@/lib/haptics").then(m => m.haptics.light());
+            setDemoState("sending");
             openTelegramLink(`https://t.me/${BOT_USERNAME}?start=demo_${story.id}`);
+            setTimeout(() => setDemoState("success"), 1500);
+            setTimeout(() => setDemoState(null), 5000);
           }}
+          disabled={!!demoState}
           className={cn(
-            "mt-6 w-full h-11 flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition active:scale-[0.98]",
+            "mt-6 w-full h-11 flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition active:scale-[0.98] disabled:opacity-80",
             useApp().theme === "cream" 
               ? "neo-button bg-white text-black border-2 border-black" 
-              : "bg-secondary text-secondary-foreground"
+              : "bg-secondary text-secondary-foreground",
+            demoState === "success" && "bg-emerald-500 text-white border-emerald-500"
           )}
         >
-          👀 {t("story.demo") || "Get Demo via Bot"}
+          {demoState === "sending" ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Sending to Bot...</>
+          ) : demoState === "success" ? (
+            <><CheckCircle2 className="h-4 w-4" /> Check your DM!</>
+          ) : (
+            <>👀 {t("story.demo") || "Get Demo via Bot"}</>
+          )}
         </button>
       </div>
 

@@ -280,10 +280,13 @@ export function CheckoutView() {
                 <Loader2 className="h-7 w-7 animate-spin text-primary" />
               </div>
             </div>
-            <h2 className="mt-5 font-display font-bold text-[17px] text-foreground">{t("checkout.processing")}</h2>
+            <h2 className="mt-5 font-display font-bold text-[17px] text-foreground">Redirecting to Payment</h2>
             <p className="mt-1.5 text-[13px] text-muted-foreground max-w-[260px]">
-              {t("common.loading")}
+              Securely processing your checkout...
             </p>
+            <div className="mt-5 p-3.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[13px] font-medium leading-relaxed max-w-[280px]">
+              <b>Note:</b> After paying, please return back to Telegram. Your payment will instantly verify and the story will be unlocked! No further action is required.
+            </div>
           </div>
         )}
 
@@ -305,7 +308,7 @@ export function CheckoutView() {
                     {t("checkout.successTitle")}
                   </h2>
                   <p className="mt-1.5 text-[12.5px] text-white/85 max-w-[280px] mx-auto leading-snug">
-                    {t("checkout.successMsg")}
+                    Your stories are now unlocked. Go to Library to access them.
                   </p>
                 </div>
 
@@ -336,7 +339,7 @@ export function CheckoutView() {
                       onCopy={() => copy("order", phase.order_id)}
                       copied={copiedKey === "order"}
                     />
-                    {phase.payment_id && (
+                    {phase.payment_id && phase.payment_id !== "link" && (
                       <ReceiptRow
                         icon={<CreditCard className="h-3.5 w-3.5" />}
                         label="Payment ID"
@@ -367,21 +370,6 @@ export function CheckoutView() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Order timeline */}
-            <div>
-              <SectionLabel>Order Status</SectionLabel>
-              <div className="rounded-[20px] bg-surface border border-border/60 p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-                <Timeline
-                  steps={[
-                    { label: t("checkout.orderPlaced"), time: "Just now", icon: <ShoppingBag className="h-3.5 w-3.5" />, done: true },
-                    { label: t("checkout.successTitle"), time: "Just now", icon: <CreditCard className="h-3.5 w-3.5" />, done: true },
-                    { label: t("story.goToLibrary"), time: "Just now", icon: <Library className="h-3.5 w-3.5" />, done: true },
-                    { label: "Episodes Ready", time: "Available now", icon: <Package className="h-3.5 w-3.5" />, done: true },
-                  ]}
-                />
               </div>
             </div>
 
@@ -416,9 +404,6 @@ export function CheckoutView() {
                 <Library className="h-5 w-5" />
                 {t("checkout.goToLibrary")}
               </button>
-              <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
-                A confirmation receipt has been recorded for your account.
-              </p>
             </div>
           </div>
         )}
