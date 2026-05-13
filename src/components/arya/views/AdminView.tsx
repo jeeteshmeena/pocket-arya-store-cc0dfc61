@@ -195,24 +195,25 @@ export function AdminView() {
     finally { setImageUploading(false); }
   };
 
+  // Translates DESCRIPTION only — story names are NEVER auto-translated
+  // because the title is the same name in a different script (not a different language).
+  // Auto-translating names causes corruption like "Tere Ishq Mein" → "In Love".
   const handleAutoTranslate = async (field: "hi" | "en") => {
     if (!editingStory) return;
     setTranslating(field);
     try {
       if (field === "hi") {
-        const [nameHi, descHi] = await Promise.all([
-          editingStory.story_name_en ? translateText(editingStory.story_name_en, "hi") : Promise.resolve(editingStory.story_name_hi || ""),
-          editingStory.description ? translateText(editingStory.description, "hi") : Promise.resolve(editingStory.description_hi || "")
-        ]);
-        setEditingStory((s: any) => ({ ...s, story_name_hi: nameHi, description_hi: descHi }));
+        const descHi = editingStory.description
+          ? await translateText(editingStory.description, "hi")
+          : (editingStory.description_hi || "");
+        setEditingStory((s: any) => ({ ...s, description_hi: descHi }));
       } else {
-        const [nameEn, descEn] = await Promise.all([
-          editingStory.story_name_hi ? translateText(editingStory.story_name_hi, "en") : Promise.resolve(editingStory.story_name_en || ""),
-          editingStory.description_hi ? translateText(editingStory.description_hi, "en") : Promise.resolve(editingStory.description || "")
-        ]);
-        setEditingStory((s: any) => ({ ...s, story_name_en: nameEn, description: descEn }));
+        const descEn = editingStory.description_hi
+          ? await translateText(editingStory.description_hi, "en")
+          : (editingStory.description || "");
+        setEditingStory((s: any) => ({ ...s, description: descEn }));
       }
-    } catch { alert("Translation failed."); } 
+    } catch { alert("Translation failed."); }
     finally { setTranslating(null); }
   };
 
@@ -678,24 +679,19 @@ export function AdminView() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Story ID</label>
                   <input required type="text" value={editingStory.story_id || ""} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" disabled={!(editingStory?.story_id || "").startsWith("story_")} />
                 </div>
+                {/* Story Name — admin manually enters both scripts. Names are NEVER auto-translated. */}
+                <div className="p-3 rounded-[14px] bg-blue-50 border border-blue-200 text-[11px] text-blue-700 font-semibold">
+                  📝 Story name <b>script</b> change karo, language/meaning NAHI. Roman script ke liye EN field, Devanagari ke liye HI field.
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name EN <span className="text-gray-400 normal-case font-normal">(English meaning)</span></label>
-                    <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" placeholder="e.g. In Love" />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name (Roman Script) <span className="text-gray-400 normal-case font-normal">— English/Hinglish</span></label>
+                    <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" placeholder="e.g. Tere Ishq Mein" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name HI <span className="text-gray-400 normal-case font-normal">(देवनागरी)</span></label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name (देवनागरी) <span className="text-gray-400 normal-case font-normal">— Hindi mode</span></label>
                     <input type="text" value={editingStory.story_name_hi || ""} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" placeholder="e.g. तेरे इश्क में" />
                   </div>
-                </div>
-                {/* Hinglish / Romanized name — used in Hinglish mode instead of English translation */}
-                <div className="p-3 rounded-[14px] bg-amber-50 border border-amber-200">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1 block">Name HINGLISH <span className="text-amber-500 normal-case font-normal">(Roman script — fills Hinglish mode)</span></label>
-                  <input type="text" value={editingStory.story_name_hin || ""} onChange={e => setEditingStory({...editingStory, story_name_hin: e.target.value})} className="w-full p-3 rounded-[12px] text-sm outline-none bg-white border border-amber-300 focus:border-amber-500 font-medium" placeholder='e.g. Tere Ishq Mein  ← yahi dikhega Hinglish mode me' />
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-blue-50 text-blue-600 disabled:opacity-50">EN → HI</button>
-                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("en")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-emerald-50 text-emerald-600 disabled:opacity-50">HI → EN</button>
                 </div>
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Desc (EN)</label>
@@ -704,6 +700,10 @@ export function AdminView() {
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Desc (HI)</label>
                   <textarea rows={2} value={editingStory.description_hi || ""} onChange={e => setEditingStory({...editingStory, description_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium resize-none" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-blue-50 text-blue-600 disabled:opacity-50">Desc EN → HI</button>
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("en")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-emerald-50 text-emerald-600 disabled:opacity-50">Desc HI → EN</button>
                 </div>
               </div>
 

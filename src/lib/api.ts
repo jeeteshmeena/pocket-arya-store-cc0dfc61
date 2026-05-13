@@ -160,45 +160,25 @@ export function getOptimizedImage(url?: string | null): string | undefined {
 }
 
 /**
- * Returns the correctly-scripted story title based on the user's language setting.
+ * Returns the story title in the correct script based on user language preference.
  *
- * Priority chain per mode:
- * - 'hi'  → titleHi (Devanagari)  → title
- * - 'en'  → title (story_name_en, may be English translation like "In Love")
- * - 'hin' → titleHin (dedicated Romanized field, e.g. "Tere Ishq Mein")
- *           → titleHi if Roman script → title (last resort)
+ * Admin stores the SAME name in two scripts — NOT translated:
+ *   story_name_en  = "Tere Ishq Mein"  (Roman script  — for English & Hinglish modes)
+ *   story_name_hi  = "तेरे इश्क में"   (Devanagari    — for Hindi mode)
+ *
+ * ✅ 'en'  → Roman  (story_name_en)
+ * ✅ 'hin' → Roman  (story_name_en) — same as English, no translation
+ * ✅ 'hi'  → Devanagari (story_name_hi) → falls back to Roman if not set
  */
-function isDevanagariScript(text: string): boolean {
-  if (!text) return false;
-  const count = (text.match(/[\u0900-\u097F]/g) || []).length;
-  return count > text.length * 0.25; // >25% Devanagari chars → Devanagari script
-}
-
 export function getStoryTitle(
   story: { title: string; titleHi?: string | null; titleHin?: string | null; [key: string]: any },
   language: string
 ): string {
-  const en  = story.title    || "";  // story_name_en  (English, e.g. "In Love")
-  const hi  = story.titleHi  || "";  // story_name_hi  (Devanagari, e.g. "तेरे इश्क में")
-  const hin = story.titleHin || "";  // story_name_hin (Romanized, e.g. "Tere Ishq Mein")
-
   if (language === "hi") {
-    // Hindi: Devanagari script preferred
-    return hi || en;
+    return story.titleHi || story.title || "";
   }
-
-  if (language === "hin") {
-    // Hinglish: Romanized name preferred
-    // 1. titleHin — dedicated field admin set ("Tere Ishq Mein")  ← best
-    if (hin) return hin;
-    // 2. titleHi  — use if it's in Roman script (not Devanagari)
-    if (hi && !isDevanagariScript(hi)) return hi;
-    // 3. title    — last resort (may be English translation)
-    return en;
-  }
-
-  // English: story_name_en as-is
-  return en;
+  // English and Hinglish — show Roman script (story_name_en)
+  return story.title || "";
 }
 
 export async function checkoutCart(
