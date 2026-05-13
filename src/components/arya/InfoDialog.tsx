@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Mail, Send, Check, FileText, Shield, HelpCircle, Sparkles, Truck, Receipt, MessageSquare, ChevronDown, Ticket, MessageCircle, Lightbulb, Loader2, CheckCircle2 } from "lucide-react";
-import { FAQ_ITEMS, ABOUT_TEXT, TERMS_TEXT, REFUND_TEXT, PRIVACY_TEXT, DELIVERY_TEXT } from "./legal-content";
+import { FAQ_ITEMS, ABOUT_TEXT, TERMS_ITEMS, REFUND_ITEMS, PRIVACY_ITEMS, DELIVERY_ITEMS } from "./legal-content";
 import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { BOT_USERNAME, submitSupport } from "@/lib/api";
@@ -89,6 +89,12 @@ export function InfoDialog({
 
   if (!open || !current) return null;
   const meta = META[current];
+  
+  const getHeaderTitle = () => {
+    if (kind === "terms" || kind === "privacy") return "Terms & Privacy";
+    if (kind === "delivery" || kind === "refund") return "Delivery & Refund Policy";
+    return meta.title;
+  };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center">
@@ -103,7 +109,7 @@ export function InfoDialog({
       <div
         ref={sheetRef}
         className={cn(
-          "relative w-full sm:max-w-lg max-h-[88vh] flex flex-col bg-card text-card-foreground border border-border/60 overflow-hidden",
+          "relative w-full sm:max-w-lg max-h-[88vh] flex flex-col bg-card text-card-foreground overflow-hidden",
           "rounded-t-[28px] sm:rounded-[28px]",
           "shadow-[0_-30px_80px_rgba(0,0,0,0.40)] sm:shadow-[0_30px_80px_rgba(0,0,0,0.40)]",
         )}
@@ -119,28 +125,23 @@ export function InfoDialog({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-4 shrink-0 border-b border-border/40">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-10 w-10 rounded-[10px] bg-muted/60 flex items-center justify-center text-foreground shrink-0">
-              {meta.icon}
-            </div>
-            <h2 className="font-display font-bold text-[17px] tracking-tight truncate">
-              {meta.title}
-            </h2>
-          </div>
+        <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-4 shrink-0">
+          <h2 className="font-display font-extrabold text-[22px] tracking-tight truncate">
+            {getHeaderTitle()}
+          </h2>
           <button
             onClick={handleClose}
             aria-label="Close"
             className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:bg-muted/60 hover:text-foreground rounded-full transition-colors shrink-0"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tabs (only when paired, like Terms ↔ Privacy) */}
         {tabs && (
-          <div className="px-5 pb-3 shrink-0">
-            <div className="inline-flex p-1 rounded-2xl bg-muted w-full">
+          <div className="px-5 pb-5 shrink-0 border-b border-border/40">
+            <div className="inline-flex p-1 rounded-xl bg-muted w-full h-[46px]">
               {tabs.map((t) => {
                 const m = META[t];
                 const active = activeTab === t;
@@ -149,12 +150,12 @@ export function InfoDialog({
                     key={t}
                     onClick={() => { import("@/lib/haptics").then(h => h.haptics.light()); setActiveTab(t); }}
                     className={cn(
-                      "flex-1 h-10 rounded-xl inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold transition-all",
+                      "flex-1 h-full rounded-lg inline-flex items-center justify-center gap-2 text-[14px] font-semibold transition-all",
                       active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {m.icon}
-                    <span className="truncate">{m.title.replace(" Policy", "").replace(" of Service", "")}</span>
+                    <span className="truncate">{m.title}</span>
                   </button>
                 );
               })}
@@ -162,12 +163,10 @@ export function InfoDialog({
           </div>
         )}
 
-        <div className="h-px bg-border/60 shrink-0" />
-
         {/* Scrollable content */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto px-5 py-5 scroll-smooth"
+          className="flex-1 overflow-y-auto px-5 pt-5 pb-[calc(env(safe-area-inset-bottom)+24px)] scroll-smooth"
           style={{ WebkitOverflowScrolling: "touch" }}
           key={current /* re-trigger fade on tab switch */}
         >
@@ -182,11 +181,11 @@ export function InfoDialog({
               </div>
             ) : (
               <LegalSections
-                text={
-                  current === "terms"    ? TERMS_TEXT    :
-                  current === "refund"   ? REFUND_TEXT   :
-                  current === "privacy"  ? PRIVACY_TEXT  :
-                  current === "delivery" ? DELIVERY_TEXT : ""
+                items={
+                  current === "terms"    ? TERMS_ITEMS    :
+                  current === "refund"   ? REFUND_ITEMS   :
+                  current === "privacy"  ? PRIVACY_ITEMS  :
+                  current === "delivery" ? DELIVERY_ITEMS : []
                 }
                 themeMode={theme === "cream" ? "cream" : "default"}
               />
@@ -198,48 +197,33 @@ export function InfoDialog({
   );
 }
 
-// ── Splits long legal text into numbered cards ────────────────
-function LegalSections({ text, themeMode }: { text: string; themeMode: "cream" | "default" }) {
-  // Split on blank lines OR numbered headings ("1. Title")
-  const blocks = text
-    .split(/\n\s*\n/)
-    .map((b) => b.trim())
-    .filter(Boolean);
-
+// ── Displays legal items in a card list matching the screenshot ──
+function LegalSections({ items, themeMode }: { items: { title: string; body: string }[]; themeMode: "cream" | "default" }) {
   return (
     <div className="space-y-3 pb-4">
-      {blocks.map((block, i) => {
-        // Detect "1. Heading\nbody..." pattern
-        const m = block.match(/^(\d+\.\s*[^\n]+)\n([\s\S]+)$/);
-        const heading = m ? m[1] : null;
-        const body = m ? m[2] : block;
-
-        return (
-          <div
-            key={i}
-            className={cn(
-              "rounded-xl border p-4",
-              themeMode === "cream" ? "bg-white border-border/60" : "bg-surface border-border/60"
-            )}
-            style={{ animation: `info-content-in 0.4s cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 35}ms` }}
-          >
-            {heading && (
-              <div className={cn(
-                "text-[14px] mb-1.5",
-                themeMode === "cream" ? "font-bold text-black" : "font-bold text-foreground"
-              )}>
-                {heading}
-              </div>
-            )}
-            <p className={cn(
-              "text-[13px] leading-relaxed whitespace-pre-line",
-              themeMode === "cream" ? "font-medium text-black/75" : "text-muted-foreground"
-            )}>
-              {body}
-            </p>
+      {items.map((item, i) => (
+        <div
+          key={i}
+          className={cn(
+            "rounded-xl border p-4",
+            themeMode === "cream" ? "bg-white border-border/60" : "bg-surface border-border/60"
+          )}
+          style={{ animation: `info-content-in 0.4s cubic-bezier(0.16,1,0.3,1) both`, animationDelay: `${i * 35}ms` }}
+        >
+          <div className={cn(
+            "text-[14px] mb-2",
+            themeMode === "cream" ? "font-bold text-black" : "font-bold text-foreground"
+          )}>
+            {item.title}
           </div>
-        );
-      })}
+          <p className={cn(
+            "text-[13px] leading-relaxed whitespace-pre-line",
+            themeMode === "cream" ? "font-medium text-black/60" : "text-muted-foreground"
+          )}>
+            {item.body}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -249,7 +233,7 @@ function AccordionFAQ({ theme }: { theme: string }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   return (
-    <div className="space-y-2 pb-4">
+    <div className="space-y-3 pb-4">
       {FAQ_ITEMS.map((item, i) => {
         const isOpen = openIdx === i;
         return (
@@ -265,14 +249,19 @@ function AccordionFAQ({ theme }: { theme: string }) {
               onClick={() => { import("@/lib/haptics").then(h => h.haptics.light()); setOpenIdx(isOpen ? null : i); }}
               className="flex w-full items-center justify-between p-4 text-left focus:outline-none"
             >
-              <span className="font-medium text-[14px]">{item.q}</span>
-              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-300 shrink-0 ml-4", isOpen && "rotate-180")} />
+              <span className={cn(
+                "text-[14px]",
+                theme === "cream" ? "font-bold text-black" : "font-bold text-foreground"
+              )}>{item.q}</span>
+              <ChevronDown className={cn("h-5 w-5 transition-transform duration-300 shrink-0 ml-4", theme === "cream" ? "text-black/40" : "text-muted-foreground", isOpen && "rotate-180")} />
             </button>
             <div
-              className={cn("px-4 overflow-hidden transition-all duration-300 ease-in-out", isOpen ? "max-h-96 pb-4 opacity-100" : "max-h-0 opacity-0")}
+              className={cn("px-4 overflow-hidden transition-all duration-300 ease-in-out", isOpen ? "max-h-[500px] pb-4 opacity-100" : "max-h-0 opacity-0")}
             >
-              <div className="h-px bg-border/40 w-full mb-3" />
-              <p className="text-[13px] text-muted-foreground leading-relaxed">
+              <p className={cn(
+                "text-[13px] leading-relaxed",
+                theme === "cream" ? "font-medium text-black/60" : "text-muted-foreground"
+              )}>
                 {item.a}
               </p>
             </div>

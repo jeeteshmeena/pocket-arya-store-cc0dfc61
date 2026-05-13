@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TERMS_TEXT } from "./legal-content";
+import { TERMS_ITEMS } from "./legal-content";
 import { useApp } from "@/store/app-store";
 
 const STORAGE_KEY = "arya_tc_accepted";
@@ -73,12 +73,17 @@ export function TermsOnboarding() {
 
         {/* Scrollable T&C */}
         <div
-          className="flex-1 overflow-y-auto px-5 py-4"
+          className="flex-1 overflow-y-auto px-5 py-4 space-y-4"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed pb-4">
-            {TERMS_TEXT}
-          </p>
+          {TERMS_ITEMS.map((item, i) => (
+            <div key={i}>
+              <div className="text-[14px] font-bold text-foreground mb-1">{item.title}</div>
+              <p className="text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">
+                {item.body}
+              </p>
+            </div>
+          ))}
         </div>
 
         {/* Accept button */}
