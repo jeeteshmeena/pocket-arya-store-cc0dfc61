@@ -669,34 +669,80 @@ export function AdminView() {
 
                  {moreSubTab === "buyers" && (
                   <div className="space-y-4 p-4">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
                       <h2 className="font-bold text-xl text-black">Orders & Buyers</h2>
-                      <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold">
-                        <Plus className="h-3.5 w-3.5" /> Manual Add
-                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}?start=bcast`)} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-blue-50 text-blue-600 font-bold hover:bg-blue-100">
+                          <MessageSquare className="h-3.5 w-3.5" /> Broadcast All
+                        </button>
+                        <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold">
+                          <Plus className="h-3.5 w-3.5" /> Add
+                        </button>
+                      </div>
                     </div>
                     {buyers.length === 0 && <div className="text-center p-10 text-gray-400">No buyers yet</div>}
-                    <div className="space-y-3">
-                      {buyers.map((buyer, i) => (
-                        <div key={i} onClick={() => setSelectedBuyer(buyer)} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition">
-                          <div className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
-                            {buyer.photo_url
-                              ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
-                              : <span className="text-gray-600">{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold text-sm text-gray-900 truncate">{buyer.first_name || buyer.username || "Unknown"}</div>
-                            <div className="text-[10px] text-gray-500">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
-                            <div className="text-[10px] text-gray-400 mt-0.5">{buyer.payments?.length || 0} purchase{(buyer.payments?.length||0)!==1?'s':''} • {buyer.source === 'bot' ? '🤖 Bot' : '📱 Mini App'}</div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="font-black text-gray-900 text-sm">₹{(buyer.amount||0).toLocaleString()}</div>
-                            <span className={cn("text-[9px] px-2 py-0.5 rounded-full uppercase mt-1 inline-block font-bold", buyer.status==="paid"?"bg-emerald-100 text-emerald-700":"bg-gray-100 text-gray-500")}>{buyer.status}</span>
-                          </div>
+
+                    {/* Pending & Processing Section */}
+                    {buyers.filter(b => b.status === "pending" || b.status === "processing").length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider mb-3">Pending / Processing</h3>
+                        <div className="space-y-3">
+                          {buyers.filter(b => b.status === "pending" || b.status === "processing").map((buyer, i) => (
+                            <div key={`pending-${i}`} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center gap-3 active:scale-[0.99] transition">
+                              <div className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
+                                {buyer.photo_url
+                                  ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                                  : <span className="text-gray-600">{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
+                                }
+                              </div>
+                              <div className="flex-1 min-w-0" onClick={() => setSelectedBuyer(buyer)}>
+                                <div className="font-bold text-sm text-gray-900 truncate">{buyer.first_name || buyer.username || "Unknown"}</div>
+                                <div className="text-[10px] text-gray-500">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
+                                <div className="text-[10px] text-gray-400 mt-0.5">{buyer.payments?.length || 0} purchase{(buyer.payments?.length||0)!==1?'s':''} • {buyer.source === 'bot' ? 'Bot' : 'Mini App'}</div>
+                              </div>
+                              <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                                <span className="text-[9px] px-2 py-0.5 rounded-full uppercase inline-block font-bold bg-amber-100 text-amber-700">{buyer.status}</span>
+                                <div className="flex gap-1.5 mt-1">
+                                  <button onClick={(e) => { e.stopPropagation(); openTelegramLink(`tg://user?id=${buyer.user_id}`); }} className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"><MessageSquare className="h-3.5 w-3.5" /></button>
+                                  <button onClick={() => setSelectedBuyer(buyer)} className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"><ChevronDown className="h-3.5 w-3.5 -rotate-90" /></button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Completed Section */}
+                    {buyers.filter(b => b.status === "paid" || b.status === "completed" || b.status === "approved").length > 0 && (
+                      <div>
+                        <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider mb-3">Completed / Paid</h3>
+                        <div className="space-y-3">
+                          {buyers.filter(b => b.status === "paid" || b.status === "completed" || b.status === "approved").map((buyer, i) => (
+                            <div key={`completed-${i}`} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center gap-3 active:scale-[0.99] transition">
+                              <div className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
+                                {buyer.photo_url
+                                  ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                                  : <span className="text-gray-600">{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
+                                }
+                              </div>
+                              <div className="flex-1 min-w-0" onClick={() => setSelectedBuyer(buyer)}>
+                                <div className="font-bold text-sm text-gray-900 truncate">{buyer.first_name || buyer.username || "Unknown"}</div>
+                                <div className="text-[10px] text-gray-500">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
+                                <div className="text-[10px] text-gray-400 mt-0.5">{buyer.payments?.length || 0} purchase{(buyer.payments?.length||0)!==1?'s':''} • {buyer.source === 'bot' ? 'Bot' : 'Mini App'}</div>
+                              </div>
+                              <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                                <div className="font-black text-gray-900 text-sm">₹{(buyer.amount||0).toLocaleString()}</div>
+                                <div className="flex gap-1.5 mt-1">
+                                  <button onClick={(e) => { e.stopPropagation(); openTelegramLink(`tg://user?id=${buyer.user_id}`); }} className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"><MessageSquare className="h-3.5 w-3.5" /></button>
+                                  <button onClick={() => setSelectedBuyer(buyer)} className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"><ChevronDown className="h-3.5 w-3.5 -rotate-90" /></button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
