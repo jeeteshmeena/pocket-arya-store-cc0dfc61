@@ -28,9 +28,10 @@ function Shell() {
     trackEvent("page_view", { 
       page: view.name, 
       story_id: (view as any).storyId || null,
-      referrer: document.referrer || "direct"
+      referrer: document.referrer || "direct",
+      user_data: tgUser
     }, tgUser?.telegram_id);
-  }, [view.name, (view as any).storyId, tgUser?.telegram_id]);
+  }, [view.name, (view as any).storyId, tgUser]);
 
   // Track session duration
   useEffect(() => {
@@ -94,7 +95,7 @@ function Shell() {
         </div>
       </main>
 
-      {view.name !== "admin" && <BottomNav />}
+      {view.name !== "admin" && view.name !== "detail" && view.name !== "purchased-detail" && view.name !== "checkout" && <BottomNav />}
       <CartPanel />
       <TermsOnboarding />
       <DeepLinkErrorDialog />

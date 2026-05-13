@@ -4,7 +4,7 @@ import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
-import { getOptimizedImage, getStoryTitle } from "@/lib/api";
+import { getOptimizedImage, getStoryTitle, openTelegramLink, BOT_USERNAME } from "@/lib/api";
 
 export function DetailView({ storyId }: { storyId: string }) {
   const { back, addToCart, goToCheckout, cart, stories, storiesLoading, t, language } = useApp();
@@ -188,7 +188,7 @@ export function DetailView({ storyId }: { storyId: string }) {
           )}
         </div>
 
-        {/* Available In / Tags section (Theme Cream specific from image) */}
+      {/* Available In / Tags section (Theme Cream specific from image) */}
         {useApp().theme === "cream" && story.language && (
           <div className="mt-8 mb-4">
             <h3 className="font-display font-bold text-foreground mb-3">Available In :</h3>
@@ -197,6 +197,22 @@ export function DetailView({ storyId }: { storyId: string }) {
             </div>
           </div>
         )}
+
+        {/* Demo Button */}
+        <button
+          onClick={() => {
+            import("@/lib/haptics").then(m => m.haptics.light());
+            openTelegramLink(`https://t.me/${BOT_USERNAME}?start=demo_${story.id}`);
+          }}
+          className={cn(
+            "mt-6 w-full h-11 flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition active:scale-[0.98]",
+            useApp().theme === "cream" 
+              ? "neo-button bg-white text-black border-2 border-black" 
+              : "bg-secondary text-secondary-foreground"
+          )}
+        >
+          👀 {t("story.demo") || "Get Demo via Bot"}
+        </button>
       </div>
 
       {/* Sticky bottom bar */}

@@ -170,7 +170,7 @@ export function Header() {
               )}
               aria-label="Arya Premium"
             >
-              <span className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-border bg-muted shrink-0">
+              <span className="h-8 w-8 rounded-[10px] overflow-hidden ring-1 ring-border bg-muted shrink-0">
                 <img src={aryaLogo} alt="Arya" className="h-full w-full object-cover" />
               </span>
               <AnimatedLogoText />

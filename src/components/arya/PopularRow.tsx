@@ -8,7 +8,7 @@ export function PopularRow() {
   const [popularStories, setPopularStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isDark = theme === "dark" || theme === "teal" || theme === "romantic";
+  const isLightMode = theme === "cream" || theme === "default" || theme === "mint" || theme === "light";
 
   useEffect(() => {
     fetch("/api/popular")
@@ -24,9 +24,8 @@ export function PopularRow() {
     return (
       <section className="mt-3 mb-2 relative z-10">
         <div className="px-4 flex items-center justify-between mb-2">
-          <h2 className="text-xl font-black tracking-tight" style={{ 
-            fontFamily: "'Outfit', sans-serif",
-            color: isDark ? "#fff" : "#000" 
+          <h2 className="text-xl font-black tracking-tight text-foreground" style={{ 
+            fontFamily: "'Outfit', sans-serif"
           }}>
             Popular on AP
           </h2>
@@ -52,9 +51,8 @@ export function PopularRow() {
   return (
     <section className="mt-3 mb-2 relative z-10">
       <div className="px-4 flex items-center justify-between mb-2">
-        <h2 className="text-xl font-black tracking-tight" style={{ 
-          fontFamily: "'Outfit', sans-serif",
-          color: isDark ? "#fff" : "#000" 
+        <h2 className="text-xl font-black tracking-tight text-foreground" style={{ 
+          fontFamily: "'Outfit', sans-serif"
         }}>
           Popular on AP
         </h2>
@@ -77,7 +75,7 @@ export function PopularRow() {
                   lineHeight: "0.8",
                   fontFamily: "'Outfit', sans-serif",
                   color: "transparent",
-                  WebkitTextStroke: isDark ? "1.5px rgba(255,255,255,0.4)" : "1.5px rgba(0,0,0,0.4)",
+                  WebkitTextStroke: isLightMode ? "1.5px rgba(0,0,0,0.4)" : "1.5px rgba(255,255,255,0.4)",
                   zIndex: 0
                 }}
               >
@@ -97,7 +95,7 @@ export function PopularRow() {
 
             {/* Category / Genre below the image */}
             <div className="z-10 mt-2 w-[110px] flex justify-center self-end">
-              <span className={cn("text-[12px] font-bold truncate block", isDark ? "text-amber-400" : "text-amber-600")}>
+              <span className={cn("text-[12px] font-bold truncate block", isLightMode ? "text-amber-600" : "text-amber-400")}>
                 {story.genre || "Drama"}
               </span>
             </div>

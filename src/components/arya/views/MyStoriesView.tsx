@@ -106,7 +106,7 @@ export function MyStoriesView() {
   };
 
   return (
-    <div className="animate-fade-in px-4 pt-3 pb-8">
+    <div className="animate-fade-in px-4 pt-3 pb-24">
       <div className="flex items-center justify-between">
         <h1 className="font-display font-bold text-xl">{t("library.title")}</h1>
         {tab === "mine" && (
@@ -124,7 +124,7 @@ export function MyStoriesView() {
       {/* Tabs */}
       <div className="mt-4 inline-flex p-1 rounded-full bg-muted w-full">
         <TabBtn active={tab === "mine"} onClick={() => { haptics.light(); setTab("mine"); }} icon={<LibIcon className="h-4 w-4" />} label={`${t("library.purchased")}${merged.length ? ` · ${merged.length}` : ""}`} />
-        <TabBtn active={tab === "want"} onClick={() => { haptics.light(); setTab("want"); }} icon={<Heart className="h-4 w-4" />} label={`${t("story.listen")}${wishlist.length ? ` · ${wishlist.length}` : ""}`} />
+        <TabBtn active={tab === "want"} onClick={() => { haptics.light(); setTab("want"); }} icon={<Heart className="h-4 w-4" />} label={`Wishlist${wishlist.length ? ` · ${wishlist.length}` : ""}`} />
       </div>
 
       {/* MY STORIES */}

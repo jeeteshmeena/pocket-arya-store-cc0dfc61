@@ -312,27 +312,33 @@ export function AdminView() {
 
                 {/* KPI Cards — Bot vs Mini App Users */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
-                    <div className="text-2xl mb-1">🤖</div>
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="absolute -right-2 -top-2 opacity-5"><Bot className="w-20 h-20" /></div>
+                    <div className="mb-2 text-blue-500"><Bot className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{(stats?.bot_users || 0).toLocaleString()}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Bot Users</div>
                     <div className="text-[10px] text-blue-500 font-bold mt-2">Telegram Bot</div>
                   </div>
-                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
-                    <div className="text-2xl mb-1">📱</div>
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="absolute -right-2 -top-2 opacity-5"><Smartphone className="w-20 h-20" /></div>
+                    <div className="mb-2 text-emerald-500"><Smartphone className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{(stats?.miniapp_users || 0).toLocaleString()}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Mini App Users</div>
                     <div className="text-[10px] text-emerald-500 font-bold mt-2">Web Store</div>
                   </div>
-                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="absolute -right-2 -top-2 opacity-5"><Library className="w-20 h-20" /></div>
+                    <div className="mb-2 text-purple-500"><Library className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{stats?.total_stories || 0}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Stories</div>
                     <div className="text-[10px] text-purple-500 font-bold mt-2">Available</div>
                   </div>
-                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div className="absolute -right-2 -top-2 opacity-5"><ShoppingBag className="w-20 h-20" /></div>
+                    <div className="mb-2 text-rose-500"><ShoppingBag className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{buyers?.length || 0}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Total Orders</div>
-                    <div className="text-[10px] text-rose-500 font-bold mt-2">Requests: {storyRequests?.length || 0}</div>
+                    <div className="text-[10px] text-rose-500 font-bold mt-2 hover:underline cursor-pointer" onClick={() => setActiveTab("support")}>Requests: {storyRequests?.length || 0}</div>
                   </div>
                 </div>
 
@@ -389,6 +395,56 @@ export function AdminView() {
                     ))}
                   </div>
                 </div>
+
+                {/* Dashboard: Support Tickets & Requests Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {/* Recent Support Tickets */}
+                  <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-base flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Support Tickets</h3>
+                      <button onClick={() => { setActiveTab("support"); setMoreSubTab("support"); }} className="text-xs font-bold text-blue-500 hover:underline">View All</button>
+                    </div>
+                    {supportTickets.length === 0 ? (
+                      <div className="text-center py-6 text-gray-400 text-xs">No open tickets</div>
+                    ) : (
+                      <div className="space-y-3">
+                        {supportTickets.slice(0, 3).map(ticket => (
+                          <div key={ticket.id} onClick={() => { setActiveTab("support"); setMoreSubTab("support"); }} className="p-3 bg-gray-50 rounded-[16px] cursor-pointer hover:bg-gray-100 transition">
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="font-bold text-sm truncate pr-2">{ticket.username || ticket.first_name || "User"}</span>
+                              <span className="text-[10px] text-gray-400 shrink-0">{new Date(ticket.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs text-gray-600 line-clamp-2">{ticket.message}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recent Story Requests */}
+                  <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Story Requests</h3>
+                      <button onClick={() => { setActiveTab("store"); setStoreSubTab("requests"); }} className="text-xs font-bold text-blue-500 hover:underline">View All</button>
+                    </div>
+                    {storyRequests.length === 0 ? (
+                      <div className="text-center py-6 text-gray-400 text-xs">No pending requests</div>
+                    ) : (
+                      <div className="space-y-3">
+                        {storyRequests.slice(0, 3).map(req => (
+                          <div key={req.id} onClick={() => { setActiveTab("store"); setStoreSubTab("requests"); }} className="p-3 bg-gray-50 rounded-[16px] cursor-pointer hover:bg-gray-100 transition flex justify-between items-center">
+                            <div className="min-w-0 pr-2">
+                              <div className="font-bold text-sm truncate">{req.story_name}</div>
+                              <div className="text-[10px] text-gray-500 mt-0.5">{req.platform} • By {req.username || req.first_name || "User"}</div>
+                            </div>
+                            <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold uppercase shrink-0", req.status === "pending" ? "bg-amber-100 text-amber-700" : "bg-gray-200 text-gray-600")}>{req.status}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
               </div>
             )}
 
@@ -1019,7 +1075,7 @@ function BuyerDetailPage({ buyer, stories, onBack }: any) {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Source</div>
-            <div className="font-bold text-sm">{buyer.source === 'bot' ? '🤖 Telegram Bot' : buyer.source === 'manual_admin' ? '🛠️ Manual' : '📱 Mini App'}</div>
+            <div className="font-bold text-sm">{buyer.source === 'bot' ? '🤖 Telegram Bot' : buyer.source === 'manual_admin' ? '🛠️ Manual' : buyer.source === 'both' ? '🤖 + 📱 Both' : '📱 Mini App'}</div>
           </div>
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Total Spent</div>
@@ -1033,6 +1089,28 @@ function BuyerDetailPage({ buyer, stories, onBack }: any) {
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">First Order</div>
             <div className="font-bold text-xs">{firstOrderDate || "N/A"}</div>
           </div>
+        </div>
+        
+        {/* Admin Controls */}
+        <div className="mt-4 flex gap-2">
+          <button 
+            onClick={() => {
+              if (window.confirm("Are you sure you want to wipe all records for this user?")) {
+                adminBuyerAction(tgUser?.telegram_id, buyer.user_id, "wipe").then(() => { alert("Wiped successfully"); window.location.reload(); }).catch(e => alert(e.message));
+              }
+            }}
+            className="flex-1 py-2 rounded-xl border border-red-200 text-red-500 font-bold text-xs flex items-center justify-center gap-1 hover:bg-red-50 transition">
+            <Trash2 className="h-4 w-4" /> Wipe Data
+          </button>
+          <button 
+            onClick={() => {
+              if (window.confirm("Ban this user from using the bot?")) {
+                adminBuyerAction(tgUser?.telegram_id, buyer.user_id, "ban").then(() => { alert("Banned successfully"); window.location.reload(); }).catch(e => alert(e.message));
+              }
+            }}
+            className="flex-1 py-2 rounded-xl bg-red-500 text-white font-bold text-xs flex items-center justify-center gap-1 hover:bg-red-600 transition">
+            <ShieldAlert className="h-4 w-4" /> Ban User
+          </button>
         </div>
         {buyer.joined_at && (
           <div className="mt-3 text-[11px] text-gray-400 text-center">Member since {joinedDate}</div>
