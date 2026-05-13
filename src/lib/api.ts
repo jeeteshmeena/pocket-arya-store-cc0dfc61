@@ -162,43 +162,42 @@ export function getOptimizedImage(url?: string | null): string | undefined {
 /**
  * Returns the correctly-scripted story title based on the user's language setting.
  *
- * Language rules:
- * - 'hi'  → Devanagari script (story_name_hi / titleHi)        e.g. "तेरे इश्क में"
- * - 'en'  → Roman script  (story_name_en / title)              e.g. "In Love"
- * - 'hin' → Original Romanized name — prefers story_name_hi
- *           IF it is Roman (e.g. "Tere Ishq Mein"), falls back to story_name_en
- *           if story_name_hi is Devanagari. This prevents showing English
- *           translations like "In Love" when the user expects "Tere Ishq Mein".
+ * Priority chain per mode:
+ * - 'hi'  → titleHi (Devanagari)  → title
+ * - 'en'  → title (story_name_en, may be English translation like "In Love")
+ * - 'hin' → titleHin (dedicated Romanized field, e.g. "Tere Ishq Mein")
+ *           → titleHi if Roman script → title (last resort)
  */
 function isDevanagariScript(text: string): boolean {
   if (!text) return false;
   const count = (text.match(/[\u0900-\u097F]/g) || []).length;
-  return count > text.length * 0.25; // >25% Devanagari chars → it's Devanagari
+  return count > text.length * 0.25; // >25% Devanagari chars → Devanagari script
 }
 
 export function getStoryTitle(
-  story: { title: string; titleHi?: string | null; [key: string]: any },
+  story: { title: string; titleHi?: string | null; titleHin?: string | null; [key: string]: any },
   language: string
 ): string {
-  const en = story.title || "";        // story_name_en (English/Roman)
-  const hi = story.titleHi || "";     // story_name_hi (Hindi Devanagari or Romanized)
+  const en  = story.title    || "";  // story_name_en  (English, e.g. "In Love")
+  const hi  = story.titleHi  || "";  // story_name_hi  (Devanagari, e.g. "तेरे इश्क में")
+  const hin = story.titleHin || "";  // story_name_hin (Romanized, e.g. "Tere Ishq Mein")
 
   if (language === "hi") {
-    // Hindi mode: always show Devanagari. Use titleHi if present, else Roman.
+    // Hindi: Devanagari script preferred
     return hi || en;
   }
 
   if (language === "hin") {
-    // Hinglish mode: show the original Romanized name — "Tere Ishq Mein", not "In Love".
-    // If titleHi is in Roman script → use it (admin entered Romanized Hinglish there).
-    // If titleHi is Devanagari or missing → fall back to title (story_name_en).
-    if (hi && !isDevanagariScript(hi)) {
-      return hi;
-    }
+    // Hinglish: Romanized name preferred
+    // 1. titleHin — dedicated field admin set ("Tere Ishq Mein")  ← best
+    if (hin) return hin;
+    // 2. titleHi  — use if it's in Roman script (not Devanagari)
+    if (hi && !isDevanagariScript(hi)) return hi;
+    // 3. title    — last resort (may be English translation)
     return en;
   }
 
-  // English mode: show story_name_en as-is (Roman script).
+  // English: story_name_en as-is
   return en;
 }
 

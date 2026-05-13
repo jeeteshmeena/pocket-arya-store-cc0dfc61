@@ -221,7 +221,7 @@ export function AdminView() {
     else {
       setEditingStory({
         story_id: `story_${Date.now()}`, bot_id: "", bot_username: "UseAryaBot", start_id: "", end_id: "", source: "",
-        story_name_en: "", story_name_hi: "", description: "", description_hi: "", episodes: "1", status: "available",
+        story_name_en: "", story_name_hi: "", story_name_hin: "", description: "", description_hi: "", episodes: "1", status: "available",
         genre: "Romance", language: "Hindi", price: 99, discount_price: 49, payment_methods: ["upi", "razorpay"],
         platform: "Pocket FM", delivery_mode: "pool", channel_id: "", image: "", poster_url: "", is_completed: false
       });
@@ -680,13 +680,18 @@ export function AdminView() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name (EN)</label>
-                    <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name EN <span className="text-gray-400 normal-case font-normal">(English meaning)</span></label>
+                    <input required type="text" value={editingStory.story_name_en} onChange={e => setEditingStory({...editingStory, story_name_en: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" placeholder="e.g. In Love" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name (HI)</label>
-                    <input type="text" value={editingStory.story_name_hi || ""} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Name HI <span className="text-gray-400 normal-case font-normal">(देवनागरी)</span></label>
+                    <input type="text" value={editingStory.story_name_hi || ""} onChange={e => setEditingStory({...editingStory, story_name_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" placeholder="e.g. तेरे इश्क में" />
                   </div>
+                </div>
+                {/* Hinglish / Romanized name — used in Hinglish mode instead of English translation */}
+                <div className="p-3 rounded-[14px] bg-amber-50 border border-amber-200">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1 block">Name HINGLISH <span className="text-amber-500 normal-case font-normal">(Roman script — fills Hinglish mode)</span></label>
+                  <input type="text" value={editingStory.story_name_hin || ""} onChange={e => setEditingStory({...editingStory, story_name_hin: e.target.value})} className="w-full p-3 rounded-[12px] text-sm outline-none bg-white border border-amber-300 focus:border-amber-500 font-medium" placeholder='e.g. Tere Ishq Mein  ← yahi dikhega Hinglish mode me' />
                 </div>
                 <div className="flex gap-2">
                   <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-blue-50 text-blue-600 disabled:opacity-50">EN → HI</button>
