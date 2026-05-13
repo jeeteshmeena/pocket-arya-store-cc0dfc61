@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { haptics } from "@/lib/haptics";
 import { StatusBadge } from "./StatusBadge";
-import { trackEvent, getOptimizedImage } from "@/lib/api";
+import { trackEvent, getOptimizedImage, getStoryTitle } from "@/lib/api";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ export const StoryCard = memo(function StoryCard({
   square?: boolean;
   enablePreview?: boolean;
 }) {
-  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout, appPreferences, t } = useApp();
+  const { addToCart, cart, navigate, theme, toggleWishlist, inWishlist, tgUser, goToCheckout, appPreferences, t, language } = useApp();
   const fmt = usePriceFormat();
 
   const liked   = inWishlist(story.id);
@@ -309,7 +309,7 @@ export const StoryCard = memo(function StoryCard({
                 {story.genre}
               </span>
               <span className="text-[11px] font-semibold text-center leading-tight line-clamp-4" style={{ color: text }}>
-                {story.title}
+                {getStoryTitle(story, language)}
               </span>
             </div>
           )}
@@ -335,7 +335,7 @@ export const StoryCard = memo(function StoryCard({
         {/* ── Label ── */}
         <div className="mt-1.5 px-0.5">
           <div className="text-[12.5px] font-semibold truncate text-foreground leading-tight">
-            {story.title}
+            {getStoryTitle(story, language)}
           </div>
           {appPreferences?.showPrices !== false && (
             <div className="text-[11.5px] font-bold mt-0.5 text-foreground/75">
@@ -385,7 +385,7 @@ function PreviewPopup({
   onBuyNow: () => void;
   onOpen: () => void;
 }) {
-  const { theme, appPreferences, t } = useApp();
+  const { theme, appPreferences, t, language } = useApp();
   const fmt = usePriceFormat();
   const { bg, text } = getGenre(story.genre);
   const hasImage = isDisplayableUrl(story.poster);
@@ -452,7 +452,7 @@ function PreviewPopup({
             "text-[15px] font-bold leading-tight line-clamp-2 text-foreground",
             theme === "cream" && "font-display"
           )}>
-            {story.title}
+            {getStoryTitle(story, language)}
           </h3>
           {story.description && (
             <p className="mt-1 text-[12px] text-muted-foreground line-clamp-2 leading-snug">

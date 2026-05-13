@@ -1,6 +1,7 @@
 export type Story = {
   id: string;
-  title: string;
+  title: string;       // story_name_en — Roman script (used for English & Hinglish)
+  titleHi?: string | null; // story_name_hi — Devanagari script (used when Hindi selected)
   description: string;
   price: number;
   episodes: number | string;

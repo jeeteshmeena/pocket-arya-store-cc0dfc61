@@ -159,6 +159,26 @@ export function getOptimizedImage(url?: string | null): string | undefined {
   return url;
 }
 
+/**
+ * Returns the correctly-scripted story title based on the user's language setting.
+ *
+ * - 'hi'  → Devanagari script (story_name_hi / titleHi) e.g. "तेरे आने से"
+ * - 'en'  → Roman script (story_name_en / title)         e.g. "Tere Aane Se" or English
+ * - 'hin' → Roman script unchanged (story_name_en)       e.g. "Tere Aane Se"  ← NOT translated
+ *
+ * IMPORTANT: story_name_en should contain the ROMANIZED form (Hinglish), NOT an English
+ * translation. If an admin entered an English translation there, this helper still respects it
+ * for the 'en' mode, but Hinglish keeps it as stored.
+ */
+export function getStoryTitle(story: { title: string; titleHi?: string | null; [key: string]: any }, language: string): string {
+  if (language === "hi") {
+    // Use Devanagari title if available, fall back to Roman
+    return story.titleHi || story.title || "";
+  }
+  // For 'en' and 'hin' — always show Roman script (story_name_en) without translation
+  return story.title || "";
+}
+
 export async function checkoutCart(
   storyIds: string[],
   identity: TelegramIdentity,

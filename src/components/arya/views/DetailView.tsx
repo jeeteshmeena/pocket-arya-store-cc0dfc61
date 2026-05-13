@@ -4,10 +4,10 @@ import { useApp } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "../StatusBadge";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
-import { getOptimizedImage } from "@/lib/api";
+import { getOptimizedImage, getStoryTitle } from "@/lib/api";
 
 export function DetailView({ storyId }: { storyId: string }) {
-  const { back, addToCart, goToCheckout, cart, stories, storiesLoading, t } = useApp();
+  const { back, addToCart, goToCheckout, cart, stories, storiesLoading, t, language } = useApp();
   const fmt = usePriceFormat();
   const story = stories.find((s) => s.id === storyId);
   const [expanded, setExpanded] = useState(false);
@@ -81,7 +81,7 @@ export function DetailView({ storyId }: { storyId: string }) {
                   {story.genre || "Book"}
                 </h2>
                 <h1 className="text-3xl font-display font-extrabold text-white leading-tight mb-2">
-                  {story.title}
+                  {getStoryTitle(story, language)}
                 </h1>
                 <p className="text-[10px] text-white/90 tracking-widest uppercase font-bold">
                   {[story.language, story.episodes ? `${story.episodes} eps` : null].filter(Boolean).join(" · ")}
@@ -137,13 +137,13 @@ export function DetailView({ storyId }: { storyId: string }) {
                 ) : (
                   <div className="h-full w-full flex items-center justify-center p-2">
                     <span className="text-[9px] text-muted-foreground font-semibold text-center leading-tight line-clamp-4">
-                      {story.title}
+                      {getStoryTitle(story, language)}
                     </span>
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="font-display font-bold text-xl leading-tight text-foreground">{story.title}</h1>
+                <h1 className="font-display font-bold text-xl leading-tight text-foreground">{getStoryTitle(story, language)}</h1>
                 <div className="text-xs text-muted-foreground mt-1">
                   {[story.genre, story.language].filter(Boolean).join(" · ")}
                 </div>
