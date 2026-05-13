@@ -97,7 +97,7 @@ export function InfoDialog({
     return meta.title;
   };
 
-    typeof document !== "undefined" ? createPortal(
+  return typeof document !== "undefined" ? createPortal(
       <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
         {/* Backdrop — smooth fade */}
         <div
