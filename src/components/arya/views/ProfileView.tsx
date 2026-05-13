@@ -189,8 +189,7 @@ export function ProfileView() {
         />
         <Item icon={ScrollText} label={t("profile.terms")} onClick={() => setDialog("terms")} isCream={useApp().theme === "cream"} />
         <Item icon={FileText} label={t("profile.privacy")} onClick={() => setDialog("privacy")} isCream={useApp().theme === "cream"} />
-        <Item icon={FileText} label={t("profile.delivery")} onClick={() => setDialog("delivery")} isCream={useApp().theme === "cream"} />
-        <Item icon={Receipt} label={t("profile.refund")} onClick={() => setDialog("refund")} isCream={useApp().theme === "cream"} />
+        <Item icon={FileText} label="Delivery & Refund Policy" onClick={() => setDialog("delivery")} isCream={useApp().theme === "cream"} />
         <Item icon={Settings} label={t("profile.settings")} onClick={() => navigate({ name: "settings" })} isCream={useApp().theme === "cream"} />
         <Item icon={FileText} label={t("profile.about")} onClick={() => setDialog("about")} isCream={useApp().theme === "cream"} />
         <Item icon={LogOut} label={t("profile.signOut")} onClick={() => {

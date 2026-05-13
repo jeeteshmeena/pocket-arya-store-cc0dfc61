@@ -23,12 +23,14 @@ export function PopularRow() {
   if (loading) {
     return (
       <section className="mt-3 mb-2 relative z-10">
-        <div className="px-4 flex items-center justify-between mb-2">
-          <h2 className="text-xl font-black tracking-tight text-foreground" style={{ 
-            fontFamily: "'Outfit', sans-serif"
-          }}>
-            Popular on AP
-          </h2>
+        <div className="px-4 flex items-center justify-between mb-3">
+          {theme === "cream" ? (
+            <h2 className="font-display font-extrabold text-[19px] tracking-tight uppercase text-black">
+              Popular on AP
+            </h2>
+          ) : (
+            <h2 className="text-[17px] font-bold tracking-tight text-foreground">Popular on AP</h2>
+          )}
         </div>
         <div className="flex gap-3 overflow-x-hidden pb-6 px-4">
           {[1, 2, 3, 4].map(i => (
@@ -50,12 +52,14 @@ export function PopularRow() {
 
   return (
     <section className="mt-3 mb-2 relative z-10">
-      <div className="px-4 flex items-center justify-between mb-2">
-        <h2 className="text-xl font-black tracking-tight text-foreground" style={{ 
-          fontFamily: "'Outfit', sans-serif"
-        }}>
-          Popular on AP
-        </h2>
+      <div className="px-4 flex items-center justify-between mb-3">
+        {theme === "cream" ? (
+          <h2 className="font-display font-extrabold text-[19px] tracking-tight uppercase text-black">
+            Popular on AP
+          </h2>
+        ) : (
+          <h2 className="text-[17px] font-bold tracking-tight text-foreground">Popular on AP</h2>
+        )}
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-3 px-4 snap-x hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>

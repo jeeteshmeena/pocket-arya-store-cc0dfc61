@@ -45,7 +45,7 @@ export function DetailView({ storyId }: { storyId: string }) {
   const filesLabel = fileCount != null ? `${fileCount} files` : null;
 
   return (
-    <div className="animate-fade-in pb-28">
+    <div className={cn("animate-fade-in pb-36", useApp().theme === "cream" && "bg-background min-h-full")}>
       {/* Hero */}
       <div className={cn("relative", useApp().theme === "cream" ? "px-4 pt-4" : "h-64")}>
         {useApp().theme === "cream" ? (
@@ -156,6 +156,9 @@ export function DetailView({ storyId }: { storyId: string }) {
                   {story.episodes && story.episodes !== "?" && (
                     <span className="text-[11px] font-semibold text-muted-foreground">{story.episodes} eps</span>
                   )}
+                  {story.fileCount != null && (
+                    <span className="text-[11px] font-semibold text-muted-foreground">{story.fileCount} files</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -230,10 +233,12 @@ export function DetailView({ storyId }: { storyId: string }) {
 
       {/* Sticky bottom bar */}
       <div className={cn(
-        "fixed bottom-0 inset-x-0 z-30 pb-[env(safe-area-inset-bottom)]",
-        useApp().theme === "cream" ? "bg-background pb-4 pt-2" : "bg-background border-t border-border"
+        "fixed bottom-0 inset-x-0 z-30",
+        useApp().theme === "cream" 
+          ? "bg-background pt-3 pb-[calc(env(safe-area-inset-bottom)+16px)]" 
+          : "bg-background border-t border-border pb-[calc(env(safe-area-inset-bottom)+12px)] pt-2"
       )}>
-        <div className="mx-auto max-w-2xl px-4 py-3 flex items-center gap-3">
+        <div className="mx-auto max-w-2xl px-4 flex items-center gap-3">
           {useApp().theme === "cream" ? (
             <>
               {/* Neo-brutalist buttons */}

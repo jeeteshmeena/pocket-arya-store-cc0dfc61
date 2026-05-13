@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp, Home, Grid, MessageSquare, Clock, Settings as SettingsIcon, Link2, Calendar, Share2, Download, Search, ShoppingBag, Bot, Library, ShieldAlert } from "lucide-react";
+import { ChevronLeft, ChevronDown, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp, Home, Grid, MessageSquare, Clock, Settings as SettingsIcon, Link2, Calendar, Share2, Download, Search, ShoppingBag, Bot, Library, ShieldAlert } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -689,7 +689,7 @@ export function AdminView() {
                         <div className="space-y-3">
                           {buyers.filter(b => b.status === "pending" || b.status === "processing").map((buyer, i) => (
                             <div key={`pending-${i}`} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center gap-3 active:scale-[0.99] transition">
-                              <div className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
+                              <div className="h-11 w-11 rounded-xl bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
                                 {buyer.photo_url
                                   ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
                                   : <span className="text-gray-600">{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
@@ -720,7 +720,7 @@ export function AdminView() {
                         <div className="space-y-3">
                           {buyers.filter(b => b.status === "paid" || b.status === "completed" || b.status === "approved").map((buyer, i) => (
                             <div key={`completed-${i}`} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center gap-3 active:scale-[0.99] transition">
-                              <div className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
+                              <div className="h-11 w-11 rounded-xl bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
                                 {buyer.photo_url
                                   ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
                                   : <span className="text-gray-600">{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
