@@ -32,11 +32,12 @@ export function AdminView() {
   const [imageUploading, setImageUploading] = useState(false);
   const [translating, setTranslating] = useState<string | null>(null);
 
-  // Manual Purchase State
+  // Manual Purchase & Sub-Page State
   const [isManualFormOpen, setIsManualFormOpen] = useState(false);
   const [manualForm, setManualForm] = useState({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 });
   const [manualSaving, setManualSaving] = useState(false);
   const [moreSubTab, setMoreSubTab] = useState<"buyers" | "support">("buyers");
+  const [selectedBuyer, setSelectedBuyer] = useState<any>(null);
 
   useEffect(() => {
     if (!tgUser?.telegram_id) {
@@ -247,25 +248,34 @@ export function AdminView() {
     );
   }
 
+  // Sub-page router: buyer detail or manual grant
+  if (selectedBuyer) {
+    return <BuyerDetailPage buyer={selectedBuyer} stories={stories} onBack={() => setSelectedBuyer(null)} />;
+  }
+  if (isManualFormOpen) {
+    return (
+      <ManualGrantPage
+        stories={stories}
+        manualForm={manualForm}
+        setManualForm={setManualForm}
+        manualSaving={manualSaving}
+        onSubmit={handleManualPurchase}
+        onBack={() => setIsManualFormOpen(false)}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-full bg-white text-black font-sans pb-24">
-      {/* Top App Bar - Exact SliceURL match */}
+      {/* Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={back} className="p-1.5 hover:bg-gray-50 rounded-full transition"><ChevronLeft className="h-5 w-5" /></button>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100">
-            <Link2 className="h-4 w-4 text-gray-500" />
-            <span className="text-xs font-bold truncate max-w-[100px]">Arya Admin</span>
-          </div>
+          <span className="text-base font-black tracking-tight">Arya Admin</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition cursor-pointer">
-            <Calendar className="h-3.5 w-3.5 text-gray-500" />
-            <span className="text-xs font-bold">30d</span>
-          </div>
-          <Share2 className="h-4 w-4 text-gray-600 hover:text-black transition cursor-pointer" />
-          <Download className="h-4 w-4 text-gray-600 hover:text-black transition cursor-pointer" />
-        </div>
+        <button onClick={loadData} className="p-2 rounded-full hover:bg-gray-50 transition">
+          <RefreshCw className="h-4 w-4 text-gray-500" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -279,78 +289,77 @@ export function AdminView() {
             {activeTab === "dashboard" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 p-4">
                 
-                {/* Total Revenue Card - Dark Theme */}
+                {/* Revenue Card */}
                 <div className="bg-[#1a1a1a] text-white p-6 rounded-[28px] shadow-xl relative overflow-hidden">
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
                   <div className="flex justify-between items-start mb-2 relative z-10">
                     <span className="text-sm text-gray-400 font-medium">Total Revenue</span>
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> +12.5%
-                    </span>
+                    <span className="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-lg">All Time</span>
                   </div>
-                  <div className="text-4xl font-black tracking-tight mb-6 relative z-10">₹{stats?.total_revenue?.toLocaleString() || 0}</div>
-                  <div className="grid grid-cols-2 gap-4 relative z-10">
-                    <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-md">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Sales</div>
-                      <div className="font-bold">₹{buyers?.reduce((s:number,b:any)=>s+(b.amount||0),0).toLocaleString() || 0}</div>
+                  <div className="text-4xl font-black tracking-tight mb-5 relative z-10">₹{(stats?.total_revenue || 0).toLocaleString()}</div>
+                  <div className="grid grid-cols-2 gap-3 relative z-10">
+                    <div className="bg-white/10 rounded-2xl p-3">
+                      <div className="text-[10px] text-gray-400 mb-1">🤖 Bot Revenue</div>
+                      <div className="font-bold text-sm">₹{(stats?.bot_revenue || 0).toLocaleString()}</div>
                     </div>
-                    <div className="bg-white/10 rounded-2xl p-3 backdrop-blur-md">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>Stories</div>
-                      <div className="font-bold">{stats?.total_stories || 0} Total</div>
+                    <div className="bg-white/10 rounded-2xl p-3">
+                      <div className="text-[10px] text-gray-400 mb-1">📱 Mini App</div>
+                      <div className="font-bold text-sm">₹{(stats?.miniapp_revenue || 0).toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
 
-                {/* KPI Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <div className="h-10 w-10 rounded-full bg-[#f3f4f6] flex items-center justify-center mb-4 text-[#111827]">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-black">{stats?.total_users?.toLocaleString() || 0}</div>
-                      <div className="text-xs text-gray-500 font-medium mt-1">Total Users</div>
-                      <div className="text-[10px] text-emerald-500 font-bold mt-2 flex items-center gap-1"><TrendingUp className="w-3 h-3"/> Active Now</div>
-                    </div>
+                {/* KPI Cards — Bot vs Mini App Users */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
+                    <div className="text-2xl mb-1">🤖</div>
+                    <div className="text-2xl font-black">{(stats?.bot_users || 0).toLocaleString()}</div>
+                    <div className="text-xs text-gray-500 font-medium mt-0.5">Bot Users</div>
+                    <div className="text-[10px] text-blue-500 font-bold mt-2">Telegram Bot</div>
                   </div>
-                  <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <div className="h-10 w-10 rounded-full bg-[#f3f4f6] flex items-center justify-center mb-4 text-[#111827]">
-                      <Banknote className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-black">{stats?.recent_orders?.length || 0}</div>
-                      <div className="text-xs text-gray-500 font-medium mt-1">New Orders</div>
-                      <div className="text-[10px] text-rose-500 font-bold mt-2 flex items-center gap-1"><Activity className="w-3 h-3"/> Pending: {storyRequests?.length||0}</div>
-                    </div>
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
+                    <div className="text-2xl mb-1">📱</div>
+                    <div className="text-2xl font-black">{(stats?.miniapp_users || 0).toLocaleString()}</div>
+                    <div className="text-xs text-gray-500 font-medium mt-0.5">Mini App Users</div>
+                    <div className="text-[10px] text-emerald-500 font-bold mt-2">Web Store</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
+                    <div className="text-2xl font-black">{stats?.total_stories || 0}</div>
+                    <div className="text-xs text-gray-500 font-medium mt-0.5">Stories</div>
+                    <div className="text-[10px] text-purple-500 font-bold mt-2">Available</div>
+                  </div>
+                  <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100">
+                    <div className="text-2xl font-black">{buyers?.length || 0}</div>
+                    <div className="text-xs text-gray-500 font-medium mt-0.5">Total Orders</div>
+                    <div className="text-[10px] text-rose-500 font-bold mt-2">Requests: {storyRequests?.length || 0}</div>
                   </div>
                 </div>
 
-                {/* Overview Chart */}
-                <div className="bg-white p-5 rounded-[28px] shadow-sm border border-gray-100">
-                  <div className="flex justify-between items-center mb-6">
+                {/* Overview — Real Data from Recent Orders */}
+                <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-center mb-4">
                     <div>
-                      <h2 className="font-bold text-lg">Overview</h2>
-                      <p className="text-xs text-gray-500">Weekly Performance</p>
+                      <h2 className="font-bold text-base">Recent Activity</h2>
+                      <p className="text-[11px] text-gray-400">Last {stats?.recent_orders?.length || 0} orders</p>
                     </div>
-                    <button className="p-2 rounded-full bg-[#f3f4f6] text-gray-600"><Monitor className="w-4 h-4" /></button>
+                    <button onClick={()=>setActiveTab("analytics")} className="text-[11px] font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg">Analytics →</button>
                   </div>
-                  <div className="h-32 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[
-                        { day: "Mon", val: 2400 }, { day: "Tue", val: 1398 }, { day: "Wed", val: 9800 },
-                        { day: "Thu", val: 3908 }, { day: "Fri", val: 4800 }, { day: "Sat", val: 3800 }, { day: "Sun", val: 4300 }
-                      ]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                        <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} dy={10} />
-                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                        <Bar dataKey="val" radius={[6, 6, 6, 6]}>
-                          {[...Array(7)].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === 2 ? '#111827' : '#e5e7eb'} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between text-xs text-gray-400 font-bold px-1">
+                      <span>Bot Orders</span>
+                      <span>{stats?.recent_orders?.filter((o:any)=>o.source==='bot'||o.source==='manual_admin').length || 0}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{width:`${Math.min(100,((stats?.recent_orders?.filter((o:any)=>o.source==='bot'||o.source==='manual_admin').length||0)/Math.max(1,stats?.recent_orders?.length||1))*100)}%`}} />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 font-bold px-1">
+                      <span>Mini App Orders</span>
+                      <span>{stats?.recent_orders?.filter((o:any)=>o.source!=='bot'&&o.source!=='manual_admin').length || 0}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{width:`${Math.min(100,((stats?.recent_orders?.filter((o:any)=>o.source!=='bot'&&o.source!=='manual_admin').length||0)/Math.max(1,stats?.recent_orders?.length||1))*100)}%`}} />
+                    </div>
                   </div>
-                  <button onClick={()=>setActiveTab("analytics")} className="w-full mt-4 py-3 bg-[#111827] text-white rounded-xl text-sm font-bold">View Full Report</button>
                 </div>
 
                 {/* Recent Projects / Orders */}
@@ -601,49 +610,32 @@ export function AdminView() {
                   <button onClick={() => setMoreSubTab("support")} className={cn("flex-1 py-2 text-xs font-bold rounded-xl transition", moreSubTab === "support" ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:text-black")}>Support {supportTickets.length > 0 && <span className="ml-1 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">{supportTickets.length}</span>}</button>
                 </div>
 
-                {moreSubTab === "buyers" && (
+                 {moreSubTab === "buyers" && (
                   <div className="space-y-4 p-4">
                     <div className="flex justify-between items-center mb-2">
                       <h2 className="font-bold text-xl text-black">Orders & Buyers</h2>
-                      <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold transition">
+                      <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold">
                         <Plus className="h-3.5 w-3.5" /> Manual Add
                       </button>
                     </div>
                     {buyers.length === 0 && <div className="text-center p-10 text-gray-400">No buyers yet</div>}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {buyers.map((buyer, i) => (
-                        <div key={i} className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex gap-3 items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
-                                {buyer.photo_url ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" /> : <span>{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>}
-                              </div>
-                              <div>
-                                <div className="font-bold text-sm text-gray-900">{buyer.first_name || buyer.username || "Unknown"}</div>
-                                <div className="text-[10px] text-gray-500 font-mono">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
-                                <div className="text-[10px] text-gray-400 mt-0.5 capitalize">{buyer.source || "app"}</div>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0 pl-2">
-                              <div className="font-black text-gray-900">₹{(buyer.amount || 0).toLocaleString()}</div>
-                              <span className={cn("text-[9px] px-2 py-0.5 rounded-full uppercase mt-1 inline-block font-black tracking-wider", buyer.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600")}>{buyer.status}</span>
-                            </div>
+                        <div key={i} onClick={() => setSelectedBuyer(buyer)} className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition">
+                          <div className="h-11 w-11 rounded-full bg-gray-50 flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-100 shrink-0">
+                            {buyer.photo_url
+                              ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+                              : <span className="text-gray-600">{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
+                            }
                           </div>
-                          {buyer.payments && buyer.payments.length > 0 && (
-                            <div className="bg-gray-50 rounded-2xl p-3 mb-3 border border-gray-100">
-                              {buyer.payments.map((p: any, j: number) => (
-                                <div key={j} className="flex justify-between items-center text-xs py-2 border-b border-gray-100 last:border-0">
-                                  <div className="flex-1 pr-2">
-                                    <span className="font-semibold text-gray-800 line-clamp-1">{p.story_name}</span>
-                                    <div className="text-[10px] text-gray-400 mt-0.5">{p.method} • {p.status}</div>
-                                  </div>
-                                  <div className="text-right font-bold text-gray-900 whitespace-nowrap">₹{p.amount}</div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          <div className="flex gap-2">
-                            <button className="flex-1 py-2 bg-gray-50 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100 transition border border-gray-100">View Full History</button>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-sm text-gray-900 truncate">{buyer.first_name || buyer.username || "Unknown"}</div>
+                            <div className="text-[10px] text-gray-500">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">{buyer.payments?.length || 0} purchase{(buyer.payments?.length||0)!==1?'s':''} • {buyer.source === 'bot' ? '🤖 Bot' : '📱 Mini App'}</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="font-black text-gray-900 text-sm">₹{(buyer.amount||0).toLocaleString()}</div>
+                            <span className={cn("text-[9px] px-2 py-0.5 rounded-full uppercase mt-1 inline-block font-bold", buyer.status==="paid"?"bg-emerald-100 text-emerald-700":"bg-gray-100 text-gray-500")}>{buyer.status}</span>
                           </div>
                         </div>
                       ))}
@@ -669,53 +661,7 @@ export function AdminView() {
       </div>
 
       
-      {/* Forms Modal Renderings */}
-      {isManualFormOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] p-6 bg-white shadow-2xl relative">
-            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white py-2 z-10 border-b border-gray-100">
-              <h2 className="text-xl font-black">Manual Add Order</h2>
-              <button onClick={() => setIsManualFormOpen(false)} className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><X className="h-5 w-5" /></button>
-            </div>
-            <form onSubmit={handleManualPurchase} className="space-y-5">
-              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
-                <h3 className="font-black text-sm uppercase tracking-wider">User Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">User ID / TG ID</label>
-                    <input required type="text" value={manualForm.user_id} onChange={e => setManualForm({...manualForm, user_id: e.target.value})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Username</label>
-                    <input type="text" value={manualForm.username} onChange={e => setManualForm({...manualForm, username: e.target.value})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">First Name</label>
-                  <input required type="text" value={manualForm.first_name} onChange={e => setManualForm({...manualForm, first_name: e.target.value})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                </div>
-              </div>
-              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
-                <h3 className="font-black text-sm uppercase tracking-wider">Order Details</h3>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Select Story</label>
-                  <select required value={manualForm.story_id} onChange={e => setManualForm({...manualForm, story_id: e.target.value, amount: stories.find(s=>s.story_id===e.target.value)?.price || 0})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium bg-white">
-                    <option value="">-- Choose Story --</option>
-                    {stories.map(s => <option key={s.story_id} value={s.story_id}>{s.story_name_en}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Amount Paid (₹)</label>
-                  <input required type="number" value={manualForm.amount} onChange={e => setManualForm({...manualForm, amount: Number(e.target.value)})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                </div>
-              </div>
-              <button disabled={manualSaving} type="submit" className="w-full py-4 font-black text-lg rounded-[20px] bg-black text-white shadow-xl hover:bg-gray-900 active:scale-[0.98] transition">
-                {manualSaving ? "Adding..." : "Add to User Account"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+
 
       {/* Forms Modal Renderings */}
       {isFormOpen && editingStory && (
@@ -1033,6 +979,145 @@ function StoryRequestCard({ req, onUpdate }: any) {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Buyer Detail Sub-Page ───────────────────────────────────────────────────
+function BuyerDetailPage({ buyer, stories, onBack }: any) {
+  const story = (name: string) => stories.find((s: any) => s.story_name_en === name || s.story_id === name);
+  const joinedDate = buyer.joined_at ? new Date(buyer.joined_at).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : "Unknown";
+  const firstOrderDate = buyer.payments?.[0]?.created_at ? new Date(buyer.payments[0].created_at).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : null;
+  return (
+    <div className="flex flex-col min-h-full bg-[#f9f9f9] text-black font-sans pb-10">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+        <button onClick={onBack} className="p-1.5 hover:bg-gray-50 rounded-full"><ChevronLeft className="h-5 w-5" /></button>
+        <span className="font-black text-base">Buyer Details</span>
+      </div>
+
+      {/* User Profile Card */}
+      <div className="bg-white m-4 rounded-[24px] p-5 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center font-bold text-2xl overflow-hidden border-2 border-gray-200 shrink-0">
+            {buyer.photo_url
+              ? <img src={buyer.photo_url} className="w-full h-full object-cover" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              : <span>{(buyer.first_name || buyer.username || "U")[0].toUpperCase()}</span>
+            }
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-black text-lg truncate">{buyer.first_name || "Unknown"}</div>
+            <div className="text-sm text-gray-500">@{buyer.username || "no username"}</div>
+            <div className="text-xs text-gray-400 font-mono mt-0.5">TG ID: {buyer.user_id}</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-50 rounded-[16px] p-3">
+            <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Source</div>
+            <div className="font-bold text-sm">{buyer.source === 'bot' ? '🤖 Telegram Bot' : buyer.source === 'manual_admin' ? '🛠️ Manual' : '📱 Mini App'}</div>
+          </div>
+          <div className="bg-gray-50 rounded-[16px] p-3">
+            <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Total Spent</div>
+            <div className="font-black text-sm text-emerald-600">₹{(buyer.amount || 0).toLocaleString()}</div>
+          </div>
+          <div className="bg-gray-50 rounded-[16px] p-3">
+            <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Status</div>
+            <div className={`font-bold text-sm capitalize ${buyer.status === 'paid' ? 'text-emerald-600' : 'text-gray-600'}`}>{buyer.status || "unknown"}</div>
+          </div>
+          <div className="bg-gray-50 rounded-[16px] p-3">
+            <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">First Order</div>
+            <div className="font-bold text-xs">{firstOrderDate || "N/A"}</div>
+          </div>
+        </div>
+        {buyer.joined_at && (
+          <div className="mt-3 text-[11px] text-gray-400 text-center">Member since {joinedDate}</div>
+        )}
+      </div>
+
+      {/* Purchase History */}
+      <div className="px-4">
+        <h3 className="font-black text-base mb-3">Purchase History ({buyer.payments?.length || 0})</h3>
+        {!buyer.payments?.length && (
+          <div className="text-center p-10 text-gray-400 bg-white rounded-[20px] border border-gray-100">No purchases yet</div>
+        )}
+        <div className="space-y-3">
+          {buyer.payments?.map((p: any, i: number) => {
+            const s = story(p.story_name);
+            return (
+              <div key={i} className="bg-white rounded-[20px] p-4 shadow-sm border border-gray-100">
+                <div className="flex gap-3 items-start">
+                  {s?.poster_url && (
+                    <img src={s.poster_url} className="w-14 h-14 rounded-[12px] object-cover shrink-0" alt="" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-sm truncate">{p.story_name || "Unknown Story"}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{p.platform || s?.platform || ""}</div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full font-bold capitalize">{p.method || "unknown"}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold capitalize ${p.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-black text-sm">₹{p.amount || 0}</div>
+                    {p.created_at && <div className="text-[10px] text-gray-400 mt-1">{new Date(p.created_at).toLocaleDateString("en-IN")}</div>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Manual Grant Sub-Page ───────────────────────────────────────────────────
+function ManualGrantPage({ stories, manualForm, setManualForm, manualSaving, onSubmit, onBack }: any) {
+  return (
+    <div className="flex flex-col min-h-full bg-[#f9f9f9] text-black font-sans pb-10">
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+        <button onClick={onBack} className="p-1.5 hover:bg-gray-50 rounded-full"><ChevronLeft className="h-5 w-5" /></button>
+        <span className="font-black text-base">Manual Grant Access</span>
+      </div>
+      <form onSubmit={onSubmit} className="p-4 space-y-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-[16px] p-4 text-xs text-amber-700 font-medium">
+          ⚠️ Use this to grant story access to a user whose payment was confirmed but delivery failed.
+        </div>
+        <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 space-y-4">
+          <h3 className="font-black text-sm uppercase tracking-wider text-gray-500">User Details</h3>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 block">Telegram User ID *</label>
+            <input required type="text" value={manualForm.user_id} onChange={e => setManualForm({...manualForm, user_id: e.target.value})} placeholder="e.g. 123456789" className="w-full p-3.5 rounded-[14px] text-sm outline-none border border-gray-200 focus:border-black font-medium" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 block">First Name *</label>
+              <input required type="text" value={manualForm.first_name} onChange={e => setManualForm({...manualForm, first_name: e.target.value})} placeholder="User name" className="w-full p-3.5 rounded-[14px] text-sm outline-none border border-gray-200 focus:border-black font-medium" />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 block">Username</label>
+              <input type="text" value={manualForm.username} onChange={e => setManualForm({...manualForm, username: e.target.value})} placeholder="@username" className="w-full p-3.5 rounded-[14px] text-sm outline-none border border-gray-200 focus:border-black font-medium" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 space-y-4">
+          <h3 className="font-black text-sm uppercase tracking-wider text-gray-500">Story Details</h3>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 block">Select Story *</label>
+            <select required value={manualForm.story_id} onChange={e => setManualForm({...manualForm, story_id: e.target.value, amount: stories.find((s:any) => s.story_id === e.target.value)?.price || 0})} className="w-full p-3.5 rounded-[14px] text-sm outline-none border border-gray-200 focus:border-black font-medium bg-white">
+              <option value="">-- Choose Story --</option>
+              {stories.map((s:any) => <option key={s.story_id} value={s.story_id}>{s.story_name_en}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1.5 block">Amount Paid (₹) *</label>
+            <input required type="number" min="0" value={manualForm.amount} onChange={e => setManualForm({...manualForm, amount: Number(e.target.value)})} className="w-full p-3.5 rounded-[14px] text-sm outline-none border border-gray-200 focus:border-black font-medium" />
+          </div>
+        </div>
+        <button disabled={manualSaving} type="submit" className="w-full py-4 font-black text-base rounded-[20px] bg-black text-white shadow-xl hover:bg-gray-900 active:scale-[0.98] transition disabled:opacity-60">
+          {manualSaving ? "Granting Access..." : "✅ Grant Story Access"}
+        </button>
+      </form>
     </div>
   );
 }
