@@ -100,6 +100,8 @@ function readTelegramIdentity(): TelegramIdentity {
     return {
       telegram_id: typeof u.id === "number" ? u.id : null,
       username: typeof u.username === "string" ? u.username : null,
+      first_name: typeof u.first_name === "string" ? u.first_name.trim() : null,
+      last_name: typeof u.last_name === "string" ? u.last_name.trim() : null,
     };
   } catch {
     return { telegram_id: null, username: null };

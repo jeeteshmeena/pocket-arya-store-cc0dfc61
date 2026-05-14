@@ -7,6 +7,8 @@ export const BOT_USERNAME = "UseAryaBot";
 export type TelegramIdentity = {
   telegram_id: number | null;
   username: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 };
 
 export type CheckoutResponse = {
@@ -447,4 +449,27 @@ export async function manualAdminPurchase(identity: any, payload: any): Promise<
   const data = await res.json();
   if (!data.success) throw new Error(data.detail || "Failed manual purchase");
   return data;
+}
+
+export async function fetchAdminSettings(identity: TelegramIdentity): Promise<{ mini_app_enabled: boolean; tnc_enabled: boolean }> {
+  const res = await request<any>(`/admin/settings?telegram_id=${identity.telegram_id}`, { method: "GET" });
+  return res.data ?? { mini_app_enabled: true, tnc_enabled: true };
+}
+
+export async function updateAdminSetting(identity: TelegramIdentity, key: "mini_app_enabled" | "tnc_enabled", value: boolean): Promise<void> {
+  await request<any>("/admin/settings", {
+    method: "POST",
+    body: JSON.stringify({ telegram_id: String(identity.telegram_id), [key]: value }),
+  });
+}
+
+export async function fetchPublicSettings(): Promise<{ mini_app_enabled: boolean; tnc_enabled: boolean }> {
+  try {
+    const res = await fetch(`${BASE_URL}/settings`);
+    if (!res.ok) return { mini_app_enabled: true, tnc_enabled: true };
+    const data = await res.json();
+    return { mini_app_enabled: data.mini_app_enabled ?? true, tnc_enabled: data.tnc_enabled ?? true };
+  } catch {
+    return { mini_app_enabled: true, tnc_enabled: true };
+  }
 }

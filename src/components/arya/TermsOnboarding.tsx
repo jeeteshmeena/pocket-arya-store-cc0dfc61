@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { TERMS_ITEMS } from "./legal-content";
 import { useApp } from "@/store/app-store";
+import { fetchPublicSettings } from "@/lib/api";
 
 const STORAGE_KEY = "arya_tc_accepted";
 
@@ -10,18 +11,44 @@ export function TermsOnboarding() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      const accepted = localStorage.getItem(STORAGE_KEY) === "1";
-      if (!accepted) {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (typeof window === "undefined") return;
+        // Check local cache first — if already accepted, skip API call
+        const accepted = localStorage.getItem(STORAGE_KEY) === "1";
+        if (accepted) return;
+
+        // Fetch server-side T&C toggle
+        const settings = await fetchPublicSettings();
+        if (cancelled) return;
+
+        if (!settings.tnc_enabled) {
+          // T&C disabled by admin — auto-accept silently
+          try { localStorage.setItem(STORAGE_KEY, "1"); } catch {}
+          return;
+        }
+
+        // T&C enabled and not yet accepted — show modal
         setOpen(true);
-        // Small delay so slide-up animation runs after mount
-        setTimeout(() => setVisible(true), 10);
+        setTimeout(() => { if (!cancelled) setVisible(true); }, 10);
+      } catch {
+        // On error, fallback: check localStorage
+        try {
+          const accepted = localStorage.getItem(STORAGE_KEY) === "1";
+          if (!accepted && !cancelled) {
+            setOpen(true);
+            setTimeout(() => { if (!cancelled) setVisible(true); }, 10);
+          }
+        } catch {
+          if (!cancelled) {
+            setOpen(true);
+            setTimeout(() => { if (!cancelled) setVisible(true); }, 10);
+          }
+        }
       }
-    } catch {
-      setOpen(true);
-      setTimeout(() => setVisible(true), 10);
-    }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const accept = () => {

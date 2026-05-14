@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronDown, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp, Home, Grid, MessageSquare, Clock, Settings as SettingsIcon, Link2, Calendar, Share2, Download, Search, ShoppingBag, Bot, Library, ShieldAlert } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase, fetchAdminSettings, updateAdminSetting } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie } from "recharts";
 
 export function AdminView() {
   const { back, tgUser } = useApp();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "analytics" | "store" | "buyers" | "support">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "analytics" | "store" | "buyers" | "support" | "settings">("dashboard");
   const [storeSubTab, setStoreSubTab] = useState<"stories" | "banners" | "requests">("stories");
 
   const [stats, setStats] = useState<any>(null);
@@ -22,6 +22,8 @@ export function AdminView() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [adminSettings, setAdminSettings] = useState<{ mini_app_enabled: boolean; tnc_enabled: boolean }>({ mini_app_enabled: true, tnc_enabled: true });
+  const [settingsSaving, setSettingsSaving] = useState<string | null>(null);
 
   // Forms State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -82,6 +84,8 @@ export function AdminView() {
       setSupportTickets(supportData);
       setAnalytics(analyticsData);
       setStoryRequests(requestsData);
+      // Load admin feature settings (non-blocking)
+      fetchAdminSettings(tgUser).then(s => setAdminSettings(s)).catch(() => {});
       setError(null);
     } catch (err: any) {
       setError(err.message || "Failed to load admin data.");
@@ -383,7 +387,10 @@ export function AdminView() {
                             {(o.first_name || o.username || "U")[0]?.toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-bold text-sm">{o.first_name || o.username || "User"}</div>
+                            <a
+                              href={o.user_id ? `tg://user?id=${o.user_id}` : undefined}
+                              className="font-bold text-sm text-gray-900 hover:underline"
+                            >{o.first_name || o.username || "User"}</a>
                             <div className="text-[10px] text-gray-500">{o.story_names?.[0] || o.username || `Order #${(o.order_id || "").slice(-6)}`}</div>
                           </div>
                         </div>
@@ -696,7 +703,7 @@ export function AdminView() {
                                 }
                               </div>
                               <div className="flex-1 min-w-0" onClick={() => setSelectedBuyer(buyer)}>
-                                <div className="font-bold text-sm text-gray-900 truncate">{buyer.first_name || buyer.username || "Unknown"}</div>
+                                <a href={`tg://user?id=${buyer.user_id}`} className="font-bold text-sm text-gray-900 truncate hover:underline block">{buyer.first_name || buyer.username || "Unknown"}</a>
                                 <div className="text-[10px] text-gray-500">@{buyer.username || "none"} • ID: {buyer.user_id}</div>
                                 <div className="text-[10px] text-gray-400 mt-0.5">{buyer.payments?.length || 0} purchase{(buyer.payments?.length||0)!==1?'s':''} • {buyer.source === 'bot' ? 'Bot' : 'Mini App'}</div>
                               </div>
@@ -896,12 +903,105 @@ export function AdminView() {
         </div>
       )}
 
+      {/* ── Admin Settings Tab ── */}
+      {activeTab === "settings" && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 p-4 space-y-5">
+          <div>
+            <h2 className="font-black text-xl mb-1">⚙️ Ecosystem Settings</h2>
+            <p className="text-xs text-gray-500">Configure global bot and mini app behaviour. Changes take effect immediately.</p>
+          </div>
+
+          {/* Mini App Deep Links Toggle */}
+          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 pr-4">
+                <div className="font-bold text-base flex items-center gap-2">📱 Mini App Deep Links</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  When <b>ON</b>, story buy links open in the Mini App (Web Store).<br />
+                  When <b>OFF</b>, links open directly in the Telegram Bot (old behavior).
+                </p>
+              </div>
+              <button
+                disabled={settingsSaving === "mini_app_enabled"}
+                onClick={async () => {
+                  if (!tgUser) return;
+                  const newVal = !adminSettings.mini_app_enabled;
+                  setSettingsSaving("mini_app_enabled");
+                  try {
+                    await updateAdminSetting(tgUser, "mini_app_enabled", newVal);
+                    setAdminSettings(s => ({ ...s, mini_app_enabled: newVal }));
+                  } catch (e: any) { alert("Failed: " + e.message); }
+                  finally { setSettingsSaving(null); }
+                }}
+                className={cn(
+                  "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
+                  adminSettings.mini_app_enabled ? "bg-black" : "bg-gray-300",
+                  settingsSaving === "mini_app_enabled" && "opacity-60 cursor-not-allowed"
+                )}
+              >
+                <span className={cn(
+                  "pointer-events-none inline-block h-6 w-6 translate-y-[-1px] rounded-full bg-white shadow-lg transform transition duration-200 ease-in-out mt-[1px] ml-[1px]",
+                  adminSettings.mini_app_enabled ? "translate-x-6" : "translate-x-0"
+                )} />
+              </button>
+            </div>
+            <div className={cn("mt-3 text-xs font-bold px-3 py-1.5 rounded-full inline-block", adminSettings.mini_app_enabled ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600")}>
+              {adminSettings.mini_app_enabled ? "✅ Mini App Links: ON" : "❌ Mini App Links: OFF (Bot only)"}
+            </div>
+          </div>
+
+          {/* T&C Toggle */}
+          <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 pr-4">
+                <div className="font-bold text-base flex items-center gap-2">📜 T&amp;C Requirement</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  When <b>ON</b>, users must accept Terms &amp; Conditions before purchasing.<br />
+                  When <b>OFF</b>, T&amp;C is auto-accepted silently (no modal shown).
+                </p>
+              </div>
+              <button
+                disabled={settingsSaving === "tnc_enabled"}
+                onClick={async () => {
+                  if (!tgUser) return;
+                  const newVal = !adminSettings.tnc_enabled;
+                  setSettingsSaving("tnc_enabled");
+                  try {
+                    await updateAdminSetting(tgUser, "tnc_enabled", newVal);
+                    setAdminSettings(s => ({ ...s, tnc_enabled: newVal }));
+                  } catch (e: any) { alert("Failed: " + e.message); }
+                  finally { setSettingsSaving(null); }
+                }}
+                className={cn(
+                  "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
+                  adminSettings.tnc_enabled ? "bg-black" : "bg-gray-300",
+                  settingsSaving === "tnc_enabled" && "opacity-60 cursor-not-allowed"
+                )}
+              >
+                <span className={cn(
+                  "pointer-events-none inline-block h-6 w-6 translate-y-[-1px] rounded-full bg-white shadow-lg transform transition duration-200 ease-in-out mt-[1px] ml-[1px]",
+                  adminSettings.tnc_enabled ? "translate-x-6" : "translate-x-0"
+                )} />
+              </button>
+            </div>
+            <div className={cn("mt-3 text-xs font-bold px-3 py-1.5 rounded-full inline-block", adminSettings.tnc_enabled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")}>
+              {adminSettings.tnc_enabled ? "✅ T&C Prompt: ON" : "⚠️ T&C: OFF (Auto-accepted)"}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-[16px] p-4 text-xs text-blue-700 font-medium">
+            💡 Changes are saved to the database and reflected in both the Telegram Bot and Mini App immediately — no restart needed.
+          </div>
+        </div>
+      )}
+
       {/* Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 pb-[max(env(safe-area-inset-bottom),12px)] shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
         <NavBtn active={activeTab === "dashboard"} icon={Home} label="Home" onClick={() => setActiveTab("dashboard")} />
         <NavBtn active={activeTab === "analytics"} icon={Activity} label="Analytics" onClick={() => setActiveTab("analytics")} />
         <NavBtn active={activeTab === "store"} icon={ShoppingBag} label="Store" onClick={() => setActiveTab("store")} />
-        <NavBtn active={activeTab === "buyers" || activeTab === "support"} icon={SettingsIcon} label="More" onClick={() => { setActiveTab("buyers"); setMoreSubTab("buyers"); }} />
+        <NavBtn active={activeTab === "buyers" || activeTab === "support"} icon={Users} label="More" onClick={() => { setActiveTab("buyers"); setMoreSubTab("buyers"); }} />
+        <NavBtn active={activeTab === "settings"} icon={SettingsIcon} label="Settings" onClick={() => setActiveTab("settings")} />
       </div>
     </div>
   );
@@ -1113,7 +1213,10 @@ function BuyerDetailPage({ buyer, stories, onBack }: any) {
             }
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-black text-lg truncate">{buyer.first_name || "Unknown"}</div>
+            <a
+              href={`tg://user?id=${buyer.user_id}`}
+              className="font-black text-lg truncate block hover:underline text-gray-900"
+            >{buyer.first_name || "Unknown"}</a>
             <div className="text-sm text-gray-500">@{buyer.username || "no username"}</div>
             <div className="text-xs text-gray-400 font-mono mt-0.5">TG ID: {buyer.user_id}</div>
           </div>
