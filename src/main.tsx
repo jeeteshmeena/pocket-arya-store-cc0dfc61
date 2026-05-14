@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter, createHashHistory } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { Analytics } from "@vercel/analytics/react";
 import "./styles.css";
 
 const hashHistory = createHashHistory();
@@ -24,5 +25,6 @@ const rootElement = document.getElementById("root")!;
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    <Analytics />
   </React.StrictMode>,
 );
