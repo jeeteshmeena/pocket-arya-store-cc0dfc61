@@ -1021,7 +1021,7 @@ function BuyerDetailPage({ buyer, stories, tgUser, onBack }: any) {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Source</div>
-            <div className="font-bold text-sm">{buyer.source === 'bot' ? '🤖 Telegram Bot' : buyer.source === 'manual_admin' ? '🛠️ Manual' : buyer.source === 'both' ? '🤖 + 📱 Both' : '📱 Mini App'}</div>
+            <div className="font-bold text-sm">{buyer.source === 'bot' ? 'Telegram Bot' : buyer.source === 'manual_admin' ? 'Manual' : buyer.source === 'both' ? 'Bot + Mini App' : 'Mini App'}</div>
           </div>
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Total Spent</div>
