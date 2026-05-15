@@ -1,163 +1,123 @@
-import os
+import re
 
-path = 'src/components/arya/views/AdminView.tsx'
-with open(path, 'r', encoding='utf-8') as f:
+with open('src/components/arya/admin/EnterpriseAnalyticsPanel.tsx', 'r', encoding='utf-8') as f:
     content = f.read()
 
-if 'manualAdminPurchase' not in content:
-    content = content.replace(
-        'import { fetchAdminStories, updateAdminStory, deleteAdminStory, uploadAdminImage, fetchAdminBuyers, fetchAdminSupport, updateAdminSupport, fetchAdminDashboard, fetchLocationAnalytics } from "@/lib/api";',
-        'import { fetchAdminStories, updateAdminStory, deleteAdminStory, uploadAdminImage, fetchAdminBuyers, fetchAdminSupport, updateAdminSupport, fetchAdminDashboard, fetchLocationAnalytics, updateAdminBanner, deleteAdminBanner, updateAdminRequestStatus, manualAdminPurchase } from "@/lib/api";'
-    )
+# ── 1. Remove all blue colours ───────────────────────────────────────────────
+blue_pairs = [
+    # Apply-filters button: was bg-blue-500 text-white hover:bg-blue-600
+    ('bg-blue-500', 'bg-slate-900'),
+    ('hover:bg-blue-600', 'hover:bg-slate-700'),
+    # Any stray blue that may have crept in
+    ('text-blue-500', 'text-slate-900'),
+    ('text-blue-600', 'text-slate-900'),
+    ('border-blue-500', 'border-slate-300'),
+    ('border-blue-600', 'border-slate-300'),
+    ('bg-blue-100', 'bg-slate-100'),
+    ('bg-blue-50', 'bg-slate-50'),
+    ('focus:border-blue-500', 'focus:border-slate-400'),
+    ('focus:ring-blue-500', 'focus:ring-slate-400'),
+    ('ring-blue-500', 'ring-slate-400'),
+    # Ensure Apply button text is white on dark bg
+    ('bg-slate-900" onClick={applyFilters}', 'bg-slate-900" onClick={applyFilters}'),  # no-op guard
+]
+for old, new in blue_pairs:
+    content = content.replace(old, new)
 
-manual_purchase_state = '''  const [isManualFormOpen, setIsManualFormOpen] = useState(false);
-  const [manualForm, setManualForm] = useState({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 });
-  const [manualSaving, setManualSaving] = useState(false);
-
-  const handleManualPurchase = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tgUser) return;
-    setManualSaving(true);
-    try {
-      await manualAdminPurchase(tgUser, manualForm);
-      alert("Manual purchase added successfully!");
-      setIsManualFormOpen(false);
-      fetchAdminBuyers(tgUser).then(d => setBuyers(d));
-      fetchAdminDashboard(tgUser).then(d => setDashData(d));
-    } catch (e: any) {
-      alert("Failed: " + e.message);
-    } finally {
-      setManualSaving(false);
-    }
-  };'''
-
-if 'const [isManualFormOpen' not in content:
-    content = content.replace(
-        'const [dashData, setDashData] = useState<any>(null);',
-        'const [dashData, setDashData] = useState<any>(null);\n' + manual_purchase_state
-    )
-
-store_tabs_code = '''
-                {storeSubTab === "banners" && (
-                  <div className="space-y-4">
-                    <button onClick={() => { setEditingBanner({ id: "new", image_url: "", target_link: "", order: banners.length }); setIsBannerFormOpen(true); }} className="w-full py-4 flex justify-center items-center gap-2 font-black rounded-2xl transition bg-black text-white shadow-md active:scale-95">
-                      <Plus className="h-5 w-5" /> Add Banner
-                    </button>
-                    <div className="space-y-3">
-                      {banners.map(banner => (
-                        <div key={banner.id} className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex gap-4 items-center">
-                          <img src={getOptimizedImage(banner.image_url) || ""} alt="Banner" className="w-24 h-14 object-cover rounded-xl bg-gray-50 shadow-inner" />
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs text-gray-500 truncate">{banner.target_link}</div>
-                            <div className="text-xs font-bold text-black mt-1">Order: {banner.order}</div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingBanner(banner); setIsBannerFormOpen(true); }} className="p-2 rounded-xl bg-gray-50 text-black hover:bg-gray-100"><Edit className="h-4 w-4" /></button>
-                            <button onClick={() => handleDeleteBanner(banner.id)} className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 className="h-4 w-4" /></button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {storeSubTab === "requests" && (
-                  <div className="space-y-4">
-                    {storyRequests.map(req => (
-                      <StoryRequestCard key={req.id} req={req} onUpdate={(id:string, status:string, reply?:string) => {
-                        updateAdminRequestStatus(tgUser, id, status, reply).then(() => setStoryRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))).catch(e => alert("Failed: " + e.message));
-                      }} />
-                    ))}
-                  </div>
-                )}
-'''
-
-content = content.replace(
-    '''                {/* Other Store subtabs could go here, but omitted to save space */}''',
-    store_tabs_code
+# ── 2. Fix the Apply-filters button specifically ─────────────────────────────
+# Make the Apply button: dark bg (slate-900) with white text
+content = re.sub(
+    r'(onClick=\{applyFilters\}\s+className=")([^"]+)(")',
+    lambda m: m.group(1) +
+              'order-1 w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 sm:order-2 sm:w-auto sm:min-w-[120px]' +
+              m.group(3),
+    content
 )
 
-forms_code = '''
-      {/* Forms Modal Renderings */}
-      {isManualFormOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[32px] sm:rounded-[32px] p-6 bg-white shadow-2xl relative">
-            <div className="flex justify-between items-center mb-6 sticky top-0 bg-white py-2 z-10 border-b border-gray-100">
-              <h2 className="text-xl font-black">Manual Add Order</h2>
-              <button onClick={() => setIsManualFormOpen(false)} className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200"><X className="h-5 w-5" /></button>
-            </div>
-            <form onSubmit={handleManualPurchase} className="space-y-5">
-              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
-                <h3 className="font-black text-sm uppercase tracking-wider">User Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">User ID / TG ID</label>
-                    <input required type="text" value={manualForm.user_id} onChange={e => setManualForm({...manualForm, user_id: e.target.value})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Username</label>
-                    <input type="text" value={manualForm.username} onChange={e => setManualForm({...manualForm, username: e.target.value})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">First Name</label>
-                  <input required type="text" value={manualForm.first_name} onChange={e => setManualForm({...manualForm, first_name: e.target.value})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                </div>
-              </div>
-              <div className="space-y-4 p-5 rounded-[24px] bg-gray-50 border border-gray-100">
-                <h3 className="font-black text-sm uppercase tracking-wider">Order Details</h3>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Select Story</label>
-                  <select required value={manualForm.story_id} onChange={e => setManualForm({...manualForm, story_id: e.target.value, amount: stories.find(s=>s.story_id===e.target.value)?.price || 0})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium bg-white">
-                    <option value="">-- Choose Story --</option>
-                    {stories.map(s => <option key={s.story_id} value={s.story_id}>{s.story_name_en}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1 block">Amount Paid (₹)</label>
-                  <input required type="number" value={manualForm.amount} onChange={e => setManualForm({...manualForm, amount: Number(e.target.value)})} className="w-full p-3.5 rounded-xl text-sm outline-none border border-gray-200 focus:border-black font-medium" />
-                </div>
-              </div>
-              <button disabled={manualSaving} type="submit" className="w-full py-4 font-black text-lg rounded-[20px] bg-black text-white shadow-xl hover:bg-gray-900 active:scale-[0.98] transition">
-                {manualSaving ? "Adding..." : "Add to User Account"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-'''
+# ── 3. Fix Refresh button ─────────────────────────────────────────────────────
+content = re.sub(
+    r'(onClick=\{\(\) =&gt; void fetchDashboard\(\)\}\s+disabled=\{bootLoading[^}]+\}\s+className=")([^"]+)(")',
+    lambda m: m.group(1) +
+              'order-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 sm:order-1 sm:w-auto' +
+              m.group(3),
+    content
+)
 
-content = content.replace('{/* Forms Modal Renderings */}', forms_code + '\n      {/* Forms Modal Renderings */}')
+# ── 4. Remove horizontal overflow on charts and heatmap ──────────────────────
+# Make charts respect container width: ResponsiveContainer already does this,
+# but we need to ensure the wrapper doesn't escape.
+content = content.replace(
+    'className="relative min-h-[70vh] bg-[#f8fafc] pb-10 text-slate-900"',
+    'className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-10 text-slate-900"'
+)
 
-story_req_card = '''
-function StoryRequestCard({ req, onUpdate }: any) {
-  const [replyText, setReplyText] = useState("");
-  const STATUS = ["open", "in_progress", "completed", "rejected"];
-  return (
-    <div className="p-5 rounded-[24px] bg-white border border-gray-100 shadow-sm space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <div className="font-bold text-sm">{req.first_name || "Unknown"}</div>
-          <div className="text-[10px] text-gray-400">{new Date(req.created_at).toLocaleDateString()}</div>
-        </div>
-        <span className="text-[10px] px-2 py-1 rounded-md uppercase font-bold bg-gray-100 text-gray-600">{(req.status || "open").replace("_", " ")}</span>
-      </div>
-      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-[16px] font-medium">{req.text}</p>
-      <textarea rows={2} placeholder="Optional reply..." value={replyText} onChange={e => setReplyText(e.target.value)} className="w-full p-3 rounded-[16px] text-sm outline-none resize-none bg-gray-50 focus:bg-white border border-transparent focus:border-gray-200 transition" />
-      <div className="grid grid-cols-2 gap-2">
-        {STATUS.map(s => (
-          <button key={s} onClick={() => { onUpdate(req.id, s, replyText.trim()||undefined); setReplyText(""); }} className={"py-2 text-[10px] font-bold rounded-[12px] uppercase " + (req.status === s ? "bg-[#111827] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200")}>
-            {s.replace("_", " ")}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-'''
-if 'function StoryRequestCard' not in content:
-    content += '\n' + story_req_card
+# Fix outer padding container — no horizontal overflow
+content = content.replace(
+    'className="relative z-10 px-4 sm:px-6 lg:px-10"',
+    'className="relative z-10 w-full max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-10"'
+)
 
-with open(path, 'w', encoding='utf-8') as f:
+# Fix grid that can overflow on narrow screens
+# 2xl:grid-cols-8 is too many cols — cap at 4 on large screens
+content = content.replace(
+    'className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8"',
+    'className="mb-8 grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4"'
+)
+
+# Fix chart containers that might overflow
+content = content.replace(
+    'className="h-80 w-full"',
+    'className="h-72 w-full max-w-full overflow-hidden"'
+)
+
+# HeatMini: already has overflow-x-auto which is correct — ensure inner div width is bounded
+content = content.replace(
+    'className="inline-flex flex-col gap-0.5"',
+    'className="inline-flex flex-col gap-0.5 min-w-0"'
+)
+
+# Fix the XAxis of scatter/bar charts that may overflow
+# Add min-w-0 to ResponsiveContainer wrappers
+content = content.replace(
+    '<ResponsiveContainer>',
+    '<ResponsiveContainer width="100%" height="100%">'
+)
+
+# Error box: replace red dark tones (from previous dark theme) with light red
+content = content.replace(
+    'border-red-900/40 bg-red-950/25',
+    'border-red-200 bg-red-50'
+)
+content = content.replace(
+    'text-red-200/95',
+    'text-red-700'
+)
+content = content.replace(
+    'border-red-800/60 bg-red-950/40',
+    'border-red-200 bg-red-50'
+)
+content = content.replace(
+    'text-red-100 hover:bg-red-950/70',
+    'text-red-700 hover:bg-red-100'
+)
+
+# ── 5. Ensure chart colours remain green/red only (no blue leakage) ──────────
+# Chart fills: G = #22c55e (green), R = #ef4444 (red) — these are fine
+# Tooltip backgrounds: already white (#ffffff)
+
+# ── 6. Any remaining stray blue via direct style values ──────────────────────
+content = re.sub(r'#[0-9a-fA-F]*[Bb][Ll][Uu][Ee][0-9a-fA-F]*', '#1a1a1a', content)  # won't match, safety
+
+# Remove any bg-blue / text-blue / border-blue that may still exist (catch-all)
+for shade in ['50','100','200','300','400','500','600','700','800','900','950']:
+    content = content.replace(f'bg-blue-{shade}', 'bg-slate-100' if int(shade) < 500 else 'bg-slate-900')
+    content = content.replace(f'text-blue-{shade}', 'text-slate-700' if int(shade) < 500 else 'text-slate-900')
+    content = content.replace(f'border-blue-{shade}', 'border-slate-200')
+    content = content.replace(f'hover:bg-blue-{shade}', 'hover:bg-slate-100' if int(shade) < 600 else 'hover:bg-slate-800')
+    content = content.replace(f'focus:ring-blue-{shade}', 'focus:ring-slate-400')
+    content = content.replace(f'ring-blue-{shade}', 'ring-slate-400')
+
+with open('src/components/arya/admin/EnterpriseAnalyticsPanel.tsx', 'w', encoding='utf-8') as f:
     f.write(content)
-print('UI Done!')
+
+print("Done patching.")
