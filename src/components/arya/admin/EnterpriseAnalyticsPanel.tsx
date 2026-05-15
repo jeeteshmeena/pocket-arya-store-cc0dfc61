@@ -1185,9 +1185,9 @@ function useWebSocketLive(telegramId: number | null, onMessage: (msg: unknown) =
 
 function RowKV({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-100 py-1.5">
-      <span className="text-slate-400">{label}</span>
-      <span className="font-mono text-slate-900">{value}</span>
+    <div className="flex items-center justify-between border-b border-black/[0.05] py-2 last:border-b-0">
+      <span className="text-[#86868b]">{label}</span>
+      <span className="font-mono text-[#1d1d1f]">{value}</span>
     </div>
   );
 }
@@ -1208,21 +1208,21 @@ function HeroStat({
   decimals?: number;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] p-5">
+    <div className="relative overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       {pulse ? (
         <span className="absolute right-4 top-4 flex h-2 w-2">
           <span
             className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50"
-            style={{ background: G }}
+            style={{ background: ACCENT }}
           />
-          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: G }} />
+          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: ACCENT }} />
         </span>
       ) : null}
-      <Icon className="h-5 w-5 text-slate-400" />
-      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-slate-400">
+      <Icon className="h-5 w-5 text-[#86868b]" />
+      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-[#86868b]">
         {label}
       </div>
-      <div className="mt-1 text-2xl font-semibold text-slate-900 md:text-3xl">
+      <div className="mt-1 text-2xl font-semibold tracking-tight text-[#1d1d1f] md:text-[28px]">
         <AnimatedInt value={value} decimals={decimals} suffix={suffix} />
       </div>
     </div>
@@ -1247,7 +1247,7 @@ function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: 
                   key={hi}
                   title={`D${di} H${hi}: ${v}`}
                   className="h-3 w-3 rounded-sm"
-                  style={{ background: `rgba(34,197,94,${op})` }}
+                  style={{ background: `rgba(0,113,227,${op})` }}
                 />
               );
             })}
