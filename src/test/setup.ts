@@ -21,10 +21,23 @@ vi.mock("@/lib/api", () => ({
     checkout_url: "https://example.com",
     order_id: "1",
   })),
+  fetchAppContext: vi.fn(async () => ({ currency: "INR" })),
+  fetchMyPurchases: vi.fn(async () => []),
+  getOptimizedImage: vi.fn((url?: string | null) => url || undefined),
+  getStoryTitle: vi.fn((story: { title?: string }) => story.title || "Test Story"),
+  trackEvent: vi.fn(),
   openTelegramLink: vi.fn(),
 }));
 
 // Stub matchMedia / IntersectionObserver used by some UI primitives.
+window.scrollTo = vi.fn();
+window.fetch = vi.fn(async () =>
+  new Response(JSON.stringify({ success: true, data: [] }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  }),
+) as typeof fetch;
+
 if (!window.matchMedia) {
   Object.defineProperty(window, "matchMedia", {
     writable: true,

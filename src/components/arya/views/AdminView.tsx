@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronDown, Users, FileText, Activity, Edit, Trash2, Plus, X, MapPin, Smartphone, RefreshCw, Home, MessageSquare, Settings as SettingsIcon, Search, ShoppingBag, Bot, Library, ShieldAlert } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase, fetchAdminSettings, updateAdminSetting, adminBuyerAction, BOT_USERNAME } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase, fetchAdminSettings, updateAdminSetting, adminBuyerAction, BOT_USERNAME, openTelegramLink } from "@/lib/api";
 import { EnterpriseAnalyticsPanel } from "@/components/arya/admin/EnterpriseAnalyticsPanel";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";

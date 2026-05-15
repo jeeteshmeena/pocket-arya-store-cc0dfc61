@@ -8,7 +8,7 @@ export function PopularRow() {
   const [popularStories, setPopularStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isLightMode = theme === "cream" || theme === "default" || theme === "mint" || theme === "light";
+  const isLightMode = theme === "cream" || theme === "default" || theme === "mint";
 
   useEffect(() => {
     fetch("/api/popular")
