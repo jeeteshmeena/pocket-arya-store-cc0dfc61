@@ -23,6 +23,7 @@ vi.mock("@/lib/api", () => ({
   })),
   fetchAppContext: vi.fn(async () => ({ currency: "INR" })),
   fetchMyPurchases: vi.fn(async () => []),
+  trackEvent: vi.fn(),
   openTelegramLink: vi.fn(),
 }));
 
