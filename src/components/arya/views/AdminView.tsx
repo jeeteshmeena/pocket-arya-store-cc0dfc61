@@ -312,11 +312,11 @@ export function AdminView() {
                   <div className="text-4xl font-black tracking-tight mb-5 relative z-10">₹{(stats?.total_revenue || 0).toLocaleString()}</div>
                   <div className="grid grid-cols-2 gap-3 relative z-10">
                     <div className="bg-white/10 rounded-2xl p-3">
-                      <div className="text-[10px] text-gray-400 mb-1">🤖 Bot Revenue</div>
+                      <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1.5"><Bot className="w-3 h-3" /> Bot Revenue</div>
                       <div className="font-bold text-sm">₹{(stats?.bot_revenue || 0).toLocaleString()}</div>
                     </div>
                     <div className="bg-white/10 rounded-2xl p-3">
-                      <div className="text-[10px] text-gray-400 mb-1">📱 Mini App</div>
+                      <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1.5"><Smartphone className="w-3 h-3" /> Mini App</div>
                       <div className="font-bold text-sm">₹{(stats?.miniapp_revenue || 0).toLocaleString()}</div>
                     </div>
                   </div>
@@ -1021,7 +1021,7 @@ function BuyerDetailPage({ buyer, stories, tgUser, onBack }: any) {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Source</div>
-            <div className="font-bold text-sm">{buyer.source === 'bot' ? '🤖 Telegram Bot' : buyer.source === 'manual_admin' ? '🛠️ Manual' : buyer.source === 'both' ? '🤖 + 📱 Both' : '📱 Mini App'}</div>
+            <div className="font-bold text-sm">{buyer.source === 'bot' ? 'Telegram Bot' : buyer.source === 'manual_admin' ? 'Manual' : buyer.source === 'both' ? 'Bot + Mini App' : 'Mini App'}</div>
           </div>
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Total Spent</div>

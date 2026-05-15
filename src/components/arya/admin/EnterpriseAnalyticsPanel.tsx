@@ -128,12 +128,18 @@ export type EnterpriseDashboard = {
   filters_echo: Record<string, unknown>;
 };
 
-/** Chart data only: green / red (axes and chrome stay neutral). */
-const G = "#22c55e";
-const R = "#ef4444";
+/** Refined iOS-inspired chart palette — single accent + neutral, no rainbow. */
+const ACCENT = "#0071e3";        // SF blue
+const ACCENT_SOFT = "#6ea8fe";
+const NEUTRAL = "#1d1d1f";
+const NEUTRAL_SOFT = "#86868b";
+const G = ACCENT;                // back-compat alias used by chart fills
+const R = NEUTRAL;
 
 function sliceFill(i: number) {
-  return i % 2 === 0 ? G : R;
+  // Alternate accent / neutral / soft accent for clean, premium chart fills
+  const palette = [ACCENT, NEUTRAL, ACCENT_SOFT, NEUTRAL_SOFT];
+  return palette[i % palette.length];
 }
 
 function AnimatedInt({
@@ -181,7 +187,7 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50 ${className}`}
+      className={`rounded-3xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.08)] ${className}`}
     >
       {children}
     </div>
@@ -200,11 +206,11 @@ function SectionTitle({
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          <Icon className="h-4 w-4 text-slate-400" />
+        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#86868b]">
+          <Icon className="h-3.5 w-3.5 text-[#86868b]" />
           {title}
         </div>
-        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-slate-400">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-[#86868b]">{subtitle}</p> : null}
       </div>
     </div>
   );
@@ -326,29 +332,31 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
   const showSkeleton = bootLoading && !data;
 
   return (
-    <div className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-10 text-slate-900">
+    <div className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f5f5f7] pb-10 text-[#1d1d1f]" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif" }}>
       {refreshing && data ? (
-        <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-slate-200">
-          <div className="h-full w-1/3 animate-pulse bg-slate-300" />
+        <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-black/5">
+          <div className="h-full w-1/3 animate-pulse bg-[#0071e3]/40" />
         </div>
       ) : null}
 
-      <div className="relative z-10 border-b border-slate-100 px-4 py-6 sm:px-6 lg:px-10">
+      <div className="relative z-10 px-4 py-7 sm:px-6 lg:px-10">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#86868b]">Admin · Analytics</div>
+            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-[#1d1d1f] sm:text-3xl md:text-[34px]">
               Intelligence
             </h1>
+            <p className="mt-1 text-sm text-[#6e6e73]">Real-time engagement, geography and revenue across the mini app.</p>
           </div>
-          <div className="hidden flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400 xl:flex">
+          <div className="hidden flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#86868b] xl:flex">
             <span>
-              <span className="text-slate-500">WS</span>{" "}
-              <span className="font-mono text-slate-600">/api/ws/analytics</span>
+              <span className="text-[#1d1d1f]/60">WS</span>{" "}
+              <span className="font-mono text-[#1d1d1f]/70">/api/ws/analytics</span>
             </span>
-            <span className="text-slate-300">|</span>
+            <span className="text-[#86868b]/40">·</span>
             <span>
-              <span className="text-slate-500">GET</span>{" "}
-              <span className="font-mono text-slate-600">/api/analytics/enterprise-dashboard</span>
+              <span className="text-[#1d1d1f]/60">GET</span>{" "}
+              <span className="font-mono text-[#1d1d1f]/70">/api/analytics/enterprise-dashboard</span>
             </span>
           </div>
         </div>
@@ -434,7 +442,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <button
               type="button"
               onClick={applyFilters}
-              className="order-1 w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 sm:order-2 sm:w-auto sm:min-w-[120px]"
+              className="order-1 w-full rounded-xl bg-[#0071e3] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0077ed] disabled:opacity-50 sm:order-2 sm:w-auto sm:min-w-[120px]"
             >
               Apply filters
             </button>
@@ -1177,9 +1185,9 @@ function useWebSocketLive(telegramId: number | null, onMessage: (msg: unknown) =
 
 function RowKV({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-100 py-1.5">
-      <span className="text-slate-400">{label}</span>
-      <span className="font-mono text-slate-900">{value}</span>
+    <div className="flex items-center justify-between border-b border-black/[0.05] py-2 last:border-b-0">
+      <span className="text-[#86868b]">{label}</span>
+      <span className="font-mono text-[#1d1d1f]">{value}</span>
     </div>
   );
 }
@@ -1200,21 +1208,21 @@ function HeroStat({
   decimals?: number;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] p-5">
+    <div className="relative overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       {pulse ? (
         <span className="absolute right-4 top-4 flex h-2 w-2">
           <span
             className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50"
-            style={{ background: G }}
+            style={{ background: ACCENT }}
           />
-          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: G }} />
+          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: ACCENT }} />
         </span>
       ) : null}
-      <Icon className="h-5 w-5 text-slate-400" />
-      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-slate-400">
+      <Icon className="h-5 w-5 text-[#86868b]" />
+      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-[#86868b]">
         {label}
       </div>
-      <div className="mt-1 text-2xl font-semibold text-slate-900 md:text-3xl">
+      <div className="mt-1 text-2xl font-semibold tracking-tight text-[#1d1d1f] md:text-[28px]">
         <AnimatedInt value={value} decimals={decimals} suffix={suffix} />
       </div>
     </div>
@@ -1239,7 +1247,7 @@ function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: 
                   key={hi}
                   title={`D${di} H${hi}: ${v}`}
                   className="h-3 w-3 rounded-sm"
-                  style={{ background: `rgba(34,197,94,${op})` }}
+                  style={{ background: `rgba(0,113,227,${op})` }}
                 />
               );
             })}

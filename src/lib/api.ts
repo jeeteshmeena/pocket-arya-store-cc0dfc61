@@ -394,6 +394,131 @@ export function loadRazorpay(): Promise<boolean> {
   });
 }
 
+/**
+ * Client-side geolocation cache.
+ * Uses ipwho.is (free, no key, CORS enabled) to derive accurate city/country/region/lat/lon
+ * from the user's *real* egress IP — bypassing inaccurate server-side IP→city lookups
+ * (which often misroute via Telegram/CDN edges and resolve to a wrong city).
+ *
+ * Cached for the session (sessionStorage) so we hit the API at most once per visit.
+ * Result is attached to every trackEvent payload as geo_* fields, which the FastAPI
+ * /track endpoint can prefer over its own IP lookup.
+ */
+type GeoSnapshot = {
+  geo_city?: string;
+  geo_region?: string;
+  geo_country?: string;
+  geo_country_code?: string;
+  geo_lat?: number;
+  geo_lon?: number;
+  geo_ip?: string;
+  geo_source?: string;
+};
+
+const GEO_CACHE_KEY = "arya_geo_v1";
+let _geoCache: GeoSnapshot | null = null;
+let _geoInflight: Promise<GeoSnapshot> | null = null;
+
+function _readGeoCache(): GeoSnapshot | null {
+  if (_geoCache) return _geoCache;
+  try {
+    const raw = sessionStorage.getItem(GEO_CACHE_KEY);
+    if (raw) {
+      _geoCache = JSON.parse(raw) as GeoSnapshot;
+      return _geoCache;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+async function _fetchGeo(): Promise<GeoSnapshot> {
+  if (_geoInflight) return _geoInflight;
+  _geoInflight = (async () => {
+    // ipwho.is — free, CORS-enabled, no API key, returns city/region/country/lat/lon
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000);
+      const r = await fetch("https://ipwho.is/?fields=ip,city,region,country,country_code,latitude,longitude,success", {
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      const j = (await r.json()) as {
+        success?: boolean;
+        ip?: string;
+        city?: string;
+        region?: string;
+        country?: string;
+        country_code?: string;
+        latitude?: number;
+        longitude?: number;
+      };
+      if (j && j.success !== false && (j.city || j.country)) {
+        const snap: GeoSnapshot = {
+          geo_city: j.city,
+          geo_region: j.region,
+          geo_country: j.country,
+          geo_country_code: j.country_code,
+          geo_lat: typeof j.latitude === "number" ? j.latitude : undefined,
+          geo_lon: typeof j.longitude === "number" ? j.longitude : undefined,
+          geo_ip: j.ip,
+          geo_source: "ipwho.is",
+        };
+        _geoCache = snap;
+        try { sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap)); } catch { /* ignore */ }
+        return snap;
+      }
+    } catch {
+      /* ignore — fall through to fallback */
+    }
+    // Fallback: ipapi.co (different egress, sometimes succeeds when ipwho.is is blocked)
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000);
+      const r = await fetch("https://ipapi.co/json/", { signal: ctrl.signal });
+      clearTimeout(timer);
+      const j = (await r.json()) as {
+        ip?: string;
+        city?: string;
+        region?: string;
+        country_name?: string;
+        country_code?: string;
+        latitude?: number;
+        longitude?: number;
+      };
+      if (j && (j.city || j.country_name)) {
+        const snap: GeoSnapshot = {
+          geo_city: j.city,
+          geo_region: j.region,
+          geo_country: j.country_name,
+          geo_country_code: j.country_code,
+          geo_lat: typeof j.latitude === "number" ? j.latitude : undefined,
+          geo_lon: typeof j.longitude === "number" ? j.longitude : undefined,
+          geo_ip: j.ip,
+          geo_source: "ipapi.co",
+        };
+        _geoCache = snap;
+        try { sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap)); } catch { /* ignore */ }
+        return snap;
+      }
+    } catch {
+      /* ignore */
+    }
+    return {};
+  })();
+  try {
+    return await _geoInflight;
+  } finally {
+    _geoInflight = null;
+  }
+}
+
+// Kick off geo lookup as early as possible (non-blocking).
+if (typeof window !== "undefined" && !_readGeoCache()) {
+  void _fetchGeo();
+}
+
 function _analyticsClientContext(): Record<string, unknown> {
   const o: Record<string, unknown> = {};
   try {
@@ -407,6 +532,13 @@ function _analyticsClientContext(): Record<string, unknown> {
     if (wa?.version) o.telegram_webapp_version = wa.version;
   } catch {
     /* ignore */
+  }
+  // Attach cached client-derived geo (if available yet — fire-and-forget refresh otherwise)
+  const geo = _readGeoCache();
+  if (geo) {
+    Object.assign(o, geo);
+  } else {
+    void _fetchGeo();
   }
   return o;
 }
