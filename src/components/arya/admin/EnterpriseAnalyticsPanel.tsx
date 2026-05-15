@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   ArrowRight,
@@ -10,7 +9,6 @@ import {
   MapPin,
   Radio,
   Search,
-  Sparkles,
   Timer,
   Zap,
 } from "lucide-react";
@@ -53,7 +51,7 @@ export type EnterpriseDashboard = {
     orders_paid_or_delivered: number;
   };
   live_feed: Array<Record<string, unknown>>;
-  map_points: Array<{ country: string; city: string; count: number; lat: number; lon: number }>;
+  map_points: Array<{ country: string; city: string; region?: string; count: number; lat: number; lon: number }>;
   charts: { hourly_events: Array<{ hour: number; events: number }> };
   users: {
     browsers: Array<{ name: string; value: number }>;
@@ -84,14 +82,20 @@ export type EnterpriseDashboard = {
   filters_echo: Record<string, unknown>;
 };
 
-const CHART_COLORS = ["#6366f1", "#a855f7", "#22d3ee", "#f472b6", "#fbbf24", "#34d399", "#fb7185", "#94a3b8"];
+/** Chart data only: green / red (axes and chrome stay neutral). */
+const G = "#22c55e";
+const R = "#ef4444";
+
+function sliceFill(i: number) {
+  return i % 2 === 0 ? G : R;
+}
 
 function AnimatedInt({ value, decimals = 0, suffix = "" }: { value: number; decimals?: number; suffix?: string }) {
   const [v, setV] = useState(0);
   useEffect(() => {
     let raf = 0;
     const start = performance.now();
-    const dur = 1000;
+    const dur = 420;
     const from = 0;
     const to = Number.isFinite(value) ? value : 0;
     const tick = (t: number) => {
@@ -112,25 +116,13 @@ function AnimatedInt({ value, decimals = 0, suffix = "" }: { value: number; deci
   );
 }
 
-function GlassCard({
-  children,
-  className = "",
-  glow = false,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  glow?: boolean;
-}) {
+function PanelCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl ${glow ? "shadow-[0_0_0_1px_rgba(99,102,241,0.25),0_0_40px_rgba(99,102,241,0.12)]" : ""} ${className}`}
+    <div
+      className={`rounded-2xl border border-zinc-800 bg-zinc-950/90 p-5 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset] ${className}`}
     >
-      <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-indigo-600/20 blur-3xl" />
-      <div className="relative z-10">{children}</div>
-    </motion.div>
+      {children}
+    </div>
   );
 }
 
@@ -138,11 +130,11 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-indigo-300/90">
-          <Icon className="h-4 w-4" />
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+          <Icon className="h-4 w-4 text-zinc-600" />
           {title}
         </div>
-        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-zinc-500">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-zinc-600">{subtitle}</p> : null}
       </div>
     </div>
   );
@@ -150,7 +142,8 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType
 
 export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdentity | null }) {
   const [data, setData] = useState<EnterpriseDashboard | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [bootLoading, setBootLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [live, setLive] = useState<Array<Record<string, unknown>>>([]);
   const [days, setDays] = useState(30);
@@ -160,15 +153,22 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
   const [device, setDevice] = useState("");
   const [telegramOnly, setTelegramOnly] = useState(false);
 
-  const adminId = identity?.telegram_id != null ? String(identity.telegram_id) : "";
+  const firstLoadRef = useRef(true);
+
+  useEffect(() => {
+    firstLoadRef.current = true;
+  }, [identity?.telegram_id]);
 
   const fetchDashboard = useCallback(async () => {
     if (!identity?.telegram_id) {
       setErr("Open this panel inside Telegram as an owner account.");
-      setLoading(false);
+      setBootLoading(false);
+      setRefreshing(false);
       return;
     }
-    setLoading(true);
+    const isFirst = firstLoadRef.current;
+    if (isFirst) setBootLoading(true);
+    else setRefreshing(true);
     setErr(null);
     try {
       const j = (await fetchEnterpriseDashboard(identity, {
@@ -180,10 +180,12 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
         telegram_only: telegramOnly || undefined,
       })) as unknown as EnterpriseDashboard;
       setData(j);
+      if (isFirst) firstLoadRef.current = false;
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load analytics");
     } finally {
-      setLoading(false);
+      setBootLoading(false);
+      setRefreshing(false);
     }
   }, [identity, days, country, city, storyId, device, telegramOnly]);
 
@@ -208,59 +210,50 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
     [data],
   );
 
-  const journeyNodes = ((data?.journey?.nodes as Array<{ id: string; count: number }>) ?? []) as Array<{ id: string; count: number }>;
+  const journeyNodes = ((data?.journey?.nodes as Array<{ id: string; count: number }>) ?? []) as Array<{
+    id: string;
+    count: number;
+  }>;
+
+  const showSkeleton = bootLoading && !data;
 
   return (
-    <div className="relative min-h-[70vh] overflow-hidden bg-[#030712] pb-8">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,0.35), transparent), radial-gradient(ellipse 60% 40% at 100% 0%, rgba(168,85,247,0.2), transparent)",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[length:48px_48px] opacity-30"
-        style={{ backgroundImage: "var(--tw-gradient-stops)" }}
-      />
+    <div className="relative min-h-[70vh] bg-black pb-10 text-zinc-200">
+      {refreshing && data ? (
+        <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-zinc-800">
+          <div className="h-full w-1/3 animate-pulse bg-zinc-400" />
+        </div>
+      ) : null}
 
-      <div className="relative z-10 px-6 py-8 lg:px-10">
-        {/* Hero */}
-        <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative z-10 border-b border-zinc-900 px-6 py-8 lg:px-10">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <motion.div
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-200"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              Intelligence Console
-            </motion.div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl">
-              Enterprise Analytics
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-zinc-400">
-              Live operational intelligence — geo, devices, stories, journeys, and revenue in one cinematic surface.
-              Powered by your FastAPI + Mongo pipeline; optional Postgres schema ships under <code className="text-indigo-300">supabase/migrations</code>.
-            </p>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">Analytics</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white md:text-3xl">Overview</h1>
+            <p className="mt-2 max-w-lg text-sm text-zinc-500">Filters apply to the selected range. Live rows update over WebSocket.</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-            <Radio className="h-4 w-4 text-emerald-400" />
-            WebSocket: <span className="text-zinc-300">/api/ws/analytics</span>
-            <span className="mx-2 text-zinc-700">|</span>
-            REST: <span className="text-zinc-300">/api/analytics/enterprise-dashboard</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600">
+            <span>
+              <span className="text-zinc-500">WS</span> <span className="font-mono text-zinc-400">/api/ws/analytics</span>
+            </span>
+            <span className="text-zinc-800">|</span>
+            <span>
+              <span className="text-zinc-500">GET</span>{" "}
+              <span className="font-mono text-zinc-400">/api/analytics/enterprise-dashboard</span>
+            </span>
           </div>
         </div>
+      </div>
 
-        {/* Filters */}
-        <GlassCard className="mb-8">
+      <div className="relative z-10 px-6 lg:px-10">
+        <PanelCard className="mb-6 mt-6">
           <div className="flex flex-wrap items-end gap-3">
             <label className="text-xs text-zinc-500">
               Range (days)
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
-                className="mt-1 block w-28 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-white"
+                className="mt-1 block w-28 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
               >
                 {[7, 14, 30, 60, 90].map((d) => (
                   <option key={d} value={d}>
@@ -274,8 +267,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <input
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                placeholder="e.g. India"
-                className="mt-1 block w-36 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-white"
+                placeholder="India"
+                className="mt-1 block w-36 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
               />
             </label>
             <label className="text-xs text-zinc-500">
@@ -283,7 +276,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="mt-1 block w-36 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-white"
+                className="mt-1 block w-36 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
               />
             </label>
             <label className="text-xs text-zinc-500">
@@ -291,7 +284,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <input
                 value={storyId}
                 onChange={(e) => setStoryId(e.target.value)}
-                className="mt-1 block w-44 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-white"
+                className="mt-1 block w-44 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
               />
             </label>
             <label className="text-xs text-zinc-500">
@@ -300,98 +293,89 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 value={device}
                 onChange={(e) => setDevice(e.target.value)}
                 placeholder="mobile / desktop"
-                className="mt-1 block w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-white"
+                className="mt-1 block w-32 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
               />
             </label>
-            <label className="flex cursor-pointer items-center gap-2 pt-5 text-xs text-zinc-400">
+            <label className="flex cursor-pointer items-center gap-2 pt-5 text-xs text-zinc-500">
               <input type="checkbox" checked={telegramOnly} onChange={(e) => setTelegramOnly(e.target.checked)} />
               Telegram WebView only
             </label>
             <button
               type="button"
               onClick={() => void fetchDashboard()}
-              className="ml-auto rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-[0_0_40px_rgba(99,102,241,0.35)] transition hover:opacity-95"
+              className="ml-auto rounded-lg border border-zinc-700 bg-zinc-900 px-5 py-2 text-sm font-medium text-zinc-100 transition hover:bg-zinc-800"
             >
               Apply
             </button>
           </div>
-        </GlassCard>
+        </PanelCard>
 
         {err ? (
-          <div className="mb-6 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">{err}</div>
+          <div className="mb-6 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">{err}</div>
         ) : null}
 
-        {loading || !data ? (
+        {showSkeleton ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-36 animate-pulse rounded-2xl bg-zinc-800/80" />
+              <div key={i} className="h-36 animate-pulse rounded-2xl bg-zinc-900" />
             ))}
           </div>
-        ) : (
+        ) : data ? (
           <>
             <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-              <HeroStat label="Total users" value={data.hero.total_users} icon={Activity} accent="from-indigo-500/30" />
-              <HeroStat label="Active now" value={data.hero.active_now} icon={Zap} accent="from-emerald-500/25" pulse />
-              <HeroStat
-                label="Revenue (₹)"
-                value={data.hero.total_revenue}
-                icon={Layers}
-                accent="from-violet-500/30"
-                decimals={0}
-              />
-              <HeroStat label="Sessions tracked" value={data.hero.sessions_tracked} icon={Timer} accent="from-cyan-500/20" />
-              <HeroStat label="Returning (window)" value={data.hero.returning_in_window} icon={ArrowRight} accent="from-fuchsia-500/25" />
+              <HeroStat label="Total users" value={data.hero.total_users} icon={Activity} />
+              <HeroStat label="Active now" value={data.hero.active_now} icon={Zap} pulse />
+              <HeroStat label="Revenue (₹)" value={data.hero.total_revenue} icon={Layers} decimals={0} />
+              <HeroStat label="Sessions tracked" value={data.hero.sessions_tracked} icon={Timer} />
+              <HeroStat label="Returning (window)" value={data.hero.returning_in_window} icon={ArrowRight} />
               <HeroStat
                 label="Premium conversion"
                 value={data.hero.premium_conversion_pct}
                 suffix="%"
-                icon={Sparkles}
-                accent="from-amber-500/20"
+                icon={Layers}
                 decimals={1}
               />
             </div>
 
             <div className="grid gap-6 xl:grid-cols-3">
-              <GlassCard className="xl:col-span-2" glow>
-                <SectionTitle
-                  icon={Radio}
-                  title="Live activity"
-                  subtitle="Streamed over WebSocket on each tracked event. Enrich /api/track payloads for richer rows."
-                />
-                <div className="h-72 overflow-hidden rounded-xl border border-white/5 bg-black/30">
+              <PanelCard className="xl:col-span-2">
+                <SectionTitle icon={Radio} title="Live activity" subtitle="Latest tracked events." />
+                <div className="h-72 overflow-hidden rounded-xl border border-zinc-800 bg-black">
                   <div className="h-full overflow-y-auto pr-2">
-                    <AnimatePresence initial={false}>
-                      {(live.length ? live : data.live_feed).slice(0, 60).map((row, idx) => (
-                        <motion.div
-                          key={`${(row as { id?: string }).id ?? idx}-${(row as { _ts?: number })._ts ?? idx}`}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/5 px-3 py-2 text-xs"
-                        >
-                          <span className="rounded bg-indigo-500/20 px-1.5 py-0.5 font-mono text-indigo-200">
-                            {String((row as { type?: string }).type ?? "event")}
-                          </span>
-                          <span className="text-zinc-500">user</span>
-                          <span className="font-mono text-zinc-200">{String((row as { user_id?: unknown }).user_id ?? "—")}</span>
-                          <span className="text-zinc-600">·</span>
-                          <MapPin className="h-3 w-3 text-zinc-600" />
-                          <span className="text-zinc-400">
-                            {(row as { city?: string }).city ?? "—"},{" "}
-                            {(row as { country?: string }).country ?? ""}
-                          </span>
-                          <span className="ml-auto text-zinc-600">
-                            {String((row as { ts?: string }).ts ?? (row as { time?: string }).time ?? "")}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
+                    {(live.length ? live : data.live_feed).slice(0, 60).map((row, idx) => (
+                      <div
+                        key={`${(row as { id?: string }).id ?? idx}-${(row as { _ts?: number })._ts ?? idx}`}
+                        className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-900 px-3 py-2 text-xs"
+                      >
+                        <span className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 font-mono text-zinc-400">
+                          {String((row as { type?: string }).type ?? "event")}
+                        </span>
+                        <span className="text-zinc-600">user</span>
+                        <span className="font-mono text-zinc-300">{String((row as { user_id?: unknown }).user_id ?? "—")}</span>
+                        <span className="text-zinc-800">·</span>
+                        <MapPin className="h-3 w-3 text-zinc-600" />
+                        <span className="text-zinc-500">
+                          {(row as { city?: string }).city ?? "—"}
+                          {((row as { region?: string }).region || "").trim() ? (
+                            <>
+                              , <span className="text-zinc-400">{(row as { region?: string }).region}</span>
+                            </>
+                          ) : null}
+                          {", "}
+                          {(row as { country?: string }).country ?? ""}
+                        </span>
+                        <span className="ml-auto font-mono text-zinc-600">
+                          {String((row as { ts?: string }).ts ?? (row as { time?: string }).time ?? "")}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </GlassCard>
+              </PanelCard>
 
-              <GlassCard>
-                <SectionTitle icon={Cpu} title="Performance signals" subtitle="Emit event_type=performance with load_ms, api_ms, page." />
-                <div className="space-y-3 text-sm text-zinc-300">
+              <PanelCard>
+                <SectionTitle icon={Cpu} title="Performance" subtitle="Client-reported timings when you emit them." />
+                <div className="space-y-3 text-sm text-zinc-400">
                   <RowKV label="Samples" value={String((data.performance as { samples?: number }).samples ?? 0)} />
                   <RowKV
                     label="Avg page load"
@@ -411,133 +395,137 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                   />
                   <RowKV label="Console errors" value={String((data.performance as { console_errors?: number }).console_errors ?? 0)} />
                 </div>
-                <div className="mt-4 rounded-lg border border-dashed border-zinc-700 p-3 text-xs text-zinc-500">
-                  Crash / error logs: send <code className="text-indigo-300">console_error</code> events from the Mini App
-                  wrapper.
-                </div>
-              </GlassCard>
+              </PanelCard>
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <GlassCard glow>
-                <SectionTitle
-                  icon={Globe2}
-                  title="Realtime geo map"
-                  subtitle="Pulsed markers from aggregated sessions (country centroids + jitter). Wire lat/lng from device when available."
-                />
+              <PanelCard>
+                <SectionTitle icon={Globe2} title="Geo map" subtitle="Pins use stored coordinates when available." />
                 <div className="h-80 w-full">
                   <ResponsiveContainer>
                     <ScatterChart margin={{ top: 16, right: 16, bottom: 0, left: 0 }}>
                       <CartesianGrid strokeDasharray="4 8" stroke="#27272a" />
-                      <XAxis type="number" dataKey="lon" name="lon" stroke="#52525b" tick={{ fill: "#71717a", fontSize: 10 }} />
-                      <YAxis type="number" dataKey="lat" name="lat" stroke="#52525b" tick={{ fill: "#71717a", fontSize: 10 }} />
+                      <XAxis type="number" dataKey="lon" name="lon" stroke="#3f3f46" tick={{ fill: "#71717a", fontSize: 10 }} />
+                      <YAxis type="number" dataKey="lat" name="lat" stroke="#3f3f46" tick={{ fill: "#71717a", fontSize: 10 }} />
                       <ZAxis type="number" dataKey="count" range={[80, 520]} />
                       <Tooltip
-                        cursor={{ strokeDasharray: "3 3" }}
-                        contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 12 }}
+                        cursor={{ strokeDasharray: "3 3", stroke: "#52525b" }}
+                        contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }}
                         formatter={(v: number, name: string) => [v, name]}
-                        labelFormatter={(_, p) => (p && p[0] ? `${p[0].payload.city}, ${p[0].payload.country}` : "")}
+                        labelFormatter={(_, p) =>
+                          p && p[0]
+                            ? [p[0].payload.city, p[0].payload.region, p[0].payload.country].filter(Boolean).join(", ")
+                            : ""
+                        }
                       />
-                      <Scatter name="Activity" data={mapPoints} fill="#818cf8" fillOpacity={0.75} />
+                      <Scatter name="Activity" data={mapPoints} fill={G} fillOpacity={0.85} />
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
-              </GlassCard>
+              </PanelCard>
 
-              <GlassCard>
-                <SectionTitle icon={Activity} title="Event cadence" subtitle="Hour-of-day distribution inside the selected window." />
+              <PanelCard>
+                <SectionTitle icon={Activity} title="Event cadence" subtitle="By hour of day (UTC) in this window." />
                 <div className="h-80 w-full">
                   <ResponsiveContainer>
                     <AreaChart data={hourly}>
                       <defs>
-                        <linearGradient id="glowArea" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#6366f1" stopOpacity={0.55} />
-                          <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                        <linearGradient id="areaHourly" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={G} stopOpacity={0.45} />
+                          <stop offset="100%" stopColor={G} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                      <XAxis dataKey="hour" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 11 }} />
-                      <YAxis stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 11 }} />
-                      <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 12 }} />
-                      <Area type="monotone" dataKey="events" stroke="#a5b4fc" strokeWidth={2} fill="url(#glowArea)" />
+                      <XAxis dataKey="hour" stroke="#3f3f46" tick={{ fill: "#a1a1aa", fontSize: 11 }} />
+                      <YAxis stroke="#3f3f46" tick={{ fill: "#a1a1aa", fontSize: 11 }} />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
+                      <Area type="monotone" dataKey="events" stroke={G} strokeWidth={2} fill="url(#areaHourly)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-              </GlassCard>
+              </PanelCard>
             </div>
 
             <div className="mt-6 grid gap-6 xl:grid-cols-3">
-              <GlassCard>
-                <SectionTitle icon={Cpu} title="Devices & clients" />
+              <PanelCard>
+                <SectionTitle icon={Cpu} title="Devices" />
                 <div className="h-64">
                   <ResponsiveContainer>
                     <PieChart>
-                      <Pie data={data.users.devices} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                      <Pie data={data.users.devices} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={2}>
                         {data.users.devices.map((_, i) => (
-                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          <Cell key={i} fill={sliceFill(i)} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 12 }} />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-zinc-400">
-                  <div className="rounded-lg bg-white/5 px-2 py-2">
-                    Mobile / tablet events<br />
-                    <span className="text-lg font-semibold text-white">{data.users.mobile_events}</span>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-zinc-500">
+                  <div className="rounded-lg border border-zinc-900 bg-black px-2 py-2">
+                    Mobile / tablet
+                    <div className="text-lg font-semibold text-zinc-100">{data.users.mobile_events}</div>
                   </div>
-                  <div className="rounded-lg bg-white/5 px-2 py-2">
-                    Desktop events<br />
-                    <span className="text-lg font-semibold text-white">{data.users.desktop_events}</span>
+                  <div className="rounded-lg border border-zinc-900 bg-black px-2 py-2">
+                    Desktop
+                    <div className="text-lg font-semibold text-zinc-100">{data.users.desktop_events}</div>
                   </div>
-                  <div className="col-span-2 rounded-lg bg-white/5 px-2 py-2">
-                    Telegram WebView<br />
-                    <span className="text-lg font-semibold text-indigo-200">{data.users.telegram_webview_events}</span>
+                  <div className="col-span-2 rounded-lg border border-zinc-900 bg-black px-2 py-2">
+                    Telegram WebView
+                    <div className="text-lg font-semibold text-zinc-100">{data.users.telegram_webview_events}</div>
                   </div>
                 </div>
-              </GlassCard>
+              </PanelCard>
 
-              <GlassCard>
+              <PanelCard>
                 <SectionTitle icon={Globe2} title="Top countries" />
                 <div className="h-72">
                   <ResponsiveContainer>
                     <BarChart data={data.geo.countries} layout="vertical" margin={{ left: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
-                      <XAxis type="number" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
-                      <YAxis type="category" dataKey="name" width={100} stroke="#71717a" tick={{ fill: "#d4d4d8", fontSize: 10 }} />
-                      <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 12 }} />
-                      <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                      <XAxis type="number" stroke="#3f3f46" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
+                      <YAxis type="category" dataKey="name" width={100} stroke="#3f3f46" tick={{ fill: "#d4d4d8", fontSize: 10 }} />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                         {data.geo.countries.map((_, i) => (
-                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          <Cell key={i} fill={sliceFill(i)} />
                         ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </GlassCard>
+              </PanelCard>
 
-              <GlassCard>
+              <PanelCard>
                 <SectionTitle icon={MapPin} title="Top cities" />
                 <div className="h-72">
                   <ResponsiveContainer>
                     <BarChart data={data.geo.cities}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                      <XAxis dataKey="name" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 9 }} interval={0} angle={-25} textAnchor="end" height={70} />
-                      <YAxis stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
-                      <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 12 }} />
-                      <Bar dataKey="value" fill="#a855f7" radius={[6, 6, 0, 0]} />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#3f3f46"
+                        tick={{ fill: "#a1a1aa", fontSize: 9 }}
+                        interval={0}
+                        angle={-25}
+                        textAnchor="end"
+                        height={70}
+                      />
+                      <YAxis stroke="#3f3f46" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
+                      <Bar dataKey="value" fill={G} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </GlassCard>
+              </PanelCard>
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <GlassCard>
-                <SectionTitle icon={Headphones} title="Story performance" subtitle="Backed by story_events + premium_stories. Extend with chapter_id in /api/track." />
-                <div className="max-h-80 overflow-y-auto rounded-xl border border-white/5">
+              <PanelCard>
+                <SectionTitle icon={Headphones} title="Stories" subtitle="Top story views in range." />
+                <div className="max-h-80 overflow-y-auto rounded-xl border border-zinc-800">
                   <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-zinc-900/95 text-zinc-500">
+                    <thead className="sticky top-0 bg-zinc-950 text-zinc-600">
                       <tr>
                         <th className="px-3 py-2">Story</th>
                         <th className="px-3 py-2">Views</th>
@@ -545,109 +533,112 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                     </thead>
                     <tbody>
                       {storiesTop.map((s) => (
-                        <tr key={s.story_id} className="border-t border-white/5 text-zinc-300">
+                        <tr key={s.story_id} className="border-t border-zinc-900 text-zinc-400">
                           <td className="px-3 py-2">{s.title}</td>
-                          <td className="px-3 py-2 font-mono text-indigo-200">{s.views}</td>
+                          <td className="px-3 py-2 font-mono text-zinc-200">{s.views}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-zinc-500">
-                  <div className="rounded-lg bg-white/5 py-2">
-                    Completion (proxy %)<div className="text-lg font-semibold text-white">{String(data.stories.story_completion_proxy_pct)}</div>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-zinc-600">
+                  <div className="rounded-lg border border-zinc-900 bg-black py-2">
+                    Completion (proxy %)
+                    <div className="text-lg font-semibold text-zinc-100">{String(data.stories.story_completion_proxy_pct)}</div>
                   </div>
-                  <div className="rounded-lg bg-white/5 py-2">
-                    Drop-off (proxy %)<div className="text-lg font-semibold text-white">{String(data.stories.dropoff_proxy_pct)}</div>
+                  <div className="rounded-lg border border-zinc-900 bg-black py-2">
+                    Drop-off (proxy %)
+                    <div className="text-lg font-semibold text-zinc-100">{String(data.stories.dropoff_proxy_pct)}</div>
                   </div>
-                  <div className="rounded-lg bg-white/5 py-2">
-                    Avg session (sec)<div className="text-lg font-semibold text-white">{String(data.stories.avg_listen_proxy_sec)}</div>
+                  <div className="rounded-lg border border-zinc-900 bg-black py-2">
+                    Avg session (sec)
+                    <div className="text-lg font-semibold text-zinc-100">{String(data.stories.avg_listen_proxy_sec)}</div>
                   </div>
                 </div>
-              </GlassCard>
+              </PanelCard>
 
-              <GlassCard>
-                <SectionTitle icon={Search} title="Search intelligence" />
-                <div className="max-h-64 overflow-y-auto space-y-2">
+              <PanelCard>
+                <SectionTitle icon={Search} title="Search" />
+                <div className="max-h-64 space-y-2 overflow-y-auto">
                   {data.search.top.map((s) => (
-                    <div key={s.query} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-xs">
-                      <span className="truncate text-zinc-200">{s.query}</span>
-                      <span className="font-mono text-indigo-300">{s.count}</span>
+                    <div
+                      key={s.query}
+                      className="flex items-center justify-between rounded-lg border border-zinc-900 bg-black px-3 py-2 text-xs"
+                    >
+                      <span className="truncate text-zinc-300">{s.query}</span>
+                      <span className="font-mono text-zinc-500">{s.count}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 text-xs text-zinc-500">
-                  Failed searches: <span className="text-rose-300">{data.search.failed_searches}</span>
+                <div className="mt-3 text-xs text-zinc-600">
+                  Failed searches: <span className="font-mono text-zinc-300">{data.search.failed_searches}</span>
                 </div>
-              </GlassCard>
+              </PanelCard>
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-3">
-              <GlassCard className="lg:col-span-2">
-                <SectionTitle icon={Layers} title="User journey (page signals)" />
+              <PanelCard className="lg:col-span-2">
+                <SectionTitle icon={Layers} title="Pages" />
                 <div className="flex flex-wrap items-center gap-2">
-                  {(journeyNodes).map((n, i, arr) => (
+                  {journeyNodes.map((n, i, arr) => (
                     <div key={n.id} className="flex items-center gap-2">
-                      <span className="rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3 py-1 text-xs text-indigo-100">
-                        {n.id}{" "}
-                        <span className="text-zinc-500">({n.count})</span>
+                      <span className="rounded-full border border-zinc-800 bg-black px-3 py-1 text-xs text-zinc-300">
+                        {n.id} <span className="text-zinc-600">({n.count})</span>
                       </span>
-                      {i < arr.length - 1 ? <ArrowRight className="h-3 w-3 text-zinc-600" /> : null}
+                      {i < arr.length - 1 ? <ArrowRight className="h-3 w-3 text-zinc-700" /> : null}
                     </div>
                   ))}
                 </div>
-                <p className="mt-3 text-xs text-zinc-500">{String(data.journey?.flow_note ?? "")}</p>
-              </GlassCard>
+                <p className="mt-3 text-xs text-zinc-600">{String(data.journey?.flow_note ?? "")}</p>
+              </PanelCard>
 
-              <GlassCard>
+              <PanelCard>
                 <SectionTitle icon={Timer} title="Session replay" />
-                <p className="text-sm text-zinc-400">{data.session_replay.message}</p>
-                <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 text-xs text-zinc-500">
-                  Reserved for rrweb bundles + encrypted blob storage (S3 / Supabase).
-                </div>
-              </GlassCard>
+                <p className="text-sm text-zinc-500">{data.session_replay.message}</p>
+                <div className="mt-4 rounded-xl border border-zinc-900 bg-black p-4 text-xs text-zinc-600">Not enabled.</div>
+              </PanelCard>
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <GlassCard>
-                <SectionTitle icon={Zap} title="Admin intelligence" />
-                <div className="space-y-2 text-sm text-zinc-300">
+              <PanelCard>
+                <SectionTitle icon={Zap} title="Growth & retention" />
+                <div className="space-y-2 text-sm text-zinc-400">
                   <RowKV
-                    label="Peak traffic hour (UTC)"
+                    label="Peak hour (UTC)"
                     value={data.intelligence.peak_traffic_hour_utc != null ? String(data.intelligence.peak_traffic_hour_utc) : "—"}
                   />
-                  <RowKV label="Returning users (window)" value={String(data.intelligence.retention_returning_in_window)} />
+                  <RowKV label="Returning (window)" value={String(data.intelligence.retention_returning_in_window)} />
                 </div>
                 <div className="mt-4 h-56">
                   <ResponsiveContainer>
                     <AreaChart data={growth}>
                       <defs>
-                        <linearGradient id="growthG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.5} />
-                          <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                        <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={G} stopOpacity={0.4} />
+                          <stop offset="100%" stopColor={G} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                      <XAxis dataKey="date" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
-                      <YAxis tick={{ fill: "#a1a1aa", fontSize: 10 }} />
-                      <Tooltip contentStyle={{ background: "#09090b", border: "1px solid #27272a", borderRadius: 12 }} />
-                      <Area type="monotone" dataKey="new_users" stroke="#22d3ee" fill="url(#growthG)" strokeWidth={2} />
+                      <XAxis dataKey="date" tick={{ fill: "#a1a1aa", fontSize: 10 }} stroke="#3f3f46" />
+                      <YAxis tick={{ fill: "#a1a1aa", fontSize: 10 }} stroke="#3f3f46" />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
+                      <Area type="monotone" dataKey="new_users" stroke={G} fill="url(#growthFill)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-              </GlassCard>
+              </PanelCard>
 
-              <GlassCard>
-                <SectionTitle icon={Globe2} title="Geo heatmap (DOW × hour)" />
+              <PanelCard>
+                <SectionTitle icon={Globe2} title="Activity heatmap" subtitle="Day of week × hour (UTC)." />
                 <HeatMini cells={data.geo?.heatmap ?? []} />
-              </GlassCard>
+              </PanelCard>
             </div>
 
-            <div className="mt-8 border-t border-white/5 pt-6 text-center text-[11px] text-zinc-600">
-              Generated {data.generated_at} · Window {data.window.days}d since {data.window.since}
+            <div className="mt-10 border-t border-zinc-900 pt-6 text-center text-[11px] text-zinc-600">
+              Generated {data.generated_at} · {data.window.days}d since {data.window.since}
             </div>
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -685,9 +676,9 @@ function useWebSocketLive(telegramId: number | null, onMessage: (msg: unknown) =
 
 function RowKV({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-white/5 py-1.5">
-      <span className="text-zinc-500">{label}</span>
-      <span className="font-mono text-zinc-100">{value}</span>
+    <div className="flex items-center justify-between border-b border-zinc-900 py-1.5">
+      <span className="text-zinc-600">{label}</span>
+      <span className="font-mono text-zinc-200">{value}</span>
     </div>
   );
 }
@@ -696,7 +687,6 @@ function HeroStat({
   label,
   value,
   icon: Icon,
-  accent,
   pulse,
   suffix = "",
   decimals,
@@ -704,28 +694,24 @@ function HeroStat({
   label: string;
   value: number;
   icon: React.ElementType;
-  accent: string;
   pulse?: boolean;
   suffix?: string;
   decimals?: number;
 }) {
   return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${accent} to-zinc-950 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.45)]`}
-    >
+    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-black p-5">
       {pulse ? (
         <span className="absolute right-4 top-4 flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" style={{ background: G }} />
+          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: G }} />
         </span>
       ) : null}
-      <Icon className="h-5 w-5 text-zinc-500" />
-      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-white md:text-3xl">
+      <Icon className="h-5 w-5 text-zinc-600" />
+      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-zinc-600">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-white md:text-3xl">
         <AnimatedInt value={value} decimals={decimals} suffix={suffix} />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -741,13 +727,13 @@ function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: 
         {grid.map((row, di) => (
           <div key={di} className="flex gap-0.5">
             {row.map((v, hi) => {
-              const op = 0.08 + (v / max) * 0.92;
+              const op = 0.06 + (v / max) * 0.94;
               return (
                 <div
                   key={hi}
                   title={`D${di} H${hi}: ${v}`}
                   className="h-3 w-3 rounded-sm"
-                  style={{ background: `rgba(129,140,248,${op})` }}
+                  style={{ background: `rgba(34,197,94,${op})` }}
                 />
               );
             })}
@@ -755,7 +741,7 @@ function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: 
         ))}
       </div>
       <div className="mt-2 flex justify-between text-[10px] text-zinc-600">
-        <span>Mon→Sun rows · 24h columns</span>
+        <span>Rows Mon–Sun · columns 0–23h</span>
       </div>
     </div>
   );
