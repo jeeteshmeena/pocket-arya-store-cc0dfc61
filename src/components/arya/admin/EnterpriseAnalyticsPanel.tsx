@@ -168,23 +168,42 @@ function SectionTitle({ icon: Icon, title, subtitle }: { icon: React.ElementType
   );
 }
 
+type AnalyticsFilterForm = {
+  days: number;
+  country: string;
+  city: string;
+  storyId: string;
+  device: string;
+  telegramOnly: boolean;
+};
+
+const defaultFilters: AnalyticsFilterForm = {
+  days: 30,
+  country: "",
+  city: "",
+  storyId: "",
+  device: "",
+  telegramOnly: false,
+};
+
 export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdentity | null }) {
   const [data, setData] = useState<EnterpriseDashboard | null>(null);
   const [bootLoading, setBootLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [live, setLive] = useState<Array<Record<string, unknown>>>([]);
-  const [days, setDays] = useState(30);
-  const [country, setCountry] = useState("");
-  const [city, setCity] = useState("");
-  const [storyId, setStoryId] = useState("");
-  const [device, setDevice] = useState("");
-  const [telegramOnly, setTelegramOnly] = useState(false);
+  /** Values used for the last successful (or attempted) API request — updated only via Apply or identity reset. */
+  const [applied, setApplied] = useState<AnalyticsFilterForm>(() => ({ ...defaultFilters }));
+  /** Editable form; does not hit the API until Apply. */
+  const [draft, setDraft] = useState<AnalyticsFilterForm>(() => ({ ...defaultFilters }));
 
   const firstLoadRef = useRef(true);
 
   useEffect(() => {
     firstLoadRef.current = true;
+    const reset = { ...defaultFilters };
+    setApplied(reset);
+    setDraft({ ...defaultFilters });
   }, [identity?.telegram_id]);
 
   const fetchDashboard = useCallback(async () => {
@@ -200,12 +219,12 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
     setErr(null);
     try {
       const j = (await fetchEnterpriseDashboard(identity, {
-        days,
-        country: country || undefined,
-        city: city || undefined,
-        story_id: storyId || undefined,
-        device: device || undefined,
-        telegram_only: telegramOnly || undefined,
+        days: applied.days,
+        country: applied.country.trim() || undefined,
+        city: applied.city.trim() || undefined,
+        story_id: applied.storyId.trim() || undefined,
+        device: applied.device.trim() || undefined,
+        telegram_only: applied.telegramOnly || undefined,
       })) as unknown as EnterpriseDashboard;
       setData(j);
       if (isFirst) firstLoadRef.current = false;
@@ -215,11 +234,15 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
       setBootLoading(false);
       setRefreshing(false);
     }
-  }, [identity, days, country, city, storyId, device, telegramOnly]);
+  }, [identity, applied]);
 
   useEffect(() => {
     void fetchDashboard();
   }, [fetchDashboard]);
+
+  const applyFilters = useCallback(() => {
+    setApplied({ ...draft });
+  }, [draft]);
 
   const onWs = useCallback((msg: unknown) => {
     if (msg && typeof msg === "object" && (msg as { channel?: string }).channel === "live") {
@@ -262,14 +285,16 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
         </div>
       ) : null}
 
-      <div className="relative z-10 border-b border-zinc-900 px-6 py-8 lg:px-10">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="relative z-10 border-b border-zinc-900 px-4 py-6 sm:px-6 lg:px-10">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-600">Analytics</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white md:text-3xl">Overview</h1>
-            <p className="mt-2 max-w-lg text-sm text-zinc-500">Filters apply to the selected range. Live rows update over WebSocket.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-600">Mini app analytics</p>
+            <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-3xl">Intelligence</h1>
+            <p className="mt-1.5 max-w-lg text-xs leading-relaxed text-zinc-500 sm:text-sm">
+              Signed-in users only. Adjust filters, then Apply. Live feed uses WebSocket.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600">
+          <div className="hidden flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600 xl:flex">
             <span>
               <span className="text-zinc-500">WS</span> <span className="font-mono text-zinc-400">/api/ws/analytics</span>
             </span>
@@ -282,73 +307,103 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
         </div>
       </div>
 
-      <div className="relative z-10 px-6 lg:px-10">
-        <PanelCard className="mb-6 mt-6">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="text-xs text-zinc-500">
-              Range (days)
+      <div className="relative z-10 px-4 sm:px-6 lg:px-10">
+        <PanelCard className="mb-6 mt-2 border-zinc-800/80 bg-zinc-950/80 p-4 sm:p-5">
+          <div className="mb-4 flex flex-col gap-1 border-b border-zinc-800/80 pb-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Report filters</span>
+            <span className="text-[11px] text-zinc-600">Changes are not sent until you Apply.</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <label className="block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+              Range
               <select
-                value={days}
-                onChange={(e) => setDays(Number(e.target.value))}
-                className="mt-1 block w-28 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
+                value={draft.days}
+                onChange={(e) => setDraft((d) => ({ ...d, days: Number(e.target.value) }))}
+                className="mt-1.5 block w-full rounded-md border border-zinc-800 bg-black px-3 py-2.5 text-sm text-zinc-100 outline-none transition focus:border-zinc-600"
               >
                 {[7, 14, 30, 60, 90].map((d) => (
                   <option key={d} value={d}>
-                    {d}d
+                    Last {d} days
                   </option>
                 ))}
               </select>
             </label>
-            <label className="text-xs text-zinc-500">
+            <label className="block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
               Country
               <input
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                placeholder="India"
-                className="mt-1 block w-36 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
+                value={draft.country}
+                onChange={(e) => setDraft((d) => ({ ...d, country: e.target.value }))}
+                placeholder="e.g. India"
+                className="mt-1.5 block w-full rounded-md border border-zinc-800 bg-black px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-700 focus:border-zinc-600"
               />
             </label>
-            <label className="text-xs text-zinc-500">
+            <label className="block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
               City
               <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="mt-1 block w-36 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
+                value={draft.city}
+                onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
+                placeholder="Optional"
+                className="mt-1.5 block w-full rounded-md border border-zinc-800 bg-black px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-700 focus:border-zinc-600"
               />
             </label>
-            <label className="text-xs text-zinc-500">
+            <label className="block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
               Story ID
               <input
-                value={storyId}
-                onChange={(e) => setStoryId(e.target.value)}
-                className="mt-1 block w-44 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
+                value={draft.storyId}
+                onChange={(e) => setDraft((d) => ({ ...d, storyId: e.target.value }))}
+                placeholder="Optional"
+                className="mt-1.5 block w-full rounded-md border border-zinc-800 bg-black px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-700 focus:border-zinc-600"
               />
             </label>
-            <label className="text-xs text-zinc-500">
+            <label className="block text-[11px] font-medium uppercase tracking-wide text-zinc-500">
               Device
               <input
-                value={device}
-                onChange={(e) => setDevice(e.target.value)}
+                value={draft.device}
+                onChange={(e) => setDraft((d) => ({ ...d, device: e.target.value }))}
                 placeholder="mobile / desktop"
-                className="mt-1 block w-32 rounded-lg border border-zinc-800 bg-black px-2 py-2 text-sm text-zinc-100"
+                className="mt-1.5 block w-full rounded-md border border-zinc-800 bg-black px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-700 focus:border-zinc-600"
               />
             </label>
-            <label className="flex cursor-pointer items-center gap-2 pt-5 text-xs text-zinc-500">
-              <input type="checkbox" checked={telegramOnly} onChange={(e) => setTelegramOnly(e.target.checked)} />
-              Telegram WebView only
+            <label className="flex cursor-pointer items-end gap-3 rounded-md border border-zinc-800 bg-black px-3 py-2.5 sm:min-h-[76px]">
+              <input
+                type="checkbox"
+                checked={draft.telegramOnly}
+                onChange={(e) => setDraft((d) => ({ ...d, telegramOnly: e.target.checked }))}
+                className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-white focus:ring-zinc-600"
+              />
+              <span className="text-xs leading-snug text-zinc-400">Telegram WebView only</span>
             </label>
+          </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => void fetchDashboard()}
-              className="ml-auto rounded-lg border border-zinc-700 bg-zinc-900 px-5 py-2 text-sm font-medium text-zinc-100 transition hover:bg-zinc-800"
+              disabled={bootLoading && !data}
+              className="order-2 w-full rounded-md border border-zinc-700 bg-transparent px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-zinc-900 disabled:opacity-50 sm:order-1 sm:w-auto"
             >
-              Apply
+              Refresh
+            </button>
+            <button
+              type="button"
+              onClick={applyFilters}
+              className="order-1 w-full rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 sm:order-2 sm:w-auto sm:min-w-[120px]"
+            >
+              Apply filters
             </button>
           </div>
         </PanelCard>
 
         {err ? (
-          <div className="mb-6 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">{err}</div>
+          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-red-900/40 bg-red-950/25 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-red-200/95">{err}</p>
+            <button
+              type="button"
+              onClick={() => void fetchDashboard()}
+              className="shrink-0 rounded-md border border-red-800/60 bg-red-950/40 px-3 py-2 text-xs font-medium text-red-100 hover:bg-red-950/70"
+            >
+              Retry
+            </button>
+          </div>
         ) : null}
 
         {showSkeleton ? (

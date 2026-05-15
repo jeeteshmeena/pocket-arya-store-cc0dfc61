@@ -219,6 +219,8 @@ export function AdminView() {
     return flags[country] || "🌐";
   };
 
+  const isAnalyticsTab = activeTab === "analytics";
+
   if (error) {
     return (
       <div className="flex flex-col min-h-full p-4 bg-white text-black">
@@ -251,19 +253,45 @@ export function AdminView() {
   }
 
   return (
-    <div className="flex flex-col min-h-full bg-white text-black font-sans pb-24">
+    <div
+      className={cn(
+        "flex flex-col min-h-full font-sans pb-24 transition-colors duration-200",
+        isAnalyticsTab ? "bg-zinc-950 text-zinc-100" : "bg-white text-black",
+      )}
+    >
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+      <div
+        className={cn(
+          "sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b",
+          isAnalyticsTab
+            ? "border-zinc-800 bg-zinc-950/95 backdrop-blur-sm"
+            : "bg-white border-gray-100 shadow-sm",
+        )}
+      >
         <div className="flex items-center gap-3">
-          <button onClick={back} className="p-1.5 hover:bg-gray-50 rounded-full transition"><ChevronLeft className="h-5 w-5" /></button>
-          <span className="text-base font-black tracking-tight">Arya Admin</span>
+          <button
+            onClick={back}
+            className={cn(
+              "p-1.5 rounded-full transition",
+              isAnalyticsTab ? "hover:bg-zinc-800 text-zinc-300" : "hover:bg-gray-50",
+            )}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className={cn("text-base font-semibold tracking-tight", isAnalyticsTab && "text-white")}>Arya Admin</span>
         </div>
-        <button onClick={loadData} className="p-2 rounded-full hover:bg-gray-50 transition">
-          <RefreshCw className="h-4 w-4 text-gray-500" />
+        <button
+          onClick={loadData}
+          className={cn(
+            "p-2 rounded-full transition",
+            isAnalyticsTab ? "hover:bg-zinc-800 text-zinc-400" : "hover:bg-gray-50",
+          )}
+        >
+          <RefreshCw className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className={cn("flex-1 overflow-y-auto", isAnalyticsTab && "bg-black")}>
         {loading ? (
           <div className="p-4 space-y-4">
             <Skeleton className="h-32 w-full rounded-2xl" />
@@ -436,7 +464,7 @@ export function AdminView() {
             )}
 
             {activeTab === "analytics" && (
-              <div className="animate-in fade-in duration-500">
+              <div className="min-h-[calc(100dvh-12rem)]">
                 <EnterpriseAnalyticsPanel identity={tgUser} />
               </div>
             )}
@@ -842,22 +870,65 @@ export function AdminView() {
       )}
 
       {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 pb-[max(env(safe-area-inset-bottom),12px)] shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-        <NavBtn active={activeTab === "dashboard"} icon={Home} label="Home" onClick={() => setActiveTab("dashboard")} />
-        <NavBtn active={activeTab === "analytics"} icon={Activity} label="Analytics" onClick={() => setActiveTab("analytics")} />
-        <NavBtn active={activeTab === "store"} icon={ShoppingBag} label="Store" onClick={() => setActiveTab("store")} />
-        <NavBtn active={activeTab === "buyers" || activeTab === "support"} icon={Users} label="More" onClick={() => { setActiveTab("buyers"); setMoreSubTab("buyers"); }} />
-        <NavBtn active={activeTab === "settings"} icon={SettingsIcon} label="Settings" onClick={() => setActiveTab("settings")} />
+      <div
+        className={cn(
+          "fixed bottom-0 left-0 right-0 px-6 py-3 flex justify-between items-center z-50 pb-[max(env(safe-area-inset-bottom),12px)] border-t",
+          isAnalyticsTab
+            ? "border-zinc-800 bg-zinc-950/95 backdrop-blur-sm shadow-[0_-8px_32px_rgba(0,0,0,0.35)]"
+            : "bg-white border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]",
+        )}
+      >
+        <NavBtn active={activeTab === "dashboard"} icon={Home} label="Home" onClick={() => setActiveTab("dashboard")} dark={isAnalyticsTab} />
+        <NavBtn active={activeTab === "analytics"} icon={Activity} label="Analytics" onClick={() => setActiveTab("analytics")} dark={isAnalyticsTab} />
+        <NavBtn active={activeTab === "store"} icon={ShoppingBag} label="Store" onClick={() => setActiveTab("store")} dark={isAnalyticsTab} />
+        <NavBtn
+          active={activeTab === "buyers" || activeTab === "support"}
+          icon={Users}
+          label="More"
+          onClick={() => {
+            setActiveTab("buyers");
+            setMoreSubTab("buyers");
+          }}
+          dark={isAnalyticsTab}
+        />
+        <NavBtn active={activeTab === "settings"} icon={SettingsIcon} label="Settings" onClick={() => setActiveTab("settings")} dark={isAnalyticsTab} />
       </div>
     </div>
   );
 }
 
-function NavBtn({ active, icon: Icon, label, onClick }: any) {
+function NavBtn({
+  active,
+  icon: Icon,
+  label,
+  onClick,
+  dark,
+}: {
+  active: boolean;
+  icon: typeof Home;
+  label: string;
+  onClick: () => void;
+  dark?: boolean;
+}) {
   return (
-    <button onClick={onClick} className={cn("flex flex-col items-center gap-1 transition-colors w-16", active ? "text-black" : "text-gray-400 hover:text-gray-800")}>
-      <Icon className={cn("h-6 w-6", active ? "fill-black stroke-black" : "")} strokeWidth={active ? 2.5 : 2} />
-      <span className={cn("text-[10px] font-medium tracking-wide", active ? "text-black font-bold" : "")}>{label}</span>
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-1 transition-colors w-16",
+        dark
+          ? active
+            ? "text-white"
+            : "text-zinc-500 hover:text-zinc-300"
+          : active
+            ? "text-black"
+            : "text-gray-400 hover:text-gray-800",
+      )}
+    >
+      <Icon
+        className={cn("h-6 w-6", active && (dark ? "text-white" : "fill-black stroke-black"))}
+        strokeWidth={active ? 2.5 : 2}
+      />
+      <span className={cn("text-[10px] font-medium tracking-wide", active && (dark ? "font-semibold text-white" : "text-black font-bold"))}>{label}</span>
     </button>
   );
 }
