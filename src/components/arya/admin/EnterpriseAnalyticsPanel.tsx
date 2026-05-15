@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ElementType, ReactNode } from "react";
+import type { Dispatch, ElementType, ReactNode, SetStateAction } from "react";
 import {
   Activity,
   ArrowDownRight,
