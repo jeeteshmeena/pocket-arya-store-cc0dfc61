@@ -442,7 +442,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <button
               type="button"
               onClick={applyFilters}
-              className="order-1 w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 sm:order-2 sm:w-auto sm:min-w-[120px]"
+              className="order-1 w-full rounded-xl bg-[#0071e3] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0077ed] disabled:opacity-50 sm:order-2 sm:w-auto sm:min-w-[120px]"
             >
               Apply filters
             </button>
