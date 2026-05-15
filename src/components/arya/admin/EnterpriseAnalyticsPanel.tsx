@@ -293,7 +293,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
   return (
     <section
       className="min-h-[70vh] w-full overflow-x-hidden bg-[#f5f5f7] pb-10 text-[#111111]"
-      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Inter, system-ui, sans-serif" }}
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Inter, system-ui, sans-serif", maxWidth: "100vw" }}
     >
       {refreshing && data ? <div className="fixed left-0 right-0 top-0 z-50 h-0.5 animate-pulse bg-[#111111]" /> : null}
 
@@ -431,20 +431,22 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             ) : null}
 
             {tab === "geo" ? (
-              <div className="mt-5 grid gap-4 xl:grid-cols-3">
-                <Card className="xl:col-span-2">
+              <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <Card className="min-w-0 overflow-hidden lg:col-span-2">
                   <CardTitle icon={Globe2} title="Top countries" subtitle="Country level user distribution." />
-                  <VerticalBars data={data.geo.countries} />
+                  <div className="w-full overflow-x-auto">
+                    <VerticalBars data={data.geo.countries} />
+                  </div>
                 </Card>
-                <Card>
+                <Card className="min-w-0">
                   <CardTitle icon={MapPin} title="Top cities" subtitle="City level user distribution." />
                   <ListRows data={data.geo.cities} empty="No city data yet" />
                 </Card>
-                <Card>
+                <Card className="min-w-0">
                   <CardTitle icon={MapPin} title="States / regions" subtitle="Regional split when backend provides it." />
                   <ListRows data={data.geo.states ?? []} empty="No region data yet" />
                 </Card>
-                <Card className="xl:col-span-2">
+                <Card className="min-w-0 overflow-hidden lg:col-span-2">
                   <CardTitle icon={Clock3} title="Activity heatmap" subtitle="Rows are days, columns are hours. Darker means more activity." />
                   <HeatMini cells={data.geo.heatmap ?? []} />
                 </Card>
@@ -468,8 +470,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             ) : null}
 
             {tab === "content" ? (
-              <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                <Card>
+              <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Card className="min-w-0 overflow-hidden">
                   <CardTitle icon={Layers} title="Stories" subtitle="Most viewed stories in this window." />
                   <TableRows rows={storyTop.map((s) => [s.title, fmt(s.views)])} empty="No story activity yet" />
                   <div className="mt-4 grid grid-cols-3 gap-2">
@@ -478,7 +480,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                     <MiniStat label="Avg listen" value={`${fmt(data.stories.avg_listen_proxy_sec)}s`} />
                   </div>
                 </Card>
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardTitle icon={Search} title="Search" subtitle="Search terms and failed searches." />
                   <ListRows
                     data={(data.search.top ?? []).map((item) => ({ name: item.query, value: item.count }))}
@@ -488,11 +490,11 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                     Failed searches: <span className="font-semibold text-[#111111]">{fmt(data.search.failed_searches)}</span>
                   </div>
                 </Card>
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardTitle icon={Layers} title="Chapters" subtitle="Chapter-level events when available." />
                   <TableRows rows={chapterTop.map((c) => [c.chapter_id, fmt(c.events)])} empty="No chapter activity yet" />
                 </Card>
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardTitle icon={MousePointerClick} title="Traffic sources" subtitle="Direct, Telegram and referral sources." />
                   <ListRows data={trafficSources} empty="No referrer data yet" />
                 </Card>
@@ -568,7 +570,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("rounded-3xl border border-[#e1e1e4] bg-white p-5 shadow-sm", className)}>{children}</div>;
+  return <div className={cn("min-w-0 rounded-3xl border border-[#e1e1e4] bg-white p-5 shadow-sm", className)}>{children}</div>;
 }
 
 function CardTitle({ icon: Icon, title, subtitle }: { icon: ElementType; title: string; subtitle?: string }) {
