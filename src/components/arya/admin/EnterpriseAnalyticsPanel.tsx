@@ -538,7 +538,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
   );
 }
 
-function FilterBar({ draft, setDraft, onApply }: { draft: AnalyticsFilterForm; setDraft: React.Dispatch<React.SetStateAction<AnalyticsFilterForm>>; onApply: () => void }) {
+function FilterBar({ draft, setDraft, onApply }: { draft: AnalyticsFilterForm; setDraft: Dispatch<SetStateAction<AnalyticsFilterForm>>; onApply: () => void }) {
   return (
     <div className="mt-5 rounded-3xl border border-[#e1e1e4] bg-white p-4 shadow-sm">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
