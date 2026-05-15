@@ -256,7 +256,7 @@ export function AdminView() {
     <div
       className={cn(
         "flex flex-col min-h-full font-sans pb-24 transition-colors duration-200",
-        isAnalyticsTab ? "bg-zinc-950 text-zinc-100" : "bg-white text-black",
+        "bg-[#f5f5f7] text-[#111111]",
       )}
     >
       {/* Header */}
@@ -264,7 +264,7 @@ export function AdminView() {
         className={cn(
           "sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b",
           isAnalyticsTab
-            ? "border-zinc-800 bg-zinc-950/95 backdrop-blur-sm"
+            ? "border-[#e1e1e4] bg-white/95 backdrop-blur-xl shadow-sm"
             : "bg-white border-gray-100 shadow-sm",
         )}
       >
@@ -273,25 +273,25 @@ export function AdminView() {
             onClick={back}
             className={cn(
               "p-1.5 rounded-full transition",
-              isAnalyticsTab ? "hover:bg-zinc-800 text-zinc-300" : "hover:bg-gray-50",
+              "hover:bg-[#f5f5f7] text-[#111111]",
             )}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <span className={cn("text-base font-semibold tracking-tight", isAnalyticsTab && "text-white")}>Arya Admin</span>
+          <span className={cn("text-base font-semibold tracking-tight", false)}>Arya Admin</span>
         </div>
         <button
           onClick={loadData}
           className={cn(
             "p-2 rounded-full transition",
-            isAnalyticsTab ? "hover:bg-zinc-800 text-zinc-400" : "hover:bg-gray-50",
+            "hover:bg-[#f5f5f7] text-[#525252]",
           )}
         >
           <RefreshCw className="h-4 w-4" />
         </button>
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto", isAnalyticsTab && "bg-black")}>
+      <div className={cn("flex-1 overflow-y-auto bg-[#f5f5f7]")}>
         {loading ? (
           <div className="p-4 space-y-4">
             <Skeleton className="h-32 w-full rounded-2xl" />
@@ -326,31 +326,31 @@ export function AdminView() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
                     <div className="absolute -right-2 -top-2 opacity-5"><Bot className="w-20 h-20" /></div>
-                    <div className="mb-2 text-blue-500"><Bot className="w-7 h-7" /></div>
+                    <div className="mb-2 text-[#525252]"><Bot className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{(stats?.bot_users || 0).toLocaleString()}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Bot Users</div>
-                    <div className="text-[10px] text-blue-500 font-bold mt-2">Telegram Bot</div>
+                    <div className="text-[10px] text-[#525252] font-bold mt-2">Telegram Bot</div>
                   </div>
                   <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
                     <div className="absolute -right-2 -top-2 opacity-5"><Smartphone className="w-20 h-20" /></div>
-                    <div className="mb-2 text-emerald-500"><Smartphone className="w-7 h-7" /></div>
+                    <div className="mb-2 text-[#111111]"><Smartphone className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{(stats?.miniapp_users || 0).toLocaleString()}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Mini App Users</div>
-                    <div className="text-[10px] text-emerald-500 font-bold mt-2">Web Store</div>
+                    <div className="text-[10px] text-[#111111] font-bold mt-2">Web Store</div>
                   </div>
                   <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
                     <div className="absolute -right-2 -top-2 opacity-5"><Library className="w-20 h-20" /></div>
-                    <div className="mb-2 text-purple-500"><Library className="w-7 h-7" /></div>
+                    <div className="mb-2 text-[#525252]"><Library className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{stats?.total_stories || 0}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Stories</div>
-                    <div className="text-[10px] text-purple-500 font-bold mt-2">Available</div>
+                    <div className="text-[10px] text-[#525252] font-bold mt-2">Available</div>
                   </div>
                   <div className="bg-white p-4 rounded-[20px] shadow-sm border border-gray-100 relative overflow-hidden">
                     <div className="absolute -right-2 -top-2 opacity-5"><ShoppingBag className="w-20 h-20" /></div>
-                    <div className="mb-2 text-rose-500"><ShoppingBag className="w-7 h-7" /></div>
+                    <div className="mb-2 text-[#525252]"><ShoppingBag className="w-7 h-7" /></div>
                     <div className="text-2xl font-black">{buyers?.length || 0}</div>
                     <div className="text-xs text-gray-500 font-medium mt-0.5">Total Orders</div>
-                    <div className="text-[10px] text-rose-500 font-bold mt-2 hover:underline cursor-pointer" onClick={() => setActiveTab("support")}>Requests: {storyRequests?.length || 0}</div>
+                    <div className="text-[10px] text-[#525252] font-bold mt-2 hover:underline cursor-pointer" onClick={() => setActiveTab("support")}>Requests: {storyRequests?.length || 0}</div>
                   </div>
                 </div>
 
@@ -369,14 +369,14 @@ export function AdminView() {
                       <span>{stats?.recent_orders?.filter((o:any)=>o.source==='bot'||o.source==='manual_admin').length || 0}</span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{width:`${Math.min(100,((stats?.recent_orders?.filter((o:any)=>o.source==='bot'||o.source==='manual_admin').length||0)/Math.max(1,stats?.recent_orders?.length||1))*100)}%`}} />
+                      <div className="h-full bg-[#111111] rounded-full" style={{width:`${Math.min(100,((stats?.recent_orders?.filter((o:any)=>o.source==='bot'||o.source==='manual_admin').length||0)/Math.max(1,stats?.recent_orders?.length||1))*100)}%`}} />
                     </div>
                     <div className="flex justify-between text-xs text-gray-400 font-bold px-1">
                       <span>Mini App Orders</span>
                       <span>{stats?.recent_orders?.filter((o:any)=>o.source!=='bot'&&o.source!=='manual_admin').length || 0}</span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{width:`${Math.min(100,((stats?.recent_orders?.filter((o:any)=>o.source!=='bot'&&o.source!=='manual_admin').length||0)/Math.max(1,stats?.recent_orders?.length||1))*100)}%`}} />
+                      <div className="h-full bg-[#525252] rounded-full" style={{width:`${Math.min(100,((stats?.recent_orders?.filter((o:any)=>o.source!=='bot'&&o.source!=='manual_admin').length||0)/Math.max(1,stats?.recent_orders?.length||1))*100)}%`}} />
                     </div>
                   </div>
                 </div>
@@ -404,7 +404,7 @@ export function AdminView() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-sm">₹{(o.amount || 0).toLocaleString()}</div>
-                          <div className={cn("text-[10px] font-bold mt-0.5 uppercase", o.status === "paid" ? "text-emerald-500" : "text-gray-400")}>{o.status}</div>
+                          <div className={cn("text-[10px] font-bold mt-0.5 uppercase", o.status === "paid" ? "text-[#111111]" : "text-gray-400")}>{o.status}</div>
                         </div>
                       </div>
                     ))}
@@ -417,7 +417,7 @@ export function AdminView() {
                   <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="font-bold text-base flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Support Tickets</h3>
-                      <button onClick={() => { setActiveTab("support"); setMoreSubTab("support"); }} className="text-xs font-bold text-blue-500 hover:underline">View All</button>
+                      <button onClick={() => { setActiveTab("support"); setMoreSubTab("support"); }} className="text-xs font-bold text-[#525252] hover:underline">View All</button>
                     </div>
                     {supportTickets.length === 0 ? (
                       <div className="text-center py-6 text-gray-400 text-xs">No open tickets</div>
@@ -440,7 +440,7 @@ export function AdminView() {
                   <div className="bg-white p-5 rounded-[24px] shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="font-bold text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Story Requests</h3>
-                      <button onClick={() => { setActiveTab("store"); setStoreSubTab("requests"); }} className="text-xs font-bold text-blue-500 hover:underline">View All</button>
+                      <button onClick={() => { setActiveTab("store"); setStoreSubTab("requests"); }} className="text-xs font-bold text-[#525252] hover:underline">View All</button>
                     </div>
                     {storyRequests.length === 0 ? (
                       <div className="text-center py-6 text-gray-400 text-xs">No pending requests</div>
@@ -553,7 +553,7 @@ export function AdminView() {
                     <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
                       <h2 className="font-bold text-xl text-black">Orders & Buyers</h2>
                       <div className="flex gap-2">
-                        <button onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}?start=bcast`)} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-blue-50 text-blue-600 font-bold hover:bg-blue-100">
+                        <button onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}?start=bcast`)} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-[#f5f5f7] text-[#111111] font-bold hover:bg-[#ededf0]">
                           <MessageSquare className="h-3.5 w-3.5" /> Broadcast All
                         </button>
                         <button onClick={() => { setManualForm({ user_id: "", first_name: "", username: "", story_id: "", amount: 0 }); setIsManualFormOpen(true); }} className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-black text-white font-bold">
@@ -663,8 +663,8 @@ export function AdminView() {
                   <input required type="text" value={editingStory.story_id || ""} onChange={e => setEditingStory({...editingStory, story_id: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium" disabled={!(editingStory?.story_id || "").startsWith("story_")} />
                 </div>
                 {/* Story Name — admin manually enters both scripts. Names are NEVER auto-translated. */}
-                <div className="p-3 rounded-[14px] bg-blue-50 border border-blue-200 text-[11px] text-blue-700 font-semibold">
-                  📝 Story name <b>script</b> change karo, language/meaning NAHI. Roman script ke liye EN field, Devanagari ke liye HI field.
+                <div className="p-3 rounded-[14px] bg-[#f5f5f7] border border-[#e1e1e4] text-[11px] text-[#111111] font-semibold">
+                  Story name script change karo, language/meaning NAHI. Roman script ke liye EN field, Devanagari ke liye HI field.
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -685,8 +685,8 @@ export function AdminView() {
                   <textarea rows={2} value={editingStory.description_hi || ""} onChange={e => setEditingStory({...editingStory, description_hi: e.target.value})} className="w-full p-3.5 rounded-[16px] text-sm outline-none bg-white border border-gray-200 focus:border-black font-medium resize-none" />
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-blue-50 text-blue-600 disabled:opacity-50">Desc EN → HI</button>
-                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("en")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-emerald-50 text-emerald-600 disabled:opacity-50">Desc HI → EN</button>
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("hi")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-[#f5f5f7] text-[#111111] disabled:opacity-50">Desc EN → HI</button>
+                  <button type="button" disabled={!!translating} onClick={() => handleAutoTranslate("en")} className="flex-1 py-2.5 text-xs font-bold rounded-[12px] bg-[#f5f5f7] text-[#111111] disabled:opacity-50">Desc HI → EN</button>
                 </div>
               </div>
 
@@ -819,7 +819,7 @@ export function AdminView() {
                 )} />
               </button>
             </div>
-            <div className={cn("mt-3 text-xs font-bold px-3 py-1.5 rounded-full inline-block", adminSettings.mini_app_enabled ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600")}>
+            <div className={cn("mt-3 text-xs font-bold px-3 py-1.5 rounded-full inline-block", adminSettings.mini_app_enabled ? "bg-[#ededf0] text-[#111111]" : "bg-gray-100 text-gray-600")}>
               {adminSettings.mini_app_enabled ? "✅ Mini App Links: ON" : "❌ Mini App Links: OFF (Bot only)"}
             </div>
           </div>
@@ -858,12 +858,12 @@ export function AdminView() {
                 )} />
               </button>
             </div>
-            <div className={cn("mt-3 text-xs font-bold px-3 py-1.5 rounded-full inline-block", adminSettings.tnc_enabled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")}>
+            <div className={cn("mt-3 text-xs font-bold px-3 py-1.5 rounded-full inline-block", adminSettings.tnc_enabled ? "bg-[#ededf0] text-[#111111]" : "bg-amber-100 text-amber-700")}>
               {adminSettings.tnc_enabled ? "✅ T&C Prompt: ON" : "⚠️ T&C: OFF (Auto-accepted)"}
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-[16px] p-4 text-xs text-blue-700 font-medium">
+          <div className="bg-[#f5f5f7] border border-[#e1e1e4] rounded-[16px] p-4 text-xs text-[#111111] font-medium">
             💡 Changes are saved to the database and reflected in both the Telegram Bot and Mini App immediately — no restart needed.
           </div>
         </div>
@@ -1025,11 +1025,11 @@ function BuyerDetailPage({ buyer, stories, tgUser, onBack }: any) {
           </div>
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Total Spent</div>
-            <div className="font-black text-sm text-emerald-600">₹{(buyer.amount || 0).toLocaleString()}</div>
+            <div className="font-black text-sm text-[#111111]">₹{(buyer.amount || 0).toLocaleString()}</div>
           </div>
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">Status</div>
-            <div className={`font-bold text-sm capitalize ${buyer.status === 'paid' ? 'text-emerald-600' : 'text-gray-600'}`}>{buyer.status || "unknown"}</div>
+            <div className={`font-bold text-sm capitalize ${buyer.status === 'paid' ? 'text-[#111111]' : 'text-gray-600'}`}>{buyer.status || "unknown"}</div>
           </div>
           <div className="bg-gray-50 rounded-[16px] p-3">
             <div className="text-[10px] text-gray-400 font-bold uppercase mb-1">First Order</div>
@@ -1083,7 +1083,7 @@ function BuyerDetailPage({ buyer, stories, tgUser, onBack }: any) {
                     <div className="text-[10px] text-gray-400 mt-0.5">{p.platform || s?.platform || ""}</div>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full font-bold capitalize">{p.method || "unknown"}</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold capitalize ${p.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold capitalize ${p.status === 'paid' ? 'bg-[#ededf0] text-[#111111]' : 'bg-gray-100 text-gray-500'}`}>{p.status}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -1110,7 +1110,7 @@ function ManualGrantPage({ stories, manualForm, setManualForm, manualSaving, onS
       </div>
       <form onSubmit={onSubmit} className="p-4 space-y-4">
         <div className="bg-amber-50 border border-amber-200 rounded-[16px] p-4 text-xs text-amber-700 font-medium">
-          ⚠️ Use this to grant story access to a user whose payment was confirmed but delivery failed.
+          Use this to grant story access to a user whose payment was confirmed but delivery failed.
         </div>
         <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 space-y-4">
           <h3 className="font-black text-sm uppercase tracking-wider text-gray-500">User Details</h3>
@@ -1144,7 +1144,7 @@ function ManualGrantPage({ stories, manualForm, setManualForm, manualSaving, onS
           </div>
         </div>
         <button disabled={manualSaving} type="submit" className="w-full py-4 font-black text-base rounded-[20px] bg-black text-white shadow-xl hover:bg-gray-900 active:scale-[0.98] transition disabled:opacity-60">
-          {manualSaving ? "Granting Access..." : "✅ Grant Story Access"}
+          {manualSaving ? "Granting Access..." : "Grant Story Access"}
         </button>
       </form>
     </div>

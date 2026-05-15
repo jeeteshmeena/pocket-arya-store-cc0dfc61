@@ -27,6 +27,6 @@
     { "src": "/refund",   "dest": "/refund.html" },
     { "src": "/shipping", "dest": "/shipping.html" },
     { "src": "/contact",  "dest": "/contact.html" },
-    { "src": "/(.*)",     "dest": "/landing.html" }
+    { "src": "/(.*)",     "dest": "/app.html" }
   ]
 }
