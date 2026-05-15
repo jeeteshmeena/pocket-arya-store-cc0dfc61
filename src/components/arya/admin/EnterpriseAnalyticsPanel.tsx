@@ -1,18 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ElementType, ReactNode } from "react";
 import {
   Activity,
-  ArrowRight,
+  ArrowDownRight,
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
   Cpu,
   CreditCard,
   Globe2,
-  Headphones,
   Layers,
   MapPin,
+  MousePointerClick,
   Radio,
+  RefreshCw,
   Search,
-  Timer,
-  TrendingUp,
-  Zap,
+  ShieldCheck,
+  Smartphone,
+  Users,
+  XCircle,
 } from "lucide-react";
 import {
   Area,
@@ -24,12 +31,9 @@ import {
   Pie,
   PieChart,
   ResponsiveContainer,
-  Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
-  ZAxis,
 } from "recharts";
 
 import {
@@ -37,6 +41,7 @@ import {
   getAnalyticsWebSocketUrl,
   type TelegramIdentity,
 } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export type EnterpriseDashboard = {
   success: boolean;
@@ -128,94 +133,6 @@ export type EnterpriseDashboard = {
   filters_echo: Record<string, unknown>;
 };
 
-/** Refined iOS-inspired chart palette — single accent + neutral, no rainbow. */
-const ACCENT = "#0071e3";        // SF blue
-const ACCENT_SOFT = "#6ea8fe";
-const NEUTRAL = "#1d1d1f";
-const NEUTRAL_SOFT = "#86868b";
-const G = ACCENT;                // back-compat alias used by chart fills
-const R = NEUTRAL;
-
-function sliceFill(i: number) {
-  // Alternate accent / neutral / soft accent for clean, premium chart fills
-  const palette = [ACCENT, NEUTRAL, ACCENT_SOFT, NEUTRAL_SOFT];
-  return palette[i % palette.length];
-}
-
-function AnimatedInt({
-  value,
-  decimals = 0,
-  suffix = "",
-}: {
-  value: number;
-  decimals?: number;
-  suffix?: string;
-}) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const dur = 420;
-    const from = 0;
-    const to = Number.isFinite(value) ? value : 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      const eased = 1 - (1 - p) ** 3;
-      const cur = from + (to - from) * eased;
-      setV(decimals ? Number(cur.toFixed(decimals)) : Math.round(cur));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, decimals]);
-  return (
-    <span>
-      {decimals
-        ? v.toLocaleString(undefined, { maximumFractionDigits: decimals })
-        : v.toLocaleString()}
-      {suffix}
-    </span>
-  );
-}
-
-function PanelCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`rounded-3xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.08)] ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function SectionTitle({
-  icon: Icon,
-  title,
-  subtitle,
-}: {
-  icon: React.ElementType;
-  title: string;
-  subtitle?: string;
-}) {
-  return (
-    <div className="mb-4 flex items-start justify-between gap-4">
-      <div>
-        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#86868b]">
-          <Icon className="h-3.5 w-3.5 text-[#86868b]" />
-          {title}
-        </div>
-        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-[#86868b]">{subtitle}</p> : null}
-      </div>
-    </div>
-  );
-}
-
 type AnalyticsFilterForm = {
   days: number;
   country: string;
@@ -224,6 +141,8 @@ type AnalyticsFilterForm = {
   device: string;
   telegramOnly: boolean;
 };
+
+type AnalyticsTab = "overview" | "geo" | "audience" | "content" | "events";
 
 const defaultFilters: AnalyticsFilterForm = {
   days: 30,
@@ -234,923 +153,38 @@ const defaultFilters: AnalyticsFilterForm = {
   telegramOnly: false,
 };
 
-export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdentity | null }) {
-  const [data, setData] = useState<EnterpriseDashboard | null>(null);
-  const [bootLoading, setBootLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [live, setLive] = useState<Array<Record<string, unknown>>>([]);
-  /** Values used for the last successful (or attempted) API request — updated only via Apply or identity reset. */
-  const [applied, setApplied] = useState<AnalyticsFilterForm>(() => ({ ...defaultFilters }));
-  /** Editable form; does not hit the API until Apply. */
-  const [draft, setDraft] = useState<AnalyticsFilterForm>(() => ({ ...defaultFilters }));
+const ink = "#111111";
+const graphite = "#525252";
+const muted = "#8a8a8e";
+const line = "#e7e7ea";
+const panel = "#ffffff";
+const wash = "#f5f5f7";
+const CHART = ["#111111", "#444444", "#707070", "#9b9b9b", "#c5c5c7", "#e1e1e3"];
 
-  const firstLoadRef = useRef(true);
+const tooltipStyle = {
+  background: panel,
+  border: `1px solid ${line}`,
+  borderRadius: 12,
+  color: ink,
+  boxShadow: "0 18px 50px -28px rgba(0,0,0,.35)",
+};
 
-  useEffect(() => {
-    firstLoadRef.current = true;
-    const reset = { ...defaultFilters };
-    setApplied(reset);
-    setDraft({ ...defaultFilters });
-  }, [identity?.telegram_id]);
+function fmt(value: unknown) {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) ? n.toLocaleString("en-IN") : "0";
+}
 
-  const fetchDashboard = useCallback(async () => {
-    if (!identity?.telegram_id) {
-      setErr("Open this panel inside Telegram as an owner account.");
-      setBootLoading(false);
-      setRefreshing(false);
-      return;
-    }
-    const isFirst = firstLoadRef.current;
-    if (isFirst) setBootLoading(true);
-    else setRefreshing(true);
-    setErr(null);
-    try {
-      const j = (await fetchEnterpriseDashboard(identity, {
-        days: applied.days,
-        country: applied.country.trim() || undefined,
-        city: applied.city.trim() || undefined,
-        story_id: applied.storyId.trim() || undefined,
-        device: applied.device.trim() || undefined,
-        telegram_only: applied.telegramOnly || undefined,
-      })) as unknown as EnterpriseDashboard;
-      setData(j);
-      if (isFirst) firstLoadRef.current = false;
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed to load analytics");
-    } finally {
-      setBootLoading(false);
-      setRefreshing(false);
-    }
-  }, [identity, applied]);
+function pct(value: unknown) {
+  const n = Number(value ?? 0);
+  return `${Number.isFinite(n) ? n.toFixed(n % 1 ? 1 : 0) : "0"}%`;
+}
 
-  useEffect(() => {
-    void fetchDashboard();
-  }, [fetchDashboard]);
+function money(value: unknown) {
+  return `₹${fmt(value)}`;
+}
 
-  const applyFilters = useCallback(() => {
-    setApplied({ ...draft });
-  }, [draft]);
-
-  const onWs = useCallback((msg: unknown) => {
-    if (msg && typeof msg === "object" && (msg as { channel?: string }).channel === "live") {
-      setLive((prev) =>
-        [{ ...(msg as object), _ts: Date.now() } as Record<string, unknown>, ...prev].slice(0, 120),
-      );
-    }
-  }, []);
-
-  useWebSocketLive(identity?.telegram_id ?? null, onWs);
-
-  const hourly = useMemo(() => data?.charts?.hourly_events ?? [], [data]);
-  const mapPoints = useMemo(() => data?.map_points ?? [], [data]);
-  const growth = useMemo(() => data?.intelligence?.user_growth_by_day ?? [], [data]);
-
-  const storiesTop = useMemo(
-    () =>
-      (data?.stories?.top_viewed as Array<{ story_id: string; title: string; views: number }>) ??
-      [],
-    [data],
-  );
-
-  const journeyNodes = ((data?.journey?.nodes as Array<{ id: string; count: number }>) ??
-    []) as Array<{
-    id: string;
-    count: number;
-  }>;
-
-  const clickPoints = useMemo(() => data?.click_heatmap?.points ?? [], [data]);
-  const clickLogs = useMemo(() => data?.click_logs ?? [], [data]);
-  const trafficSources = useMemo(() => data?.traffic?.sources ?? [], [data]);
-  const chapterTop = useMemo(
-    () =>
-      (data?.stories as { chapter_top?: Array<{ chapter_id: string; events: number }> } | undefined)
-        ?.chapter_top ?? [],
-    [data],
-  );
-
-  const showSkeleton = bootLoading && !data;
-
-  return (
-    <div className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f5f5f7] pb-10 text-[#1d1d1f]" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif" }}>
-      {refreshing && data ? (
-        <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-black/5">
-          <div className="h-full w-1/3 animate-pulse bg-[#0071e3]/40" />
-        </div>
-      ) : null}
-
-      <div className="relative z-10 px-4 py-7 sm:px-6 lg:px-10">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#86868b]">Admin · Analytics</div>
-            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-[#1d1d1f] sm:text-3xl md:text-[34px]">
-              Intelligence
-            </h1>
-            <p className="mt-1 text-sm text-[#6e6e73]">Real-time engagement, geography and revenue across the mini app.</p>
-          </div>
-          <div className="hidden flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#86868b] xl:flex">
-            <span>
-              <span className="text-[#1d1d1f]/60">WS</span>{" "}
-              <span className="font-mono text-[#1d1d1f]/70">/api/ws/analytics</span>
-            </span>
-            <span className="text-[#86868b]/40">·</span>
-            <span>
-              <span className="text-[#1d1d1f]/60">GET</span>{" "}
-              <span className="font-mono text-[#1d1d1f]/70">/api/analytics/enterprise-dashboard</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="relative z-10 w-full max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-10">
-        <PanelCard className="mb-6 mt-2 border-slate-200 bg-white p-4 sm:p-5">
-          <div className="mb-4 flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-              Report filters
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Range
-              <select
-                value={draft.days}
-                onChange={(e) => setDraft((d) => ({ ...d, days: Number(e.target.value) }))}
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-300"
-              >
-                {[7, 14, 30, 60, 90].map((d) => (
-                  <option key={d} value={d}>
-                    Last {d} days
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Country
-              <input
-                value={draft.country}
-                onChange={(e) => setDraft((d) => ({ ...d, country: e.target.value }))}
-                placeholder="e.g. India"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
-              />
-            </label>
-            <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              City
-              <input
-                value={draft.city}
-                onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
-                placeholder="Optional"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
-              />
-            </label>
-            <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Story ID
-              <input
-                value={draft.storyId}
-                onChange={(e) => setDraft((d) => ({ ...d, storyId: e.target.value }))}
-                placeholder="Optional"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
-              />
-            </label>
-            <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
-              Device
-              <input
-                value={draft.device}
-                onChange={(e) => setDraft((d) => ({ ...d, device: e.target.value }))}
-                placeholder="mobile / desktop"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
-              />
-            </label>
-            <label className="flex cursor-pointer items-end gap-3 rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 sm:min-h-[76px]">
-              <input
-                type="checkbox"
-                checked={draft.telegramOnly}
-                onChange={(e) => setDraft((d) => ({ ...d, telegramOnly: e.target.checked }))}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-slate-100 text-slate-900 focus:ring-zinc-600"
-              />
-              <span className="text-xs leading-snug text-slate-600">Telegram WebView only</span>
-            </label>
-          </div>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={() => void fetchDashboard()}
-              disabled={bootLoading && !data}
-              className="order-2 w-full rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-100 disabled:opacity-50 sm:order-1 sm:w-auto"
-            >
-              Refresh
-            </button>
-            <button
-              type="button"
-              onClick={applyFilters}
-              className="order-1 w-full rounded-xl bg-[#0071e3] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0077ed] disabled:opacity-50 sm:order-2 sm:w-auto sm:min-w-[120px]"
-            >
-              Apply filters
-            </button>
-          </div>
-        </PanelCard>
-
-        {err ? (
-          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-red-700">{err}</p>
-            <button
-              type="button"
-              onClick={() => void fetchDashboard()}
-              className="shrink-0 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              Retry
-            </button>
-          </div>
-        ) : null}
-
-        {showSkeleton ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-36 animate-pulse rounded-2xl bg-slate-100" />
-            ))}
-          </div>
-        ) : data ? (
-          <>
-            <div className="mb-8 grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
-              <HeroStat label="Mini app users" value={data.hero.total_users} icon={Activity} />
-              <HeroStat label="Active now" value={data.hero.active_now} icon={Zap} pulse />
-              <HeroStat label="In window" value={data.hero.unique_in_window} icon={Layers} />
-              <HeroStat
-                label="New (window)"
-                value={data.hero.new_users_in_window ?? 0}
-                icon={TrendingUp}
-              />
-              <HeroStat
-                label="Retention"
-                value={data.hero.retention_pct ?? 0}
-                suffix="%"
-                icon={ArrowRight}
-                decimals={1}
-              />
-              <HeroStat
-                label="Events / user"
-                value={data.hero.engagement_events_per_user ?? 0}
-                icon={Timer}
-                decimals={1}
-              />
-              <HeroStat label="Sessions tracked" value={data.hero.sessions_tracked} icon={Cpu} />
-              <HeroStat
-                label="Revenue (₹)"
-                value={data.hero.total_revenue}
-                icon={Layers}
-                decimals={0}
-              />
-            </div>
-            <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <HeroStat
-                label="Avg session (s)"
-                value={Math.round(data.hero.avg_session_seconds)}
-                icon={Activity}
-              />
-              <HeroStat label="Returning" value={data.hero.returning_in_window} icon={ArrowRight} />
-              <HeroStat
-                label="Premium conversion"
-                value={data.hero.premium_conversion_pct}
-                suffix="%"
-                icon={Layers}
-                decimals={1}
-              />
-              <HeroStat
-                label="Paid orders"
-                value={data.hero.orders_paid_or_delivered}
-                icon={Layers}
-              />
-            </div>
-
-            <div className="grid gap-6 xl:grid-cols-3">
-              <PanelCard className="xl:col-span-2">
-                <SectionTitle icon={Radio} title="Live activity" />
-                <div className="h-72 overflow-hidden rounded-xl border border-slate-200 bg-[#f8fafc]">
-                  <div className="h-full overflow-y-auto pr-2">
-                    {(live.length ? live : data.live_feed).slice(0, 60).map((row, idx) => (
-                      <div
-                        key={`${(row as { id?: string }).id ?? idx}-${(row as { _ts?: number })._ts ?? idx}`}
-                        className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-slate-100 px-3 py-2 text-xs"
-                      >
-                        <span className="min-w-0 flex-[2] truncate text-slate-800">
-                          {String((row as { summary?: string }).summary || "").trim() ||
-                            String((row as { type?: string }).type ?? "event")}
-                        </span>
-                        <span className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
-                          {String((row as { type?: string }).type ?? "event")}
-                        </span>
-                        <span className="text-slate-400">user</span>
-                        <span className="font-mono text-slate-800">
-                          {String((row as { user_id?: unknown }).user_id ?? "—")}
-                        </span>
-                        <span className="text-slate-300">·</span>
-                        <MapPin className="h-3 w-3 text-slate-400" />
-                        <span className="text-slate-500">
-                          {(row as { city?: string }).city ?? "—"}
-                          {((row as { region?: string }).region || "").trim() ? (
-                            <>
-                              ,{" "}
-                              <span className="text-slate-600">
-                                {(row as { region?: string }).region}
-                              </span>
-                            </>
-                          ) : null}
-                          {", "}
-                          {(row as { country?: string }).country ?? ""}
-                        </span>
-                        <span className="ml-auto font-mono text-slate-400">
-                          {String(
-                            (row as { ts?: string }).ts ?? (row as { time?: string }).time ?? "",
-                          )}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={Cpu} title="Performance" />
-                <div className="space-y-3 text-sm text-slate-600">
-                  <RowKV
-                    label="Samples"
-                    value={String((data.performance as { samples?: number }).samples ?? 0)}
-                  />
-                  <RowKV
-                    label="Avg page load"
-                    value={
-                      (data.performance as { avg_page_load_ms?: number | null }).avg_page_load_ms !=
-                      null
-                        ? `${(data.performance as { avg_page_load_ms?: number }).avg_page_load_ms} ms`
-                        : "—"
-                    }
-                  />
-                  <RowKV
-                    label="Avg API"
-                    value={
-                      (data.performance as { avg_api_ms?: number | null }).avg_api_ms != null
-                        ? `${(data.performance as { avg_api_ms?: number }).avg_api_ms} ms`
-                        : "—"
-                    }
-                  />
-                  <RowKV
-                    label="Console errors"
-                    value={String(
-                      (data.performance as { console_errors?: number }).console_errors ?? 0,
-                    )}
-                  />
-                </div>
-              </PanelCard>
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <PanelCard>
-                <SectionTitle icon={CreditCard} title="Checkout funnel" />
-                <div className="grid grid-cols-2 gap-3 text-sm text-slate-600">
-                  <RowKV label="Opened" value={String(data.checkout?.opened_checkout ?? 0)} />
-                  <RowKV label="Pay started" value={String(data.checkout?.pay_started ?? 0)} />
-                  <RowKV label="Completed" value={String(data.checkout?.completed ?? 0)} />
-                  <RowKV label="Failed" value={String(data.checkout?.failed ?? 0)} />
-                  <RowKV label="Abandoned (est.)" value={String(data.checkout?.abandoned ?? 0)} />
-                  <RowKV
-                    label="Conversion"
-                    value={`${String(data.checkout?.conversion_pct ?? 0)}%`}
-                  />
-                </div>
-              </PanelCard>
-              <PanelCard>
-                <SectionTitle icon={ArrowRight} title="Retention" />
-                <div className="grid grid-cols-2 gap-3 text-sm text-slate-600">
-                  <RowKV label="Returning" value={String(data.retention?.returning_users ?? 0)} />
-                  <RowKV
-                    label="Users in window"
-                    value={String(data.retention?.users_in_window ?? 0)}
-                  />
-                  <RowKV
-                    label="New in window"
-                    value={String(data.retention?.new_users_in_window ?? 0)}
-                  />
-                  <RowKV
-                    label="Retention %"
-                    value={`${String(data.retention?.retention_pct ?? 0)}%`}
-                  />
-                </div>
-              </PanelCard>
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <PanelCard>
-                <SectionTitle icon={Globe2} title="Geo map" />
-                <div className="h-72 w-full max-w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 16, right: 16, bottom: 0, left: 0 }}>
-                      <CartesianGrid strokeDasharray="4 8" stroke="#f1f5f9" />
-                      <XAxis
-                        type="number"
-                        dataKey="lon"
-                        name="lon"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#94a3b8", fontSize: 10 }}
-                      />
-                      <YAxis
-                        type="number"
-                        dataKey="lat"
-                        name="lat"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#94a3b8", fontSize: 10 }}
-                      />
-                      <ZAxis type="number" dataKey="count" range={[80, 520]} />
-                      <Tooltip
-                        cursor={{ strokeDasharray: "3 3", stroke: "#52525b" }}
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                        formatter={(v: number, name: string) => [v, name]}
-                        labelFormatter={(_, p) =>
-                          p && p[0]
-                            ? [p[0].payload.city, p[0].payload.region, p[0].payload.country]
-                                .filter(Boolean)
-                                .join(", ")
-                            : ""
-                        }
-                      />
-                      <Scatter name="Activity" data={mapPoints} fill={G} fillOpacity={0.85} />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={Activity} title="Event cadence" />
-                <div className="h-72 w-full max-w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={hourly}>
-                      <defs>
-                        <linearGradient id="areaHourly" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={G} stopOpacity={0.45} />
-                          <stop offset="100%" stopColor={G} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="hour"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#64748b", fontSize: 11 }}
-                      />
-                      <YAxis stroke="#e2e8f0" tick={{ fill: "#64748b", fontSize: 11 }} />
-                      <Tooltip
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="events"
-                        stroke={G}
-                        strokeWidth={2}
-                        fill="url(#areaHourly)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </PanelCard>
-            </div>
-
-            <div className="mt-6 grid gap-6 xl:grid-cols-3">
-              <PanelCard>
-                <SectionTitle icon={Cpu} title="Devices" />
-                <div className="h-64 w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data.users.devices}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={2}
-                      >
-                        {data.users.devices.map((_, i) => (
-                          <Cell key={i} fill={sliceFill(i)} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-500">
-                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] px-2 py-2">
-                    Mobile / tablet
-                    <div className="text-lg font-semibold text-slate-900">
-                      {data.users.mobile_events}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] px-2 py-2">
-                    Desktop
-                    <div className="text-lg font-semibold text-slate-900">
-                      {data.users.desktop_events}
-                    </div>
-                  </div>
-                  <div className="col-span-2 rounded-lg border border-slate-100 bg-[#f8fafc] px-2 py-2">
-                    Telegram WebView
-                    <div className="text-lg font-semibold text-slate-900">
-                      {data.users.telegram_webview_events}
-                    </div>
-                  </div>
-                </div>
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={Globe2} title="Top countries" />
-                <div className="h-72 w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.geo.countries} layout="vertical" margin={{ left: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                      <XAxis
-                        type="number"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#64748b", fontSize: 10 }}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        width={100}
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#475569", fontSize: 10 }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                        {data.geo.countries.map((_, i) => (
-                          <Cell key={i} fill={sliceFill(i)} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={MapPin} title="Top cities" />
-                <div className="h-72 w-full overflow-hidden">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.geo.cities}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="name"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#64748b", fontSize: 9 }}
-                        interval={0}
-                        angle={-25}
-                        textAnchor="end"
-                        height={70}
-                      />
-                      <YAxis stroke="#e2e8f0" tick={{ fill: "#64748b", fontSize: 10 }} />
-                      <Tooltip
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Bar dataKey="value" fill={G} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </PanelCard>
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <PanelCard>
-                <SectionTitle icon={Headphones} title="Stories" />
-                <div className="max-h-80 overflow-auto rounded-xl border border-slate-200">
-                  <table className="w-full min-w-[max-content] text-left text-xs">
-                    <thead className="sticky top-0 bg-white text-slate-400">
-                      <tr>
-                        <th className="px-3 py-2">Story</th>
-                        <th className="px-3 py-2">Views</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {storiesTop.map((s) => (
-                        <tr key={s.story_id} className="border-t border-slate-100 text-slate-600">
-                          <td className="px-3 py-2">{s.title}</td>
-                          <td className="px-3 py-2 font-mono text-slate-900">{s.views}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-slate-400">
-                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] py-2">
-                    Completion (proxy %)
-                    <div className="text-lg font-semibold text-slate-900">
-                      {String(data.stories.story_completion_proxy_pct)}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] py-2">
-                    Drop-off (proxy %)
-                    <div className="text-lg font-semibold text-slate-900">
-                      {String(data.stories.dropoff_proxy_pct)}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] py-2">
-                    Avg session (sec)
-                    <div className="text-lg font-semibold text-slate-900">
-                      {String(data.stories.avg_listen_proxy_sec)}
-                    </div>
-                  </div>
-                </div>
-                {chapterTop.length > 0 ? (
-                  <div className="mt-4 max-h-48 overflow-auto rounded-xl border border-slate-200">
-                    <table className="w-full min-w-[max-content] text-left text-xs">
-                      <thead className="sticky top-0 bg-white text-slate-400">
-                        <tr>
-                          <th className="px-3 py-2">Chapter</th>
-                          <th className="px-3 py-2">Events</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {chapterTop.map((c) => (
-                          <tr
-                            key={c.chapter_id}
-                            className="border-t border-slate-100 text-slate-600"
-                          >
-                            <td className="px-3 py-2 font-mono text-[10px] text-slate-800">
-                              {c.chapter_id}
-                            </td>
-                            <td className="px-3 py-2 font-mono text-slate-900">{c.events}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : null}
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={Search} title="Search" />
-                <div className="max-h-64 space-y-2 overflow-y-auto">
-                  {data.search.top.map((s) => (
-                    <div
-                      key={s.query}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 bg-[#f8fafc] px-3 py-2 text-xs"
-                    >
-                      <span className="truncate text-slate-800">{s.query}</span>
-                      <span className="font-mono text-slate-500">{s.count}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 text-xs text-slate-400">
-                  Failed searches:{" "}
-                  <span className="font-mono text-slate-800">{data.search.failed_searches}</span>
-                </div>
-                {(data.search.trending?.length ?? 0) > 0 ? (
-                  <div className="mt-4 border-t border-slate-100 pt-3">
-                    <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">
-                      Trending
-                    </div>
-                    <div className="max-h-36 space-y-1.5 overflow-y-auto">
-                      {data.search.trending!.map((s) => (
-                        <div
-                          key={`t-${s.query}`}
-                          className="flex items-center justify-between rounded border border-slate-100 bg-[#f8fafc] px-2 py-1.5 text-[11px]"
-                        >
-                          <span className="truncate text-slate-600">{s.query}</span>
-                          <span className="font-mono text-slate-500">{s.count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </PanelCard>
-            </div>
-
-            <div className="mt-6 grid gap-6 xl:grid-cols-3">
-              <PanelCard className="xl:col-span-2">
-                <SectionTitle icon={Layers} title="Click log" />
-                <div className="max-h-64 overflow-auto rounded-xl border border-slate-200">
-                  <table className="w-full min-w-[max-content] text-left text-xs">
-                    <thead className="sticky top-0 bg-white text-slate-400">
-                      <tr>
-                        <th className="px-3 py-2">Time</th>
-                        <th className="px-3 py-2">Type</th>
-                        <th className="px-3 py-2">Target</th>
-                        <th className="px-3 py-2">Page</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clickLogs.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="px-3 py-6 text-center text-slate-400">
-                            No interaction rows in this window.
-                          </td>
-                        </tr>
-                      ) : (
-                        clickLogs.map((row, i) => (
-                          <tr
-                            key={`${row.ts}-${i}`}
-                            className="border-t border-slate-100 text-slate-600"
-                          >
-                            <td className="px-3 py-2 font-mono text-[10px] text-slate-400">
-                              {row.ts}
-                            </td>
-                            <td className="px-3 py-2">{row.type}</td>
-                            <td className="max-w-[160px] truncate px-3 py-2">
-                              {row.target ?? "—"}
-                            </td>
-                            <td className="px-3 py-2">{row.page ?? "—"}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </PanelCard>
-              <PanelCard>
-                <SectionTitle icon={Globe2} title="Traffic sources" />
-                {trafficSources.length === 0 ? (
-                  <div className="flex h-64 items-center justify-center text-xs text-slate-400">
-                    No referrer data in this window.
-                  </div>
-                ) : (
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={trafficSources} layout="vertical" margin={{ left: 4 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                        <XAxis
-                          type="number"
-                          stroke="#e2e8f0"
-                          tick={{ fill: "#64748b", fontSize: 10 }}
-                        />
-                        <YAxis
-                          type="category"
-                          dataKey="name"
-                          width={90}
-                          stroke="#e2e8f0"
-                          tick={{ fill: "#475569", fontSize: 9 }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: 8,
-                          }}
-                        />
-                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                          {trafficSources.map((_, i) => (
-                            <Cell key={i} fill={sliceFill(i)} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </PanelCard>
-            </div>
-
-            {clickPoints.length > 0 ? (
-              <PanelCard className="mt-6">
-                <SectionTitle icon={MapPin} title="Click coordinates" />
-                <div className="h-52 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis
-                        type="number"
-                        dataKey="x"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#94a3b8", fontSize: 10 }}
-                      />
-                      <YAxis
-                        type="number"
-                        dataKey="y"
-                        stroke="#e2e8f0"
-                        tick={{ fill: "#94a3b8", fontSize: 10 }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Scatter data={clickPoints} fill={G} />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
-              </PanelCard>
-            ) : null}
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-3">
-              <PanelCard className="lg:col-span-2">
-                <SectionTitle icon={Layers} title="Pages" />
-                <div className="flex flex-wrap items-center gap-2">
-                  {journeyNodes.map((n, i, arr) => (
-                    <div key={n.id} className="flex items-center gap-2">
-                      <span className="rounded-full border border-slate-200 bg-[#f8fafc] px-3 py-1 text-xs text-slate-800">
-                        {n.id} <span className="text-slate-400">({n.count})</span>
-                      </span>
-                      {i < arr.length - 1 ? (
-                        <ArrowRight className="h-3 w-3 text-slate-400" />
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-slate-400">
-                  {String(data.journey?.flow_note ?? "")}
-                </p>
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={Timer} title="Session replay" />
-                <p className="text-sm text-slate-500">{data.session_replay.message}</p>
-                <div className="mt-4 rounded-xl border border-slate-100 bg-[#f8fafc] p-4 text-xs text-slate-400">
-                  Not enabled.
-                </div>
-              </PanelCard>
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <PanelCard>
-                <SectionTitle icon={Zap} title="Growth & retention" />
-                <div className="space-y-2 text-sm text-slate-600">
-                  <RowKV
-                    label="Peak hour (IST)"
-                    value={
-                      data.intelligence.peak_traffic_hour_utc != null
-                        ? String(data.intelligence.peak_traffic_hour_utc)
-                        : "—"
-                    }
-                  />
-                  <RowKV
-                    label="Returning (window)"
-                    value={String(data.intelligence.retention_returning_in_window)}
-                  />
-                </div>
-                <div className="mt-4 h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={growth}>
-                      <defs>
-                        <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={G} stopOpacity={0.4} />
-                          <stop offset="100%" stopColor={G} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fill: "#64748b", fontSize: 10 }}
-                        stroke="#e2e8f0"
-                      />
-                      <YAxis tick={{ fill: "#64748b", fontSize: 10 }} stroke="#e2e8f0" />
-                      <Tooltip
-                        contentStyle={{
-                          background: "#ffffff",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 8,
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="new_users"
-                        stroke={G}
-                        fill="url(#growthFill)"
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </PanelCard>
-
-              <PanelCard>
-                <SectionTitle icon={Globe2} title="Activity heatmap" />
-                <HeatMini cells={data.geo?.heatmap ?? []} />
-              </PanelCard>
-            </div>
-
-            <div className="mt-10 border-t border-slate-100 pt-6 text-center text-[11px] text-slate-400">
-              Generated {data.generated_at} · {data.window.days}d since {data.window.since}
-            </div>
-          </>
-        ) : null}
-      </div>
-    </div>
-  );
+function chartFill(i: number) {
+  return CHART[i % CHART.length];
 }
 
 function useWebSocketLive(telegramId: number | null, onMessage: (msg: unknown) => void) {
@@ -1183,50 +217,498 @@ function useWebSocketLive(telegramId: number | null, onMessage: (msg: unknown) =
   }, [telegramId]);
 }
 
-function RowKV({ label, value }: { label: string; value: string }) {
+export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdentity | null }) {
+  const [data, setData] = useState<EnterpriseDashboard | null>(null);
+  const [bootLoading, setBootLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [live, setLive] = useState<Array<Record<string, unknown>>>([]);
+  const [tab, setTab] = useState<AnalyticsTab>("overview");
+  const [applied, setApplied] = useState<AnalyticsFilterForm>(() => ({ ...defaultFilters }));
+  const [draft, setDraft] = useState<AnalyticsFilterForm>(() => ({ ...defaultFilters }));
+  const firstLoadRef = useRef(true);
+
+  useEffect(() => {
+    firstLoadRef.current = true;
+    const reset = { ...defaultFilters };
+    setApplied(reset);
+    setDraft({ ...defaultFilters });
+  }, [identity?.telegram_id]);
+
+  const fetchDashboard = useCallback(async () => {
+    if (!identity?.telegram_id) {
+      setErr("Owner Telegram account required.");
+      setBootLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    const isFirst = firstLoadRef.current;
+    if (isFirst) setBootLoading(true);
+    else setRefreshing(true);
+    setErr(null);
+    try {
+      const j = (await fetchEnterpriseDashboard(identity, {
+        days: applied.days,
+        country: applied.country.trim() || undefined,
+        city: applied.city.trim() || undefined,
+        story_id: applied.storyId.trim() || undefined,
+        device: applied.device.trim() || undefined,
+        telegram_only: applied.telegramOnly || undefined,
+      })) as unknown as EnterpriseDashboard;
+      setData(j);
+      if (isFirst) firstLoadRef.current = false;
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Analytics load failed");
+    } finally {
+      setBootLoading(false);
+      setRefreshing(false);
+    }
+  }, [identity, applied]);
+
+  useEffect(() => {
+    void fetchDashboard();
+  }, [fetchDashboard]);
+
+  const onWs = useCallback((msg: unknown) => {
+    if (msg && typeof msg === "object" && (msg as { channel?: string }).channel === "live") {
+      setLive((prev) => [{ ...(msg as object), _ts: Date.now() } as Record<string, unknown>, ...prev].slice(0, 80));
+    }
+  }, []);
+
+  useWebSocketLive(identity?.telegram_id ?? null, onWs);
+
+  const hourly = useMemo(() => data?.charts?.hourly_events ?? [], [data]);
+  const growth = useMemo(() => data?.intelligence?.user_growth_by_day ?? [], [data]);
+  const activityFeed = live.length ? live : data?.live_feed ?? [];
+  const clickLogs = data?.click_logs ?? [];
+  const trafficSources = data?.traffic?.sources ?? [];
+  const storyTop = ((data?.stories?.top_viewed as Array<{ story_id: string; title: string; views: number }>) ?? []).slice(0, 10);
+  const chapterTop = ((data?.stories as { chapter_top?: Array<{ chapter_id: string; events: number }> } | undefined)?.chapter_top ?? []).slice(0, 10);
+  const journeyNodes = ((data?.journey?.nodes as Array<{ id: string; count: number }>) ?? []).slice(0, 8);
+  const showSkeleton = bootLoading && !data;
+  const seenUsers = data?.hero?.unique_in_window ?? 0;
+  const returningUsers = data?.hero?.returning_in_window ?? 0;
+  const notReturned = Math.max(0, seenUsers - returningUsers);
+
   return (
-    <div className="flex items-center justify-between border-b border-black/[0.05] py-2 last:border-b-0">
-      <span className="text-[#86868b]">{label}</span>
-      <span className="font-mono text-[#1d1d1f]">{value}</span>
+    <section
+      className="min-h-[70vh] w-full overflow-x-hidden bg-[#f5f5f7] pb-10 text-[#111111]"
+      style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Inter, system-ui, sans-serif" }}
+    >
+      {refreshing && data ? <div className="fixed left-0 right-0 top-0 z-50 h-0.5 animate-pulse bg-[#111111]" /> : null}
+
+      <div className="px-4 py-5 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a8a8e]">Analytics</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[#111111]">Admin Intelligence</h1>
+            <p className="mt-1 max-w-2xl text-sm text-[#6f6f73]">Users, location, devices, sales and activity in one clean report.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void fetchDashboard()}
+            disabled={bootLoading && !data}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d9d9dd] bg-white px-4 py-2 text-sm font-medium text-[#111111] shadow-sm transition hover:bg-[#f2f2f3] disabled:opacity-50"
+          >
+            <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+            Refresh
+          </button>
+        </div>
+
+        <FilterBar draft={draft} setDraft={setDraft} onApply={() => setApplied({ ...draft })} />
+
+        {err ? (
+          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+            {err}
+          </div>
+        ) : null}
+
+        {showSkeleton ? (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 animate-pulse rounded-3xl bg-white" />)}
+          </div>
+        ) : data ? (
+          <>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard title="Total users" value={fmt(data.hero.total_users)} icon={Users} note="All-time mini app audience" />
+              <MetricCard title="Active now" value={fmt(data.hero.active_now)} icon={Radio} note="Live users" pulse />
+              <MetricCard title="Users came" value={fmt(seenUsers)} icon={ArrowUpRight} note={`Last ${data.window.days} days`} />
+              <MetricCard title="Did not return" value={fmt(notReturned)} icon={ArrowDownRight} note="Window users minus returning" />
+              <MetricCard title="Revenue" value={money(data.hero.total_revenue)} icon={CreditCard} note="Paid and delivered" />
+              <MetricCard title="Orders" value={fmt(data.hero.orders_paid_or_delivered)} icon={CheckCircle2} note="Successful deliveries" />
+              <MetricCard title="Retention" value={pct(data.hero.retention_pct ?? data.retention?.retention_pct)} icon={ShieldCheck} note={`${fmt(returningUsers)} returning users`} />
+              <MetricCard title="Avg session" value={`${fmt(Math.round(data.hero.avg_session_seconds || 0))}s`} icon={Clock3} note="Tracked sessions" />
+            </div>
+
+            <div className="mt-5 overflow-x-auto rounded-full border border-[#e1e1e4] bg-white p-1 shadow-sm">
+              <div className="flex min-w-max gap-1">
+                {[
+                  ["overview", "Overview", Activity],
+                  ["geo", "Location", Globe2],
+                  ["audience", "Device", Smartphone],
+                  ["content", "Content", Layers],
+                  ["events", "Events", MousePointerClick],
+                ].map(([id, label, Icon]) => (
+                  <button
+                    key={String(id)}
+                    type="button"
+                    onClick={() => setTab(id as AnalyticsTab)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition",
+                      tab === id ? "bg-[#111111] text-white shadow-sm" : "text-[#6f6f73] hover:bg-[#f5f5f7] hover:text-[#111111]",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {String(label)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {tab === "overview" ? (
+              <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                <Card className="xl:col-span-2">
+                  <CardTitle icon={Activity} title="Hourly activity" subtitle="Events by hour, useful for peak traffic timing." />
+                  <ChartBox>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={hourly} margin={{ top: 12, right: 12, left: -18, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="monoHourly" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={ink} stopOpacity={0.22} />
+                            <stop offset="100%" stopColor={ink} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 8" stroke={line} />
+                        <XAxis dataKey="hour" tick={{ fill: muted, fontSize: 11 }} stroke={line} />
+                        <YAxis tick={{ fill: muted, fontSize: 11 }} stroke={line} />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Area dataKey="events" type="monotone" stroke={ink} strokeWidth={2.4} fill="url(#monoHourly)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartBox>
+                </Card>
+                <Card>
+                  <CardTitle icon={CreditCard} title="Checkout funnel" subtitle="Where payment flow is completing or dropping." />
+                  <div className="space-y-3">
+                    {[
+                      ["Opened", data.checkout?.opened_checkout ?? 0],
+                      ["Payment started", data.checkout?.pay_started ?? 0],
+                      ["Completed", data.checkout?.completed ?? 0],
+                      ["Failed", data.checkout?.failed ?? 0],
+                      ["Abandoned", data.checkout?.abandoned ?? 0],
+                    ].map(([label, value]) => <ProgressRow key={String(label)} label={String(label)} value={Number(value)} max={Math.max(1, data.checkout?.opened_checkout ?? 1)} />)}
+                  </div>
+                  <div className="mt-4 rounded-2xl bg-[#f5f5f7] p-4">
+                    <p className="text-xs font-medium text-[#8a8a8e]">Conversion</p>
+                    <p className="mt-1 text-2xl font-semibold tracking-tight">{pct(data.checkout?.conversion_pct)}</p>
+                  </div>
+                </Card>
+                <Card className="xl:col-span-2">
+                  <CardTitle icon={Radio} title="Live activity" subtitle="Latest user actions with city, country and account id." />
+                  <LiveFeed rows={activityFeed} />
+                </Card>
+                <Card>
+                  <CardTitle icon={CalendarDays} title="Growth" subtitle="New users by day." />
+                  <ChartBox className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={growth} margin={{ top: 12, right: 10, left: -18, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="growthMono" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={ink} stopOpacity={0.2} />
+                            <stop offset="100%" stopColor={ink} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 8" stroke={line} />
+                        <XAxis dataKey="date" tick={{ fill: muted, fontSize: 10 }} stroke={line} />
+                        <YAxis tick={{ fill: muted, fontSize: 10 }} stroke={line} />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Area dataKey="new_users" type="monotone" stroke={ink} fill="url(#growthMono)" strokeWidth={2.2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartBox>
+                </Card>
+              </div>
+            ) : null}
+
+            {tab === "geo" ? (
+              <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                <Card className="xl:col-span-2">
+                  <CardTitle icon={Globe2} title="Top countries" subtitle="Country level user distribution." />
+                  <VerticalBars data={data.geo.countries} />
+                </Card>
+                <Card>
+                  <CardTitle icon={MapPin} title="Top cities" subtitle="City level user distribution." />
+                  <ListRows data={data.geo.cities} empty="No city data yet" />
+                </Card>
+                <Card>
+                  <CardTitle icon={MapPin} title="States / regions" subtitle="Regional split when backend provides it." />
+                  <ListRows data={data.geo.states ?? []} empty="No region data yet" />
+                </Card>
+                <Card className="xl:col-span-2">
+                  <CardTitle icon={Clock3} title="Activity heatmap" subtitle="Rows are days, columns are hours. Darker means more activity." />
+                  <HeatMini cells={data.geo.heatmap ?? []} />
+                </Card>
+              </div>
+            ) : null}
+
+            {tab === "audience" ? (
+              <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                <DonutCard title="Devices" icon={Smartphone} data={data.users.devices} />
+                <DonutCard title="Browsers" icon={Globe2} data={data.users.browsers} />
+                <DonutCard title="Operating systems" icon={Cpu} data={data.users.operating_systems} />
+                <Card className="lg:col-span-3">
+                  <CardTitle icon={Smartphone} title="Device source totals" subtitle="Telegram WebView, mobile and desktop events." />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <MiniStat label="Mobile / tablet" value={fmt(data.users.mobile_events)} />
+                    <MiniStat label="Desktop" value={fmt(data.users.desktop_events)} />
+                    <MiniStat label="Telegram WebView" value={fmt(data.users.telegram_webview_events)} />
+                  </div>
+                </Card>
+              </div>
+            ) : null}
+
+            {tab === "content" ? (
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                <Card>
+                  <CardTitle icon={Layers} title="Stories" subtitle="Most viewed stories in this window." />
+                  <TableRows rows={storyTop.map((s) => [s.title, fmt(s.views)])} empty="No story activity yet" />
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <MiniStat label="Completion" value={pct(data.stories.story_completion_proxy_pct)} />
+                    <MiniStat label="Drop-off" value={pct(data.stories.dropoff_proxy_pct)} />
+                    <MiniStat label="Avg listen" value={`${fmt(data.stories.avg_listen_proxy_sec)}s`} />
+                  </div>
+                </Card>
+                <Card>
+                  <CardTitle icon={Search} title="Search" subtitle="Search terms and failed searches." />
+                  <ListRows data={data.search.top ?? []} empty="No search data yet" />
+                  <div className="mt-4 rounded-2xl bg-[#f5f5f7] p-4 text-sm text-[#525252]">
+                    Failed searches: <span className="font-semibold text-[#111111]">{fmt(data.search.failed_searches)}</span>
+                  </div>
+                </Card>
+                <Card>
+                  <CardTitle icon={Layers} title="Chapters" subtitle="Chapter-level events when available." />
+                  <TableRows rows={chapterTop.map((c) => [c.chapter_id, fmt(c.events)])} empty="No chapter activity yet" />
+                </Card>
+                <Card>
+                  <CardTitle icon={MousePointerClick} title="Traffic sources" subtitle="Direct, Telegram and referral sources." />
+                  <ListRows data={trafficSources} empty="No referrer data yet" />
+                </Card>
+              </div>
+            ) : null}
+
+            {tab === "events" ? (
+              <div className="mt-5 grid gap-4 xl:grid-cols-3">
+                <Card className="xl:col-span-2">
+                  <CardTitle icon={MousePointerClick} title="Event log" subtitle="Recent clicks, pages and targets." />
+                  <EventTable logs={clickLogs} />
+                </Card>
+                <Card>
+                  <CardTitle icon={Layers} title="Pages" subtitle="User journey nodes." />
+                  <div className="space-y-2">
+                    {journeyNodes.length ? journeyNodes.map((n) => <ProgressRow key={n.id} label={n.id} value={n.count} max={Math.max(...journeyNodes.map((x) => x.count), 1)} />) : <EmptyState>No page journey data yet</EmptyState>}
+                  </div>
+                  {String(data.journey?.flow_note ?? "").trim() ? <p className="mt-4 text-xs text-[#8a8a8e]">{String(data.journey.flow_note)}</p> : null}
+                </Card>
+                <Card>
+                  <CardTitle icon={Cpu} title="Performance" subtitle="Load and API timing samples." />
+                  <KeyValues items={[
+                    ["Samples", fmt(data.performance.samples)],
+                    ["Avg page load", data.performance.avg_page_load_ms != null ? `${fmt(data.performance.avg_page_load_ms)} ms` : "—"],
+                    ["Avg API", data.performance.avg_api_ms != null ? `${fmt(data.performance.avg_api_ms)} ms` : "—"],
+                    ["Console errors", fmt(data.performance.console_errors)],
+                  ]} />
+                </Card>
+                <Card className="xl:col-span-2">
+                  <CardTitle icon={ShieldCheck} title="Session replay" subtitle="Replay status for future debugging." />
+                  <p className="rounded-2xl bg-[#f5f5f7] p-4 text-sm text-[#525252]">{data.session_replay.message || "Not enabled."}</p>
+                </Card>
+              </div>
+            ) : null}
+
+            <p className="mt-8 text-center text-[11px] font-medium text-[#8a8a8e]">
+              Generated {data.generated_at} · last {data.window.days} days
+            </p>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function FilterBar({ draft, setDraft, onApply }: { draft: AnalyticsFilterForm; setDraft: React.Dispatch<React.SetStateAction<AnalyticsFilterForm>>; onApply: () => void }) {
+  return (
+    <div className="mt-5 rounded-3xl border border-[#e1e1e4] bg-white p-4 shadow-sm">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <Field label="Range">
+          <select value={draft.days} onChange={(e) => setDraft((d) => ({ ...d, days: Number(e.target.value) }))} className="input-clean">
+            {[7, 14, 30, 60, 90].map((d) => <option key={d} value={d}>Last {d} days</option>)}
+          </select>
+        </Field>
+        <Field label="Country"><input value={draft.country} onChange={(e) => setDraft((d) => ({ ...d, country: e.target.value }))} className="input-clean" placeholder="India" /></Field>
+        <Field label="City"><input value={draft.city} onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))} className="input-clean" placeholder="Guna" /></Field>
+        <Field label="Story"><input value={draft.storyId} onChange={(e) => setDraft((d) => ({ ...d, storyId: e.target.value }))} className="input-clean" placeholder="Story ID" /></Field>
+        <Field label="Device"><input value={draft.device} onChange={(e) => setDraft((d) => ({ ...d, device: e.target.value }))} className="input-clean" placeholder="mobile" /></Field>
+        <div className="flex items-end gap-2">
+          <label className="flex h-[42px] flex-1 items-center gap-2 rounded-2xl border border-[#e1e1e4] bg-[#f5f5f7] px-3 text-xs font-medium text-[#525252]">
+            <input type="checkbox" checked={draft.telegramOnly} onChange={(e) => setDraft((d) => ({ ...d, telegramOnly: e.target.checked }))} className="h-4 w-4 accent-[#111111]" />
+            Telegram
+          </label>
+          <button type="button" onClick={onApply} className="h-[42px] rounded-2xl bg-[#111111] px-4 text-sm font-semibold text-white transition hover:bg-[#2b2b2b]">Apply</button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function HeroStat({
-  label,
-  value,
-  icon: Icon,
-  pulse,
-  suffix = "",
-  decimals,
-}: {
-  label: string;
-  value: number;
-  icon: React.ElementType;
-  pulse?: boolean;
-  suffix?: string;
-  decimals?: number;
-}) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return <label className="block text-[11px] font-semibold uppercase tracking-[0.13em] text-[#8a8a8e]">{label}<div className="mt-1.5">{children}</div></label>;
+}
+
+function Card({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("rounded-3xl border border-[#e1e1e4] bg-white p-5 shadow-sm", className)}>{children}</div>;
+}
+
+function CardTitle({ icon: Icon, title, subtitle }: { icon: ElementType; title: string; subtitle?: string }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-      {pulse ? (
-        <span className="absolute right-4 top-4 flex h-2 w-2">
-          <span
-            className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50"
-            style={{ background: ACCENT }}
-          />
-          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: ACCENT }} />
-        </span>
-      ) : null}
-      <Icon className="h-5 w-5 text-[#86868b]" />
-      <div className="mt-3 text-[11px] font-medium uppercase tracking-wider text-[#86868b]">
-        {label}
-      </div>
-      <div className="mt-1 text-2xl font-semibold tracking-tight text-[#1d1d1f] md:text-[28px]">
-        <AnimatedInt value={value} decimals={decimals} suffix={suffix} />
+    <div className="mb-4 flex items-start gap-3">
+      <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#f5f5f7] text-[#111111]"><Icon className="h-4 w-4" /></div>
+      <div>
+        <h2 className="text-base font-semibold tracking-tight text-[#111111]">{title}</h2>
+        {subtitle ? <p className="mt-0.5 text-xs leading-5 text-[#8a8a8e]">{subtitle}</p> : null}
       </div>
     </div>
   );
+}
+
+function MetricCard({ title, value, icon: Icon, note, pulse }: { title: string; value: string; icon: ElementType; note: string; pulse?: boolean }) {
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-[#e1e1e4] bg-white p-5 shadow-sm">
+      {pulse ? <span className="absolute right-5 top-5 h-2.5 w-2.5 rounded-full bg-[#111111] shadow-[0_0_0_6px_rgba(17,17,17,.08)]" /> : null}
+      <Icon className="h-5 w-5 text-[#525252]" />
+      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8a8a8e]">{title}</p>
+      <p className="mt-1 text-2xl font-semibold tracking-tight text-[#111111]">{value}</p>
+      <p className="mt-1 text-xs text-[#8a8a8e]">{note}</p>
+    </div>
+  );
+}
+
+function ChartBox({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("h-72 w-full overflow-hidden", className)}>{children}</div>;
+}
+
+function ProgressRow({ label, value, max }: { label: string; value: number; max: number }) {
+  const width = `${Math.min(100, Math.round((value / Math.max(1, max)) * 100))}%`;
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-sm"><span className="font-medium text-[#525252]">{label}</span><span className="font-semibold text-[#111111]">{fmt(value)}</span></div>
+      <div className="h-2 overflow-hidden rounded-full bg-[#ededf0]"><div className="h-full rounded-full bg-[#111111]" style={{ width }} /></div>
+    </div>
+  );
+}
+
+function LiveFeed({ rows }: { rows: Array<Record<string, unknown>> }) {
+  if (!rows.length) return <EmptyState>No live activity yet</EmptyState>;
+  return (
+    <div className="max-h-80 overflow-auto rounded-2xl border border-[#ededf0]">
+      {rows.slice(0, 60).map((row, idx) => (
+        <div key={`${String(row.id ?? idx)}-${String(row._ts ?? idx)}`} className="grid gap-1 border-b border-[#ededf0] px-3 py-2 text-xs last:border-b-0 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+          <span className="truncate font-medium text-[#111111]">{String(row.summary || row.type || "event")}</span>
+          <span className="font-mono text-[#6f6f73]">{String(row.user_id ?? "—")}</span>
+          <span className="truncate text-[#6f6f73]">{[row.city, row.region, row.country].filter(Boolean).join(", ") || "—"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VerticalBars({ data }: { data: Array<{ name: string; value: number }> }) {
+  if (!data.length) return <EmptyState>No country data yet</EmptyState>;
+  return (
+    <ChartBox>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data.slice(0, 10)} layout="vertical" margin={{ top: 8, right: 12, left: 8, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 8" stroke={line} horizontal={false} />
+          <XAxis type="number" tick={{ fill: muted, fontSize: 11 }} stroke={line} />
+          <YAxis type="category" dataKey="name" width={110} tick={{ fill: graphite, fontSize: 11 }} stroke={line} />
+          <Tooltip contentStyle={tooltipStyle} />
+          <Bar dataKey="value" radius={[0, 8, 8, 0]} fill={ink} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartBox>
+  );
+}
+
+function DonutCard({ title, icon, data }: { title: string; icon: ElementType; data: Array<{ name: string; value: number }> }) {
+  return (
+    <Card>
+      <CardTitle icon={icon} title={title} />
+      {data.length ? (
+        <>
+          <div className="h-48 w-full overflow-hidden">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius={48} outerRadius={76} paddingAngle={2}>
+                  {data.map((_, i) => <Cell key={i} fill={chartFill(i)} />)}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <ListRows data={data.slice(0, 4)} empty="" compact />
+        </>
+      ) : <EmptyState>No {title.toLowerCase()} data yet</EmptyState>}
+    </Card>
+  );
+}
+
+function ListRows({ data, empty, compact }: { data: Array<{ name: string; value: number }>; empty: string; compact?: boolean }) {
+  if (!data.length) return <EmptyState>{empty}</EmptyState>;
+  const max = Math.max(...data.map((d) => Number(d.value || 0)), 1);
+  return (
+    <div className={cn("space-y-2", compact && "space-y-1.5")}>
+      {data.slice(0, compact ? 4 : 10).map((d, i) => (
+        <div key={`${d.name}-${i}`} className="rounded-2xl bg-[#f5f5f7] p-3">
+          <div className="flex items-center justify-between gap-3 text-sm"><span className="truncate font-medium text-[#525252]">{d.name || "Unknown"}</span><span className="font-semibold text-[#111111]">{fmt(d.value)}</span></div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e3e3e6]"><div className="h-full rounded-full bg-[#111111]" style={{ width: `${Math.max(4, (Number(d.value || 0) / max) * 100)}%` }} /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TableRows({ rows, empty }: { rows: Array<[string, string]>; empty: string }) {
+  if (!rows.length) return <EmptyState>{empty}</EmptyState>;
+  return (
+    <div className="max-h-72 overflow-auto rounded-2xl border border-[#ededf0]">
+      <table className="w-full min-w-[360px] text-left text-xs">
+        <tbody>{rows.map(([a, b], i) => <tr key={`${a}-${i}`} className="border-b border-[#ededf0] last:border-b-0"><td className="px-3 py-3 font-medium text-[#525252]">{a}</td><td className="px-3 py-3 text-right font-semibold text-[#111111]">{b}</td></tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function EventTable({ logs }: { logs: EnterpriseDashboard["click_logs"] }) {
+  if (!logs?.length) return <EmptyState>No event rows in this window</EmptyState>;
+  return (
+    <div className="max-h-96 overflow-auto rounded-2xl border border-[#ededf0]">
+      <table className="w-full min-w-[620px] text-left text-xs">
+        <thead className="sticky top-0 bg-white text-[#8a8a8e]"><tr><th className="px-3 py-2">Time</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">Target</th><th className="px-3 py-2">Page</th></tr></thead>
+        <tbody>{logs.slice(0, 80).map((row, i) => <tr key={`${row.ts}-${i}`} className="border-t border-[#ededf0]"><td className="px-3 py-2 font-mono text-[#8a8a8e]">{row.ts}</td><td className="px-3 py-2 text-[#525252]">{row.type || "event"}</td><td className="max-w-[220px] truncate px-3 py-2 text-[#111111]">{row.target || row.story_id || "—"}</td><td className="px-3 py-2 text-[#525252]">{row.page || "—"}</td></tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function KeyValues({ items }: { items: Array<[string, string]> }) {
+  return <div className="divide-y divide-[#ededf0] rounded-2xl border border-[#ededf0]">{items.map(([k, v]) => <div key={k} className="flex items-center justify-between gap-3 px-3 py-3 text-sm"><span className="text-[#6f6f73]">{k}</span><span className="font-semibold text-[#111111]">{v}</span></div>)}</div>;
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-2xl bg-[#f5f5f7] p-4"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8a8a8e]">{label}</p><p className="mt-1 text-xl font-semibold tracking-tight text-[#111111]">{value}</p></div>;
+}
+
+function EmptyState({ children }: { children: ReactNode }) {
+  return <div className="flex min-h-32 items-center justify-center rounded-2xl bg-[#f5f5f7] p-4 text-center text-sm font-medium text-[#8a8a8e]"><XCircle className="mr-2 h-4 w-4" />{children}</div>;
 }
 
 function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: number }> }) {
@@ -1235,27 +717,20 @@ function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: 
   for (const c of cells) {
     if (c.day >= 0 && c.day < 7 && c.hour >= 0 && c.hour < 24) grid[c.day][c.hour] += c.count;
   }
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   return (
-    <div className="overflow-x-auto">
-      <div className="inline-flex flex-col gap-0.5 min-w-0">
+    <div className="w-full overflow-x-auto pb-1">
+      <div className="min-w-[760px] space-y-1">
         {grid.map((row, di) => (
-          <div key={di} className="flex gap-0.5">
+          <div key={di} className="grid grid-cols-[34px_repeat(24,minmax(0,1fr))] items-center gap-1">
+            <span className="text-[10px] font-medium text-[#8a8a8e]">{days[di]}</span>
             {row.map((v, hi) => {
-              const op = 0.06 + (v / max) * 0.94;
-              return (
-                <div
-                  key={hi}
-                  title={`D${di} H${hi}: ${v}`}
-                  className="h-3 w-3 rounded-sm"
-                  style={{ background: `rgba(0,113,227,${op})` }}
-                />
-              );
+              const op = v ? 0.16 + (v / max) * 0.84 : 0.05;
+              return <div key={hi} title={`${days[di]} ${hi}:00 · ${v}`} className="h-5 rounded-md border border-black/[0.03]" style={{ background: `rgba(17,17,17,${op})` }} />;
             })}
           </div>
         ))}
-      </div>
-      <div className="mt-2 flex justify-between text-[10px] text-slate-400">
-        <span>Rows Mon–Sun · columns 0–23h</span>
+        <div className="grid grid-cols-[34px_repeat(6,1fr)] gap-1 pt-1 text-[10px] text-[#8a8a8e]"><span />{["00", "04", "08", "12", "16", "20"].map((h) => <span key={h}>{h}:00</span>)}</div>
       </div>
     </div>
   );
