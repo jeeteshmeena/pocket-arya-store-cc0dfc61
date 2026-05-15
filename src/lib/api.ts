@@ -187,8 +187,17 @@ export async function translateText(text: string, targetLang: "hi" | "en"): Prom
 
 export function getOptimizedImage(url?: string | null): string | undefined {
   if (!url) return undefined;
-  // Fall back to direct URL loading to prevent VPS proxy timeouts from blocking image loading entirely
-  return url;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return url;
+    // Skip proxy for already-proxied or same-origin URLs
+    if (u.pathname.startsWith("/api/")) return url;
+    // Route through backend image proxy: converts to WebP + 1yr CDN cache
+    return `${BASE_URL}/image?url=${encodeURIComponent(url)}`;
+  } catch {
+    // relative or invalid — return as-is
+    return url;
+  }
 }
 
 /**

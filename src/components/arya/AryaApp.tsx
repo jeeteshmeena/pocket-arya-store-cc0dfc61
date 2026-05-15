@@ -80,7 +80,7 @@ function Shell() {
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <div className="mx-auto max-w-2xl h-full">
+        <div className="mx-auto max-w-2xl">
           {view.name === "home"      && <HomeView />}
           {view.name === "explore"   && <ExploreView />}
           {view.name === "mystories" && <MyStoriesView />}

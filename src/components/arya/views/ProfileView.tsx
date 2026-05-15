@@ -115,7 +115,7 @@ export function ProfileView() {
         <h1 className="font-display font-bold text-xl">{t("profile.title")}</h1>
         <div className="mt-4 p-4 rounded-2xl bg-surface space-y-3">
           <div className="flex items-center gap-3">
-            <Skeleton className="h-14 w-14 rounded-xl" />
+            <Skeleton className="h-14 w-14 rounded-none" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-44" />
@@ -134,7 +134,7 @@ export function ProfileView() {
       {/* Identity card */}
       <div className={cn("mt-4 p-4", theme === "cream" ? "neo-card bg-[#FFE066]" : "rounded-2xl bg-surface")}>
         <div className="flex items-center gap-3">
-          <div className={cn("h-14 w-14 rounded-xl grid place-items-center text-foreground overflow-hidden font-semibold", theme === "cream" ? "border-2 border-black bg-white" : "bg-muted border border-border")}>
+          <div className={cn("h-14 w-14 grid place-items-center text-foreground overflow-hidden font-semibold", theme === "cream" ? "border-2 border-black bg-white" : "bg-muted border border-border")}>
             {showPhoto ? (
               <img
                 src={tgProfile!.photoUrl!}
