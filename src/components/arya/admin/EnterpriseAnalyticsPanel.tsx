@@ -128,12 +128,18 @@ export type EnterpriseDashboard = {
   filters_echo: Record<string, unknown>;
 };
 
-/** Chart data only: green / red (axes and chrome stay neutral). */
-const G = "#22c55e";
-const R = "#ef4444";
+/** Refined iOS-inspired chart palette — single accent + neutral, no rainbow. */
+const ACCENT = "#0071e3";        // SF blue
+const ACCENT_SOFT = "#6ea8fe";
+const NEUTRAL = "#1d1d1f";
+const NEUTRAL_SOFT = "#86868b";
+const G = ACCENT;                // back-compat alias used by chart fills
+const R = NEUTRAL;
 
 function sliceFill(i: number) {
-  return i % 2 === 0 ? G : R;
+  // Alternate accent / neutral / soft accent for clean, premium chart fills
+  const palette = [ACCENT, NEUTRAL, ACCENT_SOFT, NEUTRAL_SOFT];
+  return palette[i % palette.length];
 }
 
 function AnimatedInt({
@@ -181,7 +187,7 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50 ${className}`}
+      className={`rounded-3xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.08)] ${className}`}
     >
       {children}
     </div>
@@ -200,11 +206,11 @@ function SectionTitle({
   return (
     <div className="mb-4 flex items-start justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          <Icon className="h-4 w-4 text-slate-400" />
+        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#86868b]">
+          <Icon className="h-3.5 w-3.5 text-[#86868b]" />
           {title}
         </div>
-        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-slate-400">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1 max-w-2xl text-xs text-[#86868b]">{subtitle}</p> : null}
       </div>
     </div>
   );
