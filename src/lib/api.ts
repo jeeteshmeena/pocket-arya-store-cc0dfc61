@@ -394,6 +394,23 @@ export function loadRazorpay(): Promise<boolean> {
   });
 }
 
+function _analyticsClientContext(): Record<string, unknown> {
+  const o: Record<string, unknown> = {};
+  try {
+    o.client_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    /* ignore */
+  }
+  try {
+    const wa = (window as unknown as { Telegram?: { WebApp?: { platform?: string; version?: string } } }).Telegram?.WebApp;
+    if (wa?.platform) o.telegram_platform = wa.platform;
+    if (wa?.version) o.telegram_webapp_version = wa.version;
+  } catch {
+    /* ignore */
+  }
+  return o;
+}
+
 /**
  * Track user engagement — fire-and-forget, never throws.
  * Powers the /api/trending live engine and location analytics.
@@ -401,14 +418,15 @@ export function loadRazorpay(): Promise<boolean> {
  */
 export function trackEvent(
   event_type: string,
-  event_data: Record<string, any>,
+  event_data: Record<string, unknown>,
   telegramId?: number | null | string,
 ) {
   try {
-    const body = JSON.stringify({ 
-      event_type, 
-      event_data, 
-      telegram_id: String(telegramId || "0") 
+    const merged = { ..._analyticsClientContext(), ...event_data };
+    const body = JSON.stringify({
+      event_type,
+      event_data: merged,
+      telegram_id: String(telegramId || "0"),
     });
     // sendBeacon won't block navigation; falls back to fetch for older browsers
     if (navigator.sendBeacon) {

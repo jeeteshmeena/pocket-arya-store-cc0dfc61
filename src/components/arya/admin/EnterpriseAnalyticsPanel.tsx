@@ -3,6 +3,7 @@ import {
   Activity,
   ArrowRight,
   Cpu,
+  CreditCard,
   Globe2,
   Headphones,
   Layers,
@@ -10,6 +11,7 @@ import {
   Radio,
   Search,
   Timer,
+  TrendingUp,
   Zap,
 } from "lucide-react";
 import {
@@ -37,7 +39,9 @@ export type EnterpriseDashboard = {
   generated_at: string;
   window: { since: string; days: number };
   hero: {
+    scope?: string;
     total_users: number;
+    new_users_in_window?: number;
     unique_in_window: number;
     active_now: number;
     total_revenue: number;
@@ -49,7 +53,26 @@ export type EnterpriseDashboard = {
     premium_users: number;
     premium_conversion_pct: number;
     orders_paid_or_delivered: number;
+    engagement_events_per_user?: number;
+    retention_pct?: number;
   };
+  retention?: {
+    returning_users: number;
+    users_in_window: number;
+    new_users_in_window: number;
+    retention_pct: number;
+  };
+  checkout?: {
+    opened_checkout: number;
+    pay_started: number;
+    completed: number;
+    failed: number;
+    abandoned: number;
+    conversion_pct: number;
+  };
+  click_logs?: Array<{ ts: string; type?: string; user_id?: unknown; page?: string; story_id?: string; target?: string }>;
+  click_heatmap?: { points: Array<{ x: number; y: number }> };
+  traffic?: { sources: Array<{ name: string; value: number }> };
   live_feed: Array<Record<string, unknown>>;
   map_points: Array<{ country: string; city: string; region?: string; count: number; lat: number; lon: number }>;
   charts: { hourly_events: Array<{ hour: number; events: number }> };
@@ -68,7 +91,12 @@ export type EnterpriseDashboard = {
     states: Array<{ name: string; value: number }>;
   };
   stories: Record<string, unknown>;
-  search: { top: Array<{ query: string; count: number }>; failed_searches: number; trending_note?: string };
+  search: {
+    top: Array<{ query: string; count: number }>;
+    failed_searches: number;
+    trending?: Array<{ query: string; count: number }>;
+    trending_note?: string;
+  };
   performance: Record<string, unknown>;
   telegram: Record<string, unknown>;
   behavior: Record<string, unknown>;
@@ -215,6 +243,15 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
     count: number;
   }>;
 
+  const clickPoints = useMemo(() => data?.click_heatmap?.points ?? [], [data]);
+  const clickLogs = useMemo(() => data?.click_logs ?? [], [data]);
+  const trafficSources = useMemo(() => data?.traffic?.sources ?? [], [data]);
+  const chapterTop = useMemo(
+    () =>
+      (data?.stories as { chapter_top?: Array<{ chapter_id: string; events: number }> } | undefined)?.chapter_top ?? [],
+    [data],
+  );
+
   const showSkeleton = bootLoading && !data;
 
   return (
@@ -322,12 +359,33 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
           </div>
         ) : data ? (
           <>
-            <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-              <HeroStat label="Total users" value={data.hero.total_users} icon={Activity} />
+            <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-600">
+              Mini app · signed-in users only
+            </p>
+            <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+              <HeroStat label="Mini app users" value={data.hero.total_users} icon={Activity} />
               <HeroStat label="Active now" value={data.hero.active_now} icon={Zap} pulse />
+              <HeroStat label="In window" value={data.hero.unique_in_window} icon={Layers} />
+              <HeroStat label="New (window)" value={data.hero.new_users_in_window ?? 0} icon={TrendingUp} />
+              <HeroStat
+                label="Retention"
+                value={data.hero.retention_pct ?? 0}
+                suffix="%"
+                icon={ArrowRight}
+                decimals={1}
+              />
+              <HeroStat
+                label="Events / user"
+                value={data.hero.engagement_events_per_user ?? 0}
+                icon={Timer}
+                decimals={1}
+              />
+              <HeroStat label="Sessions tracked" value={data.hero.sessions_tracked} icon={Cpu} />
               <HeroStat label="Revenue (₹)" value={data.hero.total_revenue} icon={Layers} decimals={0} />
-              <HeroStat label="Sessions tracked" value={data.hero.sessions_tracked} icon={Timer} />
-              <HeroStat label="Returning (window)" value={data.hero.returning_in_window} icon={ArrowRight} />
+            </div>
+            <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <HeroStat label="Avg session (s)" value={Math.round(data.hero.avg_session_seconds)} icon={Activity} />
+              <HeroStat label="Returning" value={data.hero.returning_in_window} icon={ArrowRight} />
               <HeroStat
                 label="Premium conversion"
                 value={data.hero.premium_conversion_pct}
@@ -335,6 +393,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 icon={Layers}
                 decimals={1}
               />
+              <HeroStat label="Paid orders" value={data.hero.orders_paid_or_delivered} icon={Layers} />
             </div>
 
             <div className="grid gap-6 xl:grid-cols-3">
@@ -347,7 +406,11 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                         key={`${(row as { id?: string }).id ?? idx}-${(row as { _ts?: number })._ts ?? idx}`}
                         className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-zinc-900 px-3 py-2 text-xs"
                       >
-                        <span className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 font-mono text-zinc-400">
+                        <span className="min-w-0 flex-[2] truncate text-zinc-300">
+                          {String((row as { summary?: string }).summary || "").trim() ||
+                            String((row as { type?: string }).type ?? "event")}
+                        </span>
+                        <span className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500">
                           {String((row as { type?: string }).type ?? "event")}
                         </span>
                         <span className="text-zinc-600">user</span>
@@ -394,6 +457,29 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                     }
                   />
                   <RowKV label="Console errors" value={String((data.performance as { console_errors?: number }).console_errors ?? 0)} />
+                </div>
+              </PanelCard>
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <PanelCard>
+                <SectionTitle icon={CreditCard} title="Checkout funnel" subtitle="Uses checkout_* events from the Mini App." />
+                <div className="grid grid-cols-2 gap-3 text-sm text-zinc-400">
+                  <RowKV label="Opened" value={String(data.checkout?.opened_checkout ?? 0)} />
+                  <RowKV label="Pay started" value={String(data.checkout?.pay_started ?? 0)} />
+                  <RowKV label="Completed" value={String(data.checkout?.completed ?? 0)} />
+                  <RowKV label="Failed" value={String(data.checkout?.failed ?? 0)} />
+                  <RowKV label="Abandoned (est.)" value={String(data.checkout?.abandoned ?? 0)} />
+                  <RowKV label="Conversion" value={`${String(data.checkout?.conversion_pct ?? 0)}%`} />
+                </div>
+              </PanelCard>
+              <PanelCard>
+                <SectionTitle icon={ArrowRight} title="Retention" subtitle="Returning = 2+ active days in window." />
+                <div className="grid grid-cols-2 gap-3 text-sm text-zinc-400">
+                  <RowKV label="Returning" value={String(data.retention?.returning_users ?? 0)} />
+                  <RowKV label="Users in window" value={String(data.retention?.users_in_window ?? 0)} />
+                  <RowKV label="New in window" value={String(data.retention?.new_users_in_window ?? 0)} />
+                  <RowKV label="Retention %" value={`${String(data.retention?.retention_pct ?? 0)}%`} />
                 </div>
               </PanelCard>
             </div>
@@ -555,6 +641,26 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                     <div className="text-lg font-semibold text-zinc-100">{String(data.stories.avg_listen_proxy_sec)}</div>
                   </div>
                 </div>
+                {chapterTop.length > 0 ? (
+                  <div className="mt-4 max-h-48 overflow-y-auto rounded-xl border border-zinc-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="sticky top-0 bg-zinc-950 text-zinc-600">
+                        <tr>
+                          <th className="px-3 py-2">Chapter</th>
+                          <th className="px-3 py-2">Events</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {chapterTop.map((c) => (
+                          <tr key={c.chapter_id} className="border-t border-zinc-900 text-zinc-400">
+                            <td className="px-3 py-2 font-mono text-[10px] text-zinc-300">{c.chapter_id}</td>
+                            <td className="px-3 py-2 font-mono text-zinc-200">{c.events}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
               </PanelCard>
 
               <PanelCard>
@@ -573,8 +679,99 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 <div className="mt-3 text-xs text-zinc-600">
                   Failed searches: <span className="font-mono text-zinc-300">{data.search.failed_searches}</span>
                 </div>
+                {(data.search.trending?.length ?? 0) > 0 ? (
+                  <div className="mt-4 border-t border-zinc-900 pt-3">
+                    <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-zinc-600">Trending</div>
+                    <div className="max-h-36 space-y-1.5 overflow-y-auto">
+                      {data.search.trending!.map((s) => (
+                        <div
+                          key={`t-${s.query}`}
+                          className="flex items-center justify-between rounded border border-zinc-900 bg-black px-2 py-1.5 text-[11px]"
+                        >
+                          <span className="truncate text-zinc-400">{s.query}</span>
+                          <span className="font-mono text-zinc-500">{s.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </PanelCard>
             </div>
+
+            <div className="mt-6 grid gap-6 xl:grid-cols-3">
+              <PanelCard className="xl:col-span-2">
+                <SectionTitle icon={Layers} title="Click log" subtitle="Checkout and interaction events in range." />
+                <div className="max-h-64 overflow-y-auto rounded-xl border border-zinc-800">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 bg-zinc-950 text-zinc-600">
+                      <tr>
+                        <th className="px-3 py-2">Time</th>
+                        <th className="px-3 py-2">Type</th>
+                        <th className="px-3 py-2">Target</th>
+                        <th className="px-3 py-2">Page</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clickLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-3 py-6 text-center text-zinc-600">
+                            No interaction rows in this window.
+                          </td>
+                        </tr>
+                      ) : (
+                        clickLogs.map((row, i) => (
+                          <tr key={`${row.ts}-${i}`} className="border-t border-zinc-900 text-zinc-400">
+                            <td className="px-3 py-2 font-mono text-[10px] text-zinc-600">{row.ts}</td>
+                            <td className="px-3 py-2">{row.type}</td>
+                            <td className="max-w-[160px] truncate px-3 py-2">{row.target ?? "—"}</td>
+                            <td className="px-3 py-2">{row.page ?? "—"}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </PanelCard>
+              <PanelCard>
+                <SectionTitle icon={Globe2} title="Traffic sources" subtitle="Referrer field on events." />
+                {trafficSources.length === 0 ? (
+                  <div className="flex h-64 items-center justify-center text-xs text-zinc-600">No referrer data in this window.</div>
+                ) : (
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={trafficSources} layout="vertical" margin={{ left: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
+                        <XAxis type="number" stroke="#3f3f46" tick={{ fill: "#a1a1aa", fontSize: 10 }} />
+                        <YAxis type="category" dataKey="name" width={90} stroke="#3f3f46" tick={{ fill: "#d4d4d8", fontSize: 9 }} />
+                        <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
+                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                          {trafficSources.map((_, i) => (
+                            <Cell key={i} fill={sliceFill(i)} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </PanelCard>
+            </div>
+
+            {clickPoints.length > 0 ? (
+              <PanelCard className="mt-6">
+                <SectionTitle icon={MapPin} title="Click coordinates" subtitle="Requires data.x and data.y on events." />
+                <div className="h-52 w-full">
+                  <ResponsiveContainer>
+                    <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                      <XAxis type="number" dataKey="x" stroke="#3f3f46" tick={{ fill: "#71717a", fontSize: 10 }} />
+                      <YAxis type="number" dataKey="y" stroke="#3f3f46" tick={{ fill: "#71717a", fontSize: 10 }} />
+                      <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #27272a", borderRadius: 8 }} />
+                      <Scatter data={clickPoints} fill={G} />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+              </PanelCard>
+            ) : null}
 
             <div className="mt-6 grid gap-6 lg:grid-cols-3">
               <PanelCard className="lg:col-span-2">

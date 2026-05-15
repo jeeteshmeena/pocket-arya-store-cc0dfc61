@@ -8,7 +8,7 @@ import { useApp } from "@/store/app-store";
 import { usePriceFormat } from "@/hooks/usePriceFormat";
 import {
   openTelegramLink, BOT_USERNAME, createRazorpayOrder, verifyRazorpayPayment, createOxapayOrder,
-  createRazorpayPaymentLink, checkRazorpayPaymentLink
+  createRazorpayPaymentLink, checkRazorpayPaymentLink, trackEvent,
 } from "@/lib/api";
 
 // ── Thumbnail with fallback ────────────────────────────────────────
@@ -40,6 +40,8 @@ export function CheckoutView() {
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"razorpay-link" | "crypto">("razorpay-link");
+  const checkoutSuccessTracked = useRef<string | null>(null);
+  const checkoutErrorTracked = useRef<string | null>(null);
 
   // Snapshot cart at mount so success screen still shows items
   const cartSnap = useRef(cart);
@@ -52,6 +54,35 @@ export function CheckoutView() {
   const isInternational = currency.code !== "INR";
   const intlFee = isInternational ? Math.round(subtotal * 0.0354) : 0;
   const total = subtotal + intlFee;
+
+  useEffect(() => {
+    if (!tgUser?.telegram_id || itemCount === 0) return;
+    trackEvent(
+      "checkout_view",
+      { page: "checkout", item_count: itemCount, subtotal, currency: currency.code },
+      tgUser.telegram_id,
+    );
+  }, [tgUser?.telegram_id, itemCount, subtotal, currency.code]);
+
+  useEffect(() => {
+    if (phase.name !== "success" || !tgUser?.telegram_id) return;
+    const key = phase.order_id;
+    if (checkoutSuccessTracked.current === key) return;
+    checkoutSuccessTracked.current = key;
+    trackEvent(
+      "checkout_success",
+      { page: "checkout", order_id: phase.order_id, amount: phase.amount },
+      tgUser.telegram_id,
+    );
+  }, [phase, tgUser?.telegram_id]);
+
+  useEffect(() => {
+    if (phase.name !== "error" || !tgUser?.telegram_id) return;
+    const key = phase.message;
+    if (checkoutErrorTracked.current === key) return;
+    checkoutErrorTracked.current = key;
+    trackEvent("checkout_error", { page: "checkout", message: phase.message }, tgUser.telegram_id);
+  }, [phase, tgUser?.telegram_id]);
 
   const copy = async (key: string, value: string) => {
     try {
@@ -66,6 +97,13 @@ export function CheckoutView() {
     if (!cartSnap.current.length) return;
     import("@/lib/haptics").then(m => m.haptics.heavy());
     setPhase({ name: "loading" });
+    if (tgUser?.telegram_id) {
+      trackEvent(
+        "checkout_pay_start",
+        { page: "checkout", payment_method: paymentMethod, item_count: itemCount, subtotal },
+        tgUser.telegram_id,
+      );
+    }
 
     try {
       const tg = (window as any).Telegram?.WebApp;
