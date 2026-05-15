@@ -596,7 +596,7 @@ function MetricCard({ title, value, icon: Icon, note, pulse }: { title: string; 
 }
 
 function ChartBox({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("h-72 w-full overflow-hidden", className)}>{children}</div>;
+  return <div className={cn("h-72 w-full min-w-0 overflow-hidden", className)}>{children}</div>;
 }
 
 function ProgressRow({ label, value, max }: { label: string; value: number; max: number }) {
@@ -612,14 +612,19 @@ function ProgressRow({ label, value, max }: { label: string; value: number; max:
 function LiveFeed({ rows }: { rows: Array<Record<string, unknown>> }) {
   if (!rows.length) return <EmptyState>No live activity yet</EmptyState>;
   return (
-    <div className="max-h-80 overflow-auto rounded-2xl border border-[#ededf0]">
-      {rows.slice(0, 60).map((row, idx) => (
-        <div key={`${String(row.id ?? idx)}-${String(row._ts ?? idx)}`} className="grid gap-1 border-b border-[#ededf0] px-3 py-2 text-xs last:border-b-0 sm:grid-cols-[1fr_auto_auto] sm:items-center">
-          <span className="truncate font-medium text-[#111111]">{String(row.summary || row.type || "event")}</span>
-          <span className="font-mono text-[#6f6f73]">{String(row.user_id ?? "—")}</span>
-          <span className="truncate text-[#6f6f73]">{[row.city, row.region, row.country].filter(Boolean).join(", ") || "—"}</span>
-        </div>
-      ))}
+    <div className="max-h-80 w-full overflow-auto rounded-2xl border border-[#ededf0]">
+      {rows.slice(0, 60).map((row, idx) => {
+        const ts = Number(row._ts || Date.now());
+        const timeStr = new Date(ts).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour12: true, hour: "numeric", minute: "2-digit" });
+        return (
+          <div key={`${String(row.id ?? idx)}-${ts}`} className="grid gap-1 border-b border-[#ededf0] px-3 py-2 text-xs last:border-b-0 sm:grid-cols-[auto_1fr_auto_auto] sm:items-center">
+            <span className="font-mono text-[10px] text-[#8a8a8e]">{timeStr}</span>
+            <span className="truncate font-medium text-[#111111]">{String(row.summary || row.type || "event")}</span>
+            <span className="font-mono text-[#6f6f73]">{String(row.user_id ?? "—")}</span>
+            <span className="truncate text-[#6f6f73]">{[row.city, row.region, row.country].filter(Boolean).join(", ") || "—"}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -647,7 +652,7 @@ function DonutCard({ title, icon, data }: { title: string; icon: ElementType; da
       <CardTitle icon={icon} title={title} />
       {data.length ? (
         <>
-          <div className="h-48 w-full overflow-hidden">
+          <div className="h-48 w-full min-w-0 overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={data} dataKey="value" nameKey="name" innerRadius={48} outerRadius={76} paddingAngle={2}>
@@ -682,7 +687,7 @@ function ListRows({ data, empty, compact }: { data: Array<{ name: string; value:
 function TableRows({ rows, empty }: { rows: Array<[string, string]>; empty: string }) {
   if (!rows.length) return <EmptyState>{empty}</EmptyState>;
   return (
-    <div className="max-h-72 overflow-auto rounded-2xl border border-[#ededf0]">
+    <div className="max-h-72 w-full overflow-auto rounded-2xl border border-[#ededf0]">
       <table className="w-full min-w-[360px] text-left text-xs">
         <tbody>{rows.map(([a, b], i) => <tr key={`${a}-${i}`} className="border-b border-[#ededf0] last:border-b-0"><td className="px-3 py-3 font-medium text-[#525252]">{a}</td><td className="px-3 py-3 text-right font-semibold text-[#111111]">{b}</td></tr>)}</tbody>
       </table>
@@ -693,10 +698,20 @@ function TableRows({ rows, empty }: { rows: Array<[string, string]>; empty: stri
 function EventTable({ logs }: { logs: EnterpriseDashboard["click_logs"] }) {
   if (!logs?.length) return <EmptyState>No event rows in this window</EmptyState>;
   return (
-    <div className="max-h-96 overflow-auto rounded-2xl border border-[#ededf0]">
+    <div className="max-h-96 w-full overflow-auto rounded-2xl border border-[#ededf0]">
       <table className="w-full min-w-[620px] text-left text-xs">
         <thead className="sticky top-0 bg-white text-[#8a8a8e]"><tr><th className="px-3 py-2">Time</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">Target</th><th className="px-3 py-2">Page</th></tr></thead>
-        <tbody>{logs.slice(0, 80).map((row, i) => <tr key={`${row.ts}-${i}`} className="border-t border-[#ededf0]"><td className="px-3 py-2 font-mono text-[#8a8a8e]">{row.ts}</td><td className="px-3 py-2 text-[#525252]">{row.type || "event"}</td><td className="max-w-[220px] truncate px-3 py-2 text-[#111111]">{row.target || row.story_id || "—"}</td><td className="px-3 py-2 text-[#525252]">{row.page || "—"}</td></tr>)}</tbody>
+        <tbody>{logs.slice(0, 80).map((row, i) => {
+          const timeStr = row.ts ? new Date(row.ts).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour12: true, hour: "numeric", minute: "2-digit", day: "numeric", month: "short" }) : "—";
+          return (
+            <tr key={`${row.ts}-${i}`} className="border-t border-[#ededf0]">
+              <td className="px-3 py-2 font-mono text-[10px] text-[#8a8a8e] whitespace-nowrap">{timeStr}</td>
+              <td className="px-3 py-2 text-[#525252]">{row.type || "event"}</td>
+              <td className="max-w-[220px] truncate px-3 py-2 text-[#111111]">{row.target || row.story_id || "—"}</td>
+              <td className="px-3 py-2 text-[#525252]">{row.page || "—"}</td>
+            </tr>
+          );
+        })}</tbody>
       </table>
     </div>
   );

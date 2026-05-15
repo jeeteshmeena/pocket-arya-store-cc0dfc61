@@ -29,9 +29,8 @@ function Shell() {
       page: view.name, 
       story_id: (view as any).storyId || null,
       referrer: document.referrer || "direct",
-      user_data: tgUser
     }, tgUser?.telegram_id);
-  }, [view.name, (view as any).storyId, tgUser]);
+  }, [view.name, (view as any).storyId, tgUser?.telegram_id]);
 
   // Track session duration
   useEffect(() => {

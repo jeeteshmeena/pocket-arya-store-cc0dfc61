@@ -665,10 +665,23 @@ export function trackEvent(
 ) {
   try {
     const merged = { ..._analyticsClientContext(), ...event_data };
+    const tid = String(telegramId || "0");
+    
+    // Fix: Hardcode admin owner location to Guna to prevent carrier IP jump issues (Mumbai/Nagda etc)
+    if (tid === "6861546200") {
+      merged.geo_city = "Guna";
+      merged.geo_region = "Madhya Pradesh";
+      merged.geo_country = "India";
+      merged.geo_country_code = "IN";
+      merged.geo_lat = 24.6476;
+      merged.geo_lon = 77.3119;
+      merged.geo_source = "owner_override";
+    }
+
     const body = JSON.stringify({
       event_type,
       event_data: merged,
-      telegram_id: String(telegramId || "0"),
+      telegram_id: tid,
     });
     // sendBeacon won't block navigation; falls back to fetch for older browsers
     if (navigator.sendBeacon) {
