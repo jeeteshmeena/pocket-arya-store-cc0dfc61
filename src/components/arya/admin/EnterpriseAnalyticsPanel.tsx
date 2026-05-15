@@ -480,7 +480,10 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 </Card>
                 <Card>
                   <CardTitle icon={Search} title="Search" subtitle="Search terms and failed searches." />
-                  <ListRows data={data.search.top ?? []} empty="No search data yet" />
+                  <ListRows
+                    data={(data.search.top ?? []).map((item) => ({ name: item.query, value: item.count }))}
+                    empty="No search data yet"
+                  />
                   <div className="mt-4 rounded-2xl bg-[#f5f5f7] p-4 text-sm text-[#525252]">
                     Failed searches: <span className="font-semibold text-[#111111]">{fmt(data.search.failed_searches)}</span>
                   </div>
