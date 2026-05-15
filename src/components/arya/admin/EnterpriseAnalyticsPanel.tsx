@@ -181,7 +181,7 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-blue-500 p-5 shadow-sm shadow-slate-200/50 ${className}`}
+      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50 ${className}`}
     >
       {children}
     </div>
@@ -326,10 +326,10 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
   const showSkeleton = bootLoading && !data;
 
   return (
-    <div className="relative min-h-[70vh] bg-slate-50 pb-10 text-slate-900">
+    <div className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-10 text-slate-900">
       {refreshing && data ? (
         <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-slate-200">
-          <div className="h-full w-1/3 animate-pulse bg-zinc-400" />
+          <div className="h-full w-1/3 animate-pulse bg-slate-300" />
         </div>
       ) : null}
 
@@ -345,7 +345,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <span className="text-slate-500">WS</span>{" "}
               <span className="font-mono text-slate-600">/api/ws/analytics</span>
             </span>
-            <span className="text-zinc-800">|</span>
+            <span className="text-slate-300">|</span>
             <span>
               <span className="text-slate-500">GET</span>{" "}
               <span className="font-mono text-slate-600">/api/analytics/enterprise-dashboard</span>
@@ -354,8 +354,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
         </div>
       </div>
 
-      <div className="relative z-10 px-4 sm:px-6 lg:px-10">
-        <PanelCard className="mb-6 mt-2 border-slate-200 bg-blue-500 p-4 sm:p-5">
+      <div className="relative z-10 w-full max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-10">
+        <PanelCard className="mb-6 mt-2 border-slate-200 bg-white p-4 sm:p-5">
           <div className="mb-4 flex flex-col gap-1 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
               Report filters
@@ -367,7 +367,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <select
                 value={draft.days}
                 onChange={(e) => setDraft((d) => ({ ...d, days: Number(e.target.value) }))}
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-300"
+                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-300"
               >
                 {[7, 14, 30, 60, 90].map((d) => (
                   <option key={d} value={d}>
@@ -382,7 +382,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 value={draft.country}
                 onChange={(e) => setDraft((d) => ({ ...d, country: e.target.value }))}
                 placeholder="e.g. India"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-zinc-700 focus:border-slate-300"
+                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
               />
             </label>
             <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -391,7 +391,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 value={draft.city}
                 onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
                 placeholder="Optional"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-zinc-700 focus:border-slate-300"
+                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
               />
             </label>
             <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -400,7 +400,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 value={draft.storyId}
                 onChange={(e) => setDraft((d) => ({ ...d, storyId: e.target.value }))}
                 placeholder="Optional"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-zinc-700 focus:border-slate-300"
+                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
               />
             </label>
             <label className="block text-[11px] font-medium uppercase tracking-wide text-slate-500">
@@ -409,10 +409,10 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 value={draft.device}
                 onChange={(e) => setDraft((d) => ({ ...d, device: e.target.value }))}
                 placeholder="mobile / desktop"
-                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-zinc-700 focus:border-slate-300"
+                className="mt-1.5 block w-full rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-300"
               />
             </label>
-            <label className="flex cursor-pointer items-end gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 sm:min-h-[76px]">
+            <label className="flex cursor-pointer items-end gap-3 rounded-md border border-slate-200 bg-[#f8fafc] px-3 py-2.5 sm:min-h-[76px]">
               <input
                 type="checkbox"
                 checked={draft.telegramOnly}
@@ -434,7 +434,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <button
               type="button"
               onClick={applyFilters}
-              className="order-1 w-full rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 sm:order-2 sm:w-auto sm:min-w-[120px]"
+              className="order-1 w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50 sm:order-2 sm:w-auto sm:min-w-[120px]"
             >
               Apply filters
             </button>
@@ -442,12 +442,12 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
         </PanelCard>
 
         {err ? (
-          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-red-900/40 bg-red-950/25 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-red-200/95">{err}</p>
+          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-red-700">{err}</p>
             <button
               type="button"
               onClick={() => void fetchDashboard()}
-              className="shrink-0 rounded-md border border-red-800/60 bg-red-950/40 px-3 py-2 text-xs font-medium text-red-100 hover:bg-red-950/70"
+              className="shrink-0 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100"
             >
               Retry
             </button>
@@ -462,7 +462,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
           </div>
         ) : data ? (
           <>
-            <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+            <div className="mb-8 grid gap-3 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
               <HeroStat label="Mini app users" value={data.hero.total_users} icon={Activity} />
               <HeroStat label="Active now" value={data.hero.active_now} icon={Zap} pulse />
               <HeroStat label="In window" value={data.hero.unique_in_window} icon={Layers} />
@@ -516,7 +516,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <div className="grid gap-6 xl:grid-cols-3">
               <PanelCard className="xl:col-span-2">
                 <SectionTitle icon={Radio} title="Live activity" />
-                <div className="h-72 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <div className="h-72 overflow-hidden rounded-xl border border-slate-200 bg-[#f8fafc]">
                   <div className="h-full overflow-y-auto pr-2">
                     {(live.length ? live : data.live_feed).slice(0, 60).map((row, idx) => (
                       <div
@@ -534,7 +534,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                         <span className="font-mono text-slate-800">
                           {String((row as { user_id?: unknown }).user_id ?? "—")}
                         </span>
-                        <span className="text-zinc-800">·</span>
+                        <span className="text-slate-300">·</span>
                         <MapPin className="h-3 w-3 text-slate-400" />
                         <span className="text-slate-500">
                           {(row as { city?: string }).city ?? "—"}
@@ -632,8 +632,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <PanelCard>
                 <SectionTitle icon={Globe2} title="Geo map" />
-                <div className="h-80 w-full">
-                  <ResponsiveContainer>
+                <div className="h-72 w-full max-w-full overflow-hidden">
+                  <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 16, right: 16, bottom: 0, left: 0 }}>
                       <CartesianGrid strokeDasharray="4 8" stroke="#f1f5f9" />
                       <XAxis
@@ -675,8 +675,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
 
               <PanelCard>
                 <SectionTitle icon={Activity} title="Event cadence" />
-                <div className="h-80 w-full">
-                  <ResponsiveContainer>
+                <div className="h-72 w-full max-w-full overflow-hidden">
+                  <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={hourly}>
                       <defs>
                         <linearGradient id="areaHourly" x1="0" y1="0" x2="0" y2="1">
@@ -714,8 +714,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <div className="mt-6 grid gap-6 xl:grid-cols-3">
               <PanelCard>
                 <SectionTitle icon={Cpu} title="Devices" />
-                <div className="h-64">
-                  <ResponsiveContainer>
+                <div className="h-64 w-full overflow-hidden">
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={data.users.devices}
@@ -740,19 +740,19 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-500">
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-2">
+                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] px-2 py-2">
                     Mobile / tablet
                     <div className="text-lg font-semibold text-slate-900">
                       {data.users.mobile_events}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-2">
+                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] px-2 py-2">
                     Desktop
                     <div className="text-lg font-semibold text-slate-900">
                       {data.users.desktop_events}
                     </div>
                   </div>
-                  <div className="col-span-2 rounded-lg border border-slate-100 bg-slate-50 px-2 py-2">
+                  <div className="col-span-2 rounded-lg border border-slate-100 bg-[#f8fafc] px-2 py-2">
                     Telegram WebView
                     <div className="text-lg font-semibold text-slate-900">
                       {data.users.telegram_webview_events}
@@ -763,8 +763,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
 
               <PanelCard>
                 <SectionTitle icon={Globe2} title="Top countries" />
-                <div className="h-72">
-                  <ResponsiveContainer>
+                <div className="h-72 w-full overflow-hidden">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.geo.countries} layout="vertical" margin={{ left: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                       <XAxis
@@ -798,8 +798,8 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
 
               <PanelCard>
                 <SectionTitle icon={MapPin} title="Top cities" />
-                <div className="h-72">
-                  <ResponsiveContainer>
+                <div className="h-72 w-full overflow-hidden">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.geo.cities}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis
@@ -829,9 +829,9 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
               <PanelCard>
                 <SectionTitle icon={Headphones} title="Stories" />
-                <div className="max-h-80 overflow-y-auto rounded-xl border border-slate-200">
-                  <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-blue-500 text-slate-400">
+                <div className="max-h-80 overflow-auto rounded-xl border border-slate-200">
+                  <table className="w-full min-w-[max-content] text-left text-xs">
+                    <thead className="sticky top-0 bg-white text-slate-400">
                       <tr>
                         <th className="px-3 py-2">Story</th>
                         <th className="px-3 py-2">Views</th>
@@ -848,19 +848,19 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                   </table>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-slate-400">
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 py-2">
+                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] py-2">
                     Completion (proxy %)
                     <div className="text-lg font-semibold text-slate-900">
                       {String(data.stories.story_completion_proxy_pct)}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 py-2">
+                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] py-2">
                     Drop-off (proxy %)
                     <div className="text-lg font-semibold text-slate-900">
                       {String(data.stories.dropoff_proxy_pct)}
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-100 bg-slate-50 py-2">
+                  <div className="rounded-lg border border-slate-100 bg-[#f8fafc] py-2">
                     Avg session (sec)
                     <div className="text-lg font-semibold text-slate-900">
                       {String(data.stories.avg_listen_proxy_sec)}
@@ -868,9 +868,9 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                   </div>
                 </div>
                 {chapterTop.length > 0 ? (
-                  <div className="mt-4 max-h-48 overflow-y-auto rounded-xl border border-slate-200">
-                    <table className="w-full text-left text-xs">
-                      <thead className="sticky top-0 bg-blue-500 text-slate-400">
+                  <div className="mt-4 max-h-48 overflow-auto rounded-xl border border-slate-200">
+                    <table className="w-full min-w-[max-content] text-left text-xs">
+                      <thead className="sticky top-0 bg-white text-slate-400">
                         <tr>
                           <th className="px-3 py-2">Chapter</th>
                           <th className="px-3 py-2">Events</th>
@@ -900,7 +900,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                   {data.search.top.map((s) => (
                     <div
                       key={s.query}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs"
+                      className="flex items-center justify-between rounded-lg border border-slate-100 bg-[#f8fafc] px-3 py-2 text-xs"
                     >
                       <span className="truncate text-slate-800">{s.query}</span>
                       <span className="font-mono text-slate-500">{s.count}</span>
@@ -920,7 +920,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                       {data.search.trending!.map((s) => (
                         <div
                           key={`t-${s.query}`}
-                          className="flex items-center justify-between rounded border border-slate-100 bg-slate-50 px-2 py-1.5 text-[11px]"
+                          className="flex items-center justify-between rounded border border-slate-100 bg-[#f8fafc] px-2 py-1.5 text-[11px]"
                         >
                           <span className="truncate text-slate-600">{s.query}</span>
                           <span className="font-mono text-slate-500">{s.count}</span>
@@ -935,9 +935,9 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
             <div className="mt-6 grid gap-6 xl:grid-cols-3">
               <PanelCard className="xl:col-span-2">
                 <SectionTitle icon={Layers} title="Click log" />
-                <div className="max-h-64 overflow-y-auto rounded-xl border border-slate-200">
-                  <table className="w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-blue-500 text-slate-400">
+                <div className="max-h-64 overflow-auto rounded-xl border border-slate-200">
+                  <table className="w-full min-w-[max-content] text-left text-xs">
+                    <thead className="sticky top-0 bg-white text-slate-400">
                       <tr>
                         <th className="px-3 py-2">Time</th>
                         <th className="px-3 py-2">Type</th>
@@ -1019,7 +1019,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <PanelCard className="mt-6">
                 <SectionTitle icon={MapPin} title="Click coordinates" />
                 <div className="h-52 w-full">
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                       <XAxis
@@ -1054,10 +1054,12 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                 <div className="flex flex-wrap items-center gap-2">
                   {journeyNodes.map((n, i, arr) => (
                     <div key={n.id} className="flex items-center gap-2">
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-800">
+                      <span className="rounded-full border border-slate-200 bg-[#f8fafc] px-3 py-1 text-xs text-slate-800">
                         {n.id} <span className="text-slate-400">({n.count})</span>
                       </span>
-                      {i < arr.length - 1 ? <ArrowRight className="h-3 w-3 text-zinc-700" /> : null}
+                      {i < arr.length - 1 ? (
+                        <ArrowRight className="h-3 w-3 text-slate-400" />
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -1069,7 +1071,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
               <PanelCard>
                 <SectionTitle icon={Timer} title="Session replay" />
                 <p className="text-sm text-slate-500">{data.session_replay.message}</p>
-                <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs text-slate-400">
+                <div className="mt-4 rounded-xl border border-slate-100 bg-[#f8fafc] p-4 text-xs text-slate-400">
                   Not enabled.
                 </div>
               </PanelCard>
@@ -1093,7 +1095,7 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
                   />
                 </div>
                 <div className="mt-4 h-56">
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={growth}>
                       <defs>
                         <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
@@ -1198,7 +1200,7 @@ function HeroStat({
   decimals?: number;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] p-5">
       {pulse ? (
         <span className="absolute right-4 top-4 flex h-2 w-2">
           <span
@@ -1227,7 +1229,7 @@ function HeatMini({ cells }: { cells: Array<{ day: number; hour: number; count: 
   }
   return (
     <div className="overflow-x-auto">
-      <div className="inline-flex flex-col gap-0.5">
+      <div className="inline-flex flex-col gap-0.5 min-w-0">
         {grid.map((row, di) => (
           <div key={di} className="flex gap-0.5">
             {row.map((v, hi) => {
