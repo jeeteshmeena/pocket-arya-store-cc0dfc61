@@ -628,6 +628,31 @@ if (typeof window !== "undefined" && !_readGeoCache()) {
   void _fetchGeo();
 }
 
+function _analyticsClientContext(): Record<string, unknown> {
+  const o: Record<string, unknown> = {};
+  try {
+    o.client_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    /* ignore */
+  }
+  try {
+    Object.assign(o, _detectClientDevice());
+  } catch {
+    /* ignore */
+  }
+  try {
+    const wa = (window as unknown as { Telegram?: { WebApp?: { platform?: string; version?: string } } }).Telegram?.WebApp;
+    if (wa?.platform) o.telegram_platform = wa.platform;
+    if (wa?.version) o.telegram_webapp_version = wa.version;
+  } catch {
+    /* ignore */
+  }
+  const geo = _readGeoCache();
+  if (geo) Object.assign(o, geo);
+  else void _fetchGeo();
+  return o;
+}
+
 /**
  * Track user engagement — fire-and-forget, never throws.
  * Powers the /api/trending live engine and location analytics.
