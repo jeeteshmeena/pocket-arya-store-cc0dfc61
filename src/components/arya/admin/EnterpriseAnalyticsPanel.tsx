@@ -332,29 +332,31 @@ export function EnterpriseAnalyticsPanel({ identity }: { identity: TelegramIdent
   const showSkeleton = bootLoading && !data;
 
   return (
-    <div className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f8fafc] pb-10 text-slate-900">
+    <div className="relative min-h-[70vh] w-full max-w-full overflow-x-hidden bg-[#f5f5f7] pb-10 text-[#1d1d1f]" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif" }}>
       {refreshing && data ? (
-        <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-slate-200">
-          <div className="h-full w-1/3 animate-pulse bg-slate-300" />
+        <div className="pointer-events-none fixed left-0 right-0 top-0 z-20 h-0.5 bg-black/5">
+          <div className="h-full w-1/3 animate-pulse bg-[#0071e3]/40" />
         </div>
       ) : null}
 
-      <div className="relative z-10 border-b border-slate-100 px-4 py-6 sm:px-6 lg:px-10">
+      <div className="relative z-10 px-4 py-7 sm:px-6 lg:px-10">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl md:text-3xl">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#86868b]">Admin · Analytics</div>
+            <h1 className="mt-1.5 text-2xl font-semibold tracking-tight text-[#1d1d1f] sm:text-3xl md:text-[34px]">
               Intelligence
             </h1>
+            <p className="mt-1 text-sm text-[#6e6e73]">Real-time engagement, geography and revenue across the mini app.</p>
           </div>
-          <div className="hidden flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400 xl:flex">
+          <div className="hidden flex-wrap gap-x-4 gap-y-1 text-[11px] text-[#86868b] xl:flex">
             <span>
-              <span className="text-slate-500">WS</span>{" "}
-              <span className="font-mono text-slate-600">/api/ws/analytics</span>
+              <span className="text-[#1d1d1f]/60">WS</span>{" "}
+              <span className="font-mono text-[#1d1d1f]/70">/api/ws/analytics</span>
             </span>
-            <span className="text-slate-300">|</span>
+            <span className="text-[#86868b]/40">·</span>
             <span>
-              <span className="text-slate-500">GET</span>{" "}
-              <span className="font-mono text-slate-600">/api/analytics/enterprise-dashboard</span>
+              <span className="text-[#1d1d1f]/60">GET</span>{" "}
+              <span className="font-mono text-[#1d1d1f]/70">/api/analytics/enterprise-dashboard</span>
             </span>
           </div>
         </div>
