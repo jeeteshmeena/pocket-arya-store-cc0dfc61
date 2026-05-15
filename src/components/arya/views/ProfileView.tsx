@@ -16,9 +16,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/store/app-store";
 import { Skeleton } from "@/components/ui/skeleton";
-import { openTelegramLink, BOT_USERNAME } from "@/lib/api";
 import { InfoDialog, type InfoDialogKind } from "../InfoDialog";
-import { TERMS_TEXT, REFUND_TEXT } from "../legal-content";
 import { cn } from "@/lib/utils";
 
 const SUPPORT_URL = "https://t.me/AryaPremiumSupport";

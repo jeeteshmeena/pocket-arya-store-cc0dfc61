@@ -15,6 +15,7 @@ type OrderDetails = {
   amount: number;
   source: string;
   paid_at: string;
+  created_at?: string;
 } | null;
 
 type PurchasedStory = {
