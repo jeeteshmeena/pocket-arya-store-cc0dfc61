@@ -442,14 +442,13 @@ const COUNTRY_BY_CODE: Record<string, string> = {
 };
 
 const INDIAN_TIMEZONE_CITY: Record<string, { city: string; region: string; lat: number; lon: number }> = {
-  "Asia/Kolkata": { city: "Guna", region: "Madhya Pradesh", lat: 24.6476, lon: 77.3119 },
-  "Asia/Calcutta": { city: "Guna", region: "Madhya Pradesh", lat: 24.6476, lon: 77.3119 },
+  // Removed hardcoded Guna fallback so we don't fake locations for all Indian users
 };
 
 function _readGeoCache(): GeoSnapshot | null {
   if (_geoCache) return _geoCache;
   try {
-    const raw = sessionStorage.getItem(GEO_CACHE_KEY);
+    const raw = localStorage.getItem(GEO_CACHE_KEY) || sessionStorage.getItem(GEO_CACHE_KEY);
     if (raw) {
       _geoCache = JSON.parse(raw) as GeoSnapshot;
       return _geoCache;
@@ -463,7 +462,7 @@ function _readGeoCache(): GeoSnapshot | null {
 function _saveGeoCache(snap: GeoSnapshot): GeoSnapshot {
   _geoCache = snap;
   try {
-    sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap));
+    localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap));
   } catch {
     /* ignore */
   }
@@ -471,25 +470,7 @@ function _saveGeoCache(snap: GeoSnapshot): GeoSnapshot {
 }
 
 function _timezoneFallback(): GeoSnapshot {
-  try {
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const match = timezone ? INDIAN_TIMEZONE_CITY[timezone] : undefined;
-    if (match) {
-      return {
-        geo_city: match.city,
-        geo_region: match.region,
-        geo_country: "India",
-        geo_country_code: "IN",
-        geo_lat: match.lat,
-        geo_lon: match.lon,
-        geo_source: `timezone:${timezone}`,
-        geo_accuracy: "timezone",
-      };
-    }
-  } catch {
-    /* ignore */
-  }
-  return {};
+  return {}; // Disabled timezone fallback since it faked locations
 }
 
 function _looksLikeCarrierHub(snap: GeoSnapshot): boolean {
@@ -665,23 +646,10 @@ export function trackEvent(
 ) {
   try {
     const merged = { ..._analyticsClientContext(), ...event_data };
-    const tid = String(telegramId || "0");
-    
-    // Fix: Hardcode admin owner location to Guna to prevent carrier IP jump issues (Mumbai/Nagda etc)
-    if (tid === "6861546200") {
-      merged.geo_city = "Guna";
-      merged.geo_region = "Madhya Pradesh";
-      merged.geo_country = "India";
-      merged.geo_country_code = "IN";
-      merged.geo_lat = 24.6476;
-      merged.geo_lon = 77.3119;
-      merged.geo_source = "owner_override";
-    }
-
     const body = JSON.stringify({
       event_type,
       event_data: merged,
-      telegram_id: tid,
+      telegram_id: String(telegramId || "0"),
     });
     // sendBeacon won't block navigation; falls back to fetch for older browsers
     if (navigator.sendBeacon) {
