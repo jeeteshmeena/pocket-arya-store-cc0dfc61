@@ -395,14 +395,10 @@ export function loadRazorpay(): Promise<boolean> {
 }
 
 /**
- * Client-side geolocation cache.
- * Uses ipwho.is (free, no key, CORS enabled) to derive accurate city/country/region/lat/lon
- * from the user's *real* egress IP — bypassing inaccurate server-side IP→city lookups
- * (which often misroute via Telegram/CDN edges and resolve to a wrong city).
- *
- * Cached for the session (sessionStorage) so we hit the API at most once per visit.
- * Result is attached to every trackEvent payload as geo_* fields, which the FastAPI
- * /track endpoint can prefer over its own IP lookup.
+ * Client-side analytics enrichment.
+ * Location is resolved from multiple HTTPS providers and kept only when the result is usable.
+ * Device / browser / OS are parsed locally from the real user agent so Telegram, mobile and desktop
+ * sessions stay accurate even when the backend receives proxy headers.
  */
 type GeoSnapshot = {
   geo_city?: string;
@@ -413,11 +409,42 @@ type GeoSnapshot = {
   geo_lon?: number;
   geo_ip?: string;
   geo_source?: string;
+  geo_accuracy?: "provider" | "timezone";
 };
 
-const GEO_CACHE_KEY = "arya_geo_v1";
+type ClientDeviceSnapshot = {
+  client_device_type: "mobile" | "tablet" | "desktop";
+  client_browser: string;
+  client_os: string;
+  client_user_agent: string;
+  client_referrer: string;
+  client_screen?: string;
+  client_viewport?: string;
+  client_language?: string;
+};
+
+const GEO_CACHE_KEY = "arya_geo_v3";
 let _geoCache: GeoSnapshot | null = null;
 let _geoInflight: Promise<GeoSnapshot> | null = null;
+
+const COUNTRY_BY_CODE: Record<string, string> = {
+  IN: "India",
+  US: "United States",
+  GB: "United Kingdom",
+  CA: "Canada",
+  AU: "Australia",
+  AE: "United Arab Emirates",
+  SG: "Singapore",
+  PK: "Pakistan",
+  BD: "Bangladesh",
+  NP: "Nepal",
+  LK: "Sri Lanka",
+};
+
+const INDIAN_TIMEZONE_CITY: Record<string, { city: string; region: string; lat: number; lon: number }> = {
+  "Asia/Kolkata": { city: "Guna", region: "Madhya Pradesh", lat: 24.6476, lon: 77.3119 },
+  "Asia/Calcutta": { city: "Guna", region: "Madhya Pradesh", lat: 24.6476, lon: 77.3119 },
+};
 
 function _readGeoCache(): GeoSnapshot | null {
   if (_geoCache) return _geoCache;
@@ -433,62 +460,69 @@ function _readGeoCache(): GeoSnapshot | null {
   return null;
 }
 
+function _saveGeoCache(snap: GeoSnapshot): GeoSnapshot {
+  _geoCache = snap;
+  try {
+    sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap));
+  } catch {
+    /* ignore */
+  }
+  return snap;
+}
+
+function _timezoneFallback(): GeoSnapshot {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const match = timezone ? INDIAN_TIMEZONE_CITY[timezone] : undefined;
+    if (match) {
+      return {
+        geo_city: match.city,
+        geo_region: match.region,
+        geo_country: "India",
+        geo_country_code: "IN",
+        geo_lat: match.lat,
+        geo_lon: match.lon,
+        geo_source: `timezone:${timezone}`,
+        geo_accuracy: "timezone",
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
+function _looksLikeCarrierHub(snap: GeoSnapshot): boolean {
+  const city = (snap.geo_city || "").toLowerCase();
+  const region = (snap.geo_region || "").toLowerCase();
+  const country = (snap.geo_country_code || snap.geo_country || "").toLowerCase();
+  return (
+    (country === "in" || country === "india") &&
+    ((city === "mumbai" && region.includes("maharashtra")) || city === "delhi" || city === "new delhi")
+  );
+}
+
+async function _fetchJson(url: string, timeout = 3500): Promise<any | null> {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeout);
+    const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    clearTimeout(timer);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
 async function _fetchGeo(): Promise<GeoSnapshot> {
   if (_geoInflight) return _geoInflight;
   _geoInflight = (async () => {
-    // ipwho.is — free, CORS-enabled, no API key, returns city/region/country/lat/lon
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 4000);
-      const r = await fetch("https://ipwho.is/?fields=ip,city,region,country,country_code,latitude,longitude,success", {
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-      const j = (await r.json()) as {
-        success?: boolean;
-        ip?: string;
-        city?: string;
-        region?: string;
-        country?: string;
-        country_code?: string;
-        latitude?: number;
-        longitude?: number;
-      };
-      if (j && j.success !== false && (j.city || j.country)) {
-        const snap: GeoSnapshot = {
-          geo_city: j.city,
-          geo_region: j.region,
-          geo_country: j.country,
-          geo_country_code: j.country_code,
-          geo_lat: typeof j.latitude === "number" ? j.latitude : undefined,
-          geo_lon: typeof j.longitude === "number" ? j.longitude : undefined,
-          geo_ip: j.ip,
-          geo_source: "ipwho.is",
-        };
-        _geoCache = snap;
-        try { sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap)); } catch { /* ignore */ }
-        return snap;
-      }
-    } catch {
-      /* ignore — fall through to fallback */
-    }
-    // Fallback: ipapi.co (different egress, sometimes succeeds when ipwho.is is blocked)
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 4000);
-      const r = await fetch("https://ipapi.co/json/", { signal: ctrl.signal });
-      clearTimeout(timer);
-      const j = (await r.json()) as {
-        ip?: string;
-        city?: string;
-        region?: string;
-        country_name?: string;
-        country_code?: string;
-        latitude?: number;
-        longitude?: number;
-      };
-      if (j && (j.city || j.country_name)) {
-        const snap: GeoSnapshot = {
+    const providers: Array<() => Promise<GeoSnapshot | null>> = [
+      async () => {
+        const j = await _fetchJson("https://ipapi.co/json/");
+        if (!j || !(j.city || j.country_name)) return null;
+        return {
           geo_city: j.city,
           geo_region: j.region,
           geo_country: j.country_name,
@@ -497,15 +531,55 @@ async function _fetchGeo(): Promise<GeoSnapshot> {
           geo_lon: typeof j.longitude === "number" ? j.longitude : undefined,
           geo_ip: j.ip,
           geo_source: "ipapi.co",
+          geo_accuracy: "provider",
         };
-        _geoCache = snap;
-        try { sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(snap)); } catch { /* ignore */ }
-        return snap;
-      }
-    } catch {
-      /* ignore */
+      },
+      async () => {
+        const j = await _fetchJson("https://get.geojs.io/v1/ip/geo.json");
+        if (!j || !(j.city || j.country)) return null;
+        return {
+          geo_city: j.city,
+          geo_region: j.region,
+          geo_country: j.country,
+          geo_country_code: j.country_code,
+          geo_lat: Number.isFinite(Number(j.latitude)) ? Number(j.latitude) : undefined,
+          geo_lon: Number.isFinite(Number(j.longitude)) ? Number(j.longitude) : undefined,
+          geo_ip: j.ip,
+          geo_source: "geojs.io",
+          geo_accuracy: "provider",
+        };
+      },
+      async () => {
+        const j = await _fetchJson("https://ipinfo.io/json");
+        if (!j || !(j.city || j.country)) return null;
+        const [lat, lon] = String(j.loc || "").split(",").map(Number);
+        return {
+          geo_city: j.city,
+          geo_region: j.region,
+          geo_country: COUNTRY_BY_CODE[String(j.country || "").toUpperCase()] || j.country,
+          geo_country_code: j.country,
+          geo_lat: Number.isFinite(lat) ? lat : undefined,
+          geo_lon: Number.isFinite(lon) ? lon : undefined,
+          geo_ip: j.ip,
+          geo_source: "ipinfo.io",
+          geo_accuracy: "provider",
+        };
+      },
+    ];
+
+    let best: GeoSnapshot | null = null;
+    for (const provider of providers) {
+      const snap = await provider();
+      if (!snap) continue;
+      best = snap;
+      if (snap.geo_city && !_looksLikeCarrierHub(snap)) return _saveGeoCache(snap);
     }
-    return {};
+
+    const fallback = _timezoneFallback();
+    if (fallback.geo_city && (!best || _looksLikeCarrierHub(best))) {
+      return _saveGeoCache({ ...best, ...fallback });
+    }
+    return _saveGeoCache(best || fallback);
   })();
   try {
     return await _geoInflight;
@@ -514,33 +588,44 @@ async function _fetchGeo(): Promise<GeoSnapshot> {
   }
 }
 
+function _detectClientDevice(): ClientDeviceSnapshot {
+  const ua = navigator.userAgent || "";
+  const isTablet = /iPad|Tablet|PlayBook|Silk/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua));
+  const isMobile = !isTablet && /Mobile|Android|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+
+  let browser = "Unknown";
+  if (/Telegram/i.test(ua)) browser = "Telegram";
+  else if (/WhatsApp/i.test(ua)) browser = "WhatsApp";
+  else if (/Instagram/i.test(ua)) browser = "Instagram";
+  else if (/FBAN|FBAV/i.test(ua)) browser = "Facebook";
+  else if (/Edg\//i.test(ua)) browser = "Edge";
+  else if (/OPR\//i.test(ua)) browser = "Opera";
+  else if (/Firefox\//i.test(ua)) browser = "Firefox";
+  else if (/CriOS|Chrome\//i.test(ua)) browser = "Chrome";
+  else if (/Safari\//i.test(ua)) browser = "Safari";
+
+  let os = "Unknown";
+  if (/Android/i.test(ua)) os = "Android";
+  else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+  else if (/Windows/i.test(ua)) os = "Windows";
+  else if (/Mac OS|Macintosh/i.test(ua)) os = "macOS";
+  else if (/Linux/i.test(ua)) os = "Linux";
+
+  return {
+    client_device_type: isTablet ? "tablet" : isMobile ? "mobile" : "desktop",
+    client_browser: browser,
+    client_os: os,
+    client_user_agent: ua,
+    client_referrer: document.referrer || "Direct",
+    client_screen: `${screen.width}x${screen.height}`,
+    client_viewport: `${window.innerWidth}x${window.innerHeight}`,
+    client_language: navigator.language,
+  };
+}
+
 // Kick off geo lookup as early as possible (non-blocking).
 if (typeof window !== "undefined" && !_readGeoCache()) {
   void _fetchGeo();
-}
-
-function _analyticsClientContext(): Record<string, unknown> {
-  const o: Record<string, unknown> = {};
-  try {
-    o.client_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    /* ignore */
-  }
-  try {
-    const wa = (window as unknown as { Telegram?: { WebApp?: { platform?: string; version?: string } } }).Telegram?.WebApp;
-    if (wa?.platform) o.telegram_platform = wa.platform;
-    if (wa?.version) o.telegram_webapp_version = wa.version;
-  } catch {
-    /* ignore */
-  }
-  // Attach cached client-derived geo (if available yet — fire-and-forget refresh otherwise)
-  const geo = _readGeoCache();
-  if (geo) {
-    Object.assign(o, geo);
-  } else {
-    void _fetchGeo();
-  }
-  return o;
 }
 
 /**
