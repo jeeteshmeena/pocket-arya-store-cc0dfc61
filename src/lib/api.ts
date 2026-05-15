@@ -130,6 +130,36 @@ export async function fetchLocationAnalytics(identity: TelegramIdentity, days: n
   return res.data;
 }
 
+/** Enterprise intelligence console — same payload as FastAPI `GET /api/analytics/enterprise-dashboard`. */
+export async function fetchEnterpriseDashboard(
+  identity: TelegramIdentity,
+  filters: {
+    days?: number;
+    country?: string;
+    city?: string;
+    story_id?: string;
+    device?: string;
+    telegram_only?: boolean;
+  } = {},
+): Promise<Record<string, unknown>> {
+  if (identity.telegram_id == null) throw new Error("telegram_id required");
+  const qs = new URLSearchParams({ telegram_id: String(identity.telegram_id) });
+  if (filters.days != null) qs.set("days", String(filters.days));
+  if (filters.country) qs.set("country", filters.country);
+  if (filters.city) qs.set("city", filters.city);
+  if (filters.story_id) qs.set("story_id", filters.story_id);
+  if (filters.device) qs.set("device", filters.device);
+  if (filters.telegram_only) qs.set("telegram_only", "true");
+  return request<Record<string, unknown>>(`/analytics/enterprise-dashboard?${qs.toString()}`, { method: "GET" });
+}
+
+/** WebSocket URL for live analytics (same host as mini app; path under `/api`). */
+export function getAnalyticsWebSocketUrl(telegramId: number): string {
+  if (typeof window === "undefined") return "";
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/api/ws/analytics?telegram_id=${encodeURIComponent(String(telegramId))}`;
+}
+
 export async function uploadAdminImage(identity: TelegramIdentity, file: File): Promise<{poster_url: string, file_id: string}> {
   const formData = new FormData();
   formData.append("telegram_id", String(identity.telegram_id));

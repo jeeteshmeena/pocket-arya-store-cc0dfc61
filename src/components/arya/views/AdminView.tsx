@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronDown, Users, FileText, Banknote, HelpCircle, Activity, Edit, Trash2, Plus, X, Image as ImageIcon, MapPin, Globe, Monitor, Smartphone, RefreshCw, TrendingUp, Home, Grid, MessageSquare, Clock, Settings as SettingsIcon, Link2, Calendar, Share2, Download, Search, ShoppingBag, Bot, Library, ShieldAlert } from "lucide-react";
+import { ChevronLeft, ChevronDown, Users, FileText, Activity, Edit, Trash2, Plus, X, MapPin, Smartphone, RefreshCw, Home, MessageSquare, Settings as SettingsIcon, Search, ShoppingBag, Bot, Library, ShieldAlert } from "lucide-react";
 import { useApp } from "@/store/app-store";
-import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, fetchAnalytics, fetchLocationAnalytics, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase, fetchAdminSettings, updateAdminSetting } from "@/lib/api";
+import { fetchAdminStats, fetchAdminStories, saveAdminStory, deleteAdminStory, fetchAdminBanners, saveAdminBanner, deleteAdminBanner, fetchAdminBuyers, fetchAdminSupport, replyAdminSupport, uploadAdminImage, translateText, getOptimizedImage, fetchAdminRequests, updateAdminRequestStatus, manualAdminPurchase, fetchAdminSettings, updateAdminSetting, adminBuyerAction, BOT_USERNAME } from "@/lib/api";
+import { EnterpriseAnalyticsPanel } from "@/components/arya/admin/EnterpriseAnalyticsPanel";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie } from "recharts";
 
 export function AdminView() {
   const { back, tgUser } = useApp();
@@ -17,9 +17,6 @@ export function AdminView() {
   const [buyers, setBuyers] = useState<any[]>([]);
   const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [storyRequests, setStoryRequests] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [locationAnalytics, setLocationAnalytics] = useState<any>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [adminSettings, setAdminSettings] = useState<{ mini_app_enabled: boolean; tnc_enabled: boolean }>({ mini_app_enabled: true, tnc_enabled: true });
@@ -50,31 +47,15 @@ export function AdminView() {
     loadData();
   }, [tgUser]);
 
-  useEffect(() => {
-    let interval: any;
-    if (activeTab === "analytics" && tgUser?.telegram_id) {
-      const load = () => {
-        fetchLocationAnalytics(tgUser, 30)
-          .then(d => { setLocationAnalytics(d); setLocationLoading(false); })
-          .catch(() => setLocationLoading(false));
-      };
-      if (!locationAnalytics) setLocationLoading(true);
-      load();
-      interval = setInterval(load, 15000); // 15s refresh
-    }
-    return () => clearInterval(interval);
-  }, [activeTab, tgUser?.telegram_id]);
-
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statsData, storiesData, bannersData, buyersData, supportData, analyticsData, requestsData] = await Promise.all([
+      const [statsData, storiesData, bannersData, buyersData, supportData, requestsData] = await Promise.all([
         fetchAdminStats(tgUser),
         fetchAdminStories(tgUser),
         fetchAdminBanners(tgUser),
         fetchAdminBuyers(tgUser),
         fetchAdminSupport(tgUser),
-        fetchAnalytics(tgUser),
         fetchAdminRequests(tgUser),
       ]);
       setStats(statsData);
@@ -82,7 +63,6 @@ export function AdminView() {
       setBanners(bannersData);
       setBuyers(buyersData);
       setSupportTickets(supportData);
-      setAnalytics(analyticsData);
       setStoryRequests(requestsData);
       // Load admin feature settings (non-blocking)
       fetchAdminSettings(tgUser).then(s => setAdminSettings(s)).catch(() => {});
@@ -255,7 +235,7 @@ export function AdminView() {
 
   // Sub-page router: buyer detail or manual grant
   if (selectedBuyer) {
-    return <BuyerDetailPage buyer={selectedBuyer} stories={stories} onBack={() => setSelectedBuyer(null)} />;
+    return <BuyerDetailPage buyer={selectedBuyer} stories={stories} tgUser={tgUser} onBack={() => setSelectedBuyer(null)} />;
   }
   if (isManualFormOpen) {
     return (
@@ -456,142 +436,8 @@ export function AdminView() {
             )}
 
             {activeTab === "analytics" && (
-              <div className="animate-in fade-in duration-500 bg-[#f9f9f9] min-h-full pb-4">
-                
-                {/* Analytics Header Section */}
-                <div className="bg-white px-4 pt-6 pb-6 border-b border-gray-100 mb-4 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-lg font-bold flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Overview</h2>
-                    {locationLoading && <RefreshCw className="h-3.5 w-3.5 text-gray-400 animate-spin" />}
-                  </div>
-
-                  {/* Overview Grid Card */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <OverviewCard icon={Activity} title="Total Clicks" value={locationAnalytics?.summary?.total_events?.toLocaleString() || 0} trend="-22%" />
-                    <OverviewCard icon={Users} title="Unique Visitors" value={locationAnalytics?.summary?.unique_visitors?.toLocaleString() || 0} trend="-24%" />
-                    <OverviewCard icon={Activity} title="Conversion" value="93.0%" />
-                    <OverviewCard icon={Globe} title="Countries" value={locationAnalytics?.countries?.length || 0} />
-                    <div className="col-span-2"><OverviewCard icon={MapPin} title="Cities" value={locationAnalytics?.cities?.length || 0} /></div>
-                  </div>
-                </div>
-
-                {/* Clicks Over Time */}
-                <div className="bg-white p-5 border-y border-gray-100 mb-4 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-[15px]">Clicks Over Time</h3>
-                    <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold uppercase tracking-wider">Last 30 days</span>
-                  </div>
-                  <div className="h-40 w-full">
-                    {locationAnalytics?.hourly_trend?.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={locationAnalytics.hourly_trend} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#000" stopOpacity={0.1}/>
-                              <stop offset="95%" stopColor="#000" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', fontSize: '12px', fontWeight: 'bold' }} />
-                          <Area type="monotone" dataKey="count" stroke="#000" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCount)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    ) : <div className="text-center text-gray-400 text-xs py-10">No data</div>}
-                  </div>
-                </div>
-
-                {/* Heatmap */}
-                <div className="bg-white p-5 border-y border-gray-100 mb-4 shadow-sm">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-[15px] flex items-center gap-2"><Grid className="h-4 w-4" /> Click Heatmap</h3>
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">Hour × Day of Week</span>
-                  </div>
-                  <Heatmap data={locationAnalytics?.heatmap || []} />
-                </div>
-
-                {/* Live Activity */}
-                <div className="bg-white p-5 border-y border-gray-100 mb-4 shadow-sm">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-[15px] flex items-center gap-2">⚡ Live Activity</h3>
-                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase"><div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></div> Live</div>
-                  </div>
-                  <div className="space-y-3">
-                    {locationAnalytics?.live_activity?.slice(0, 5).map((log: any, i: number) => {
-                      const minsAgo = Math.floor((new Date().getTime() - new Date(log.time).getTime()) / 60000);
-                      const timeStr = minsAgo < 1 ? "38s ago" : minsAgo < 60 ? `${minsAgo}m ago` : `${Math.floor(minsAgo/60)}h ago`;
-                      return (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-2xl border border-gray-100 bg-[#fafafa]">
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">{getFlag(log.country)}</span>
-                            <div>
-                              <div className="text-sm font-bold text-gray-900">{log.city}, <span className="font-normal text-gray-500">{log.country}</span></div>
-                              <div className="text-[11px] text-gray-500 mt-0.5">{log.device} • {log.browser} • {log.referrer}</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xs text-gray-400 font-medium">{timeStr}</div>
-                            {minsAgo < 15 && <div className="inline-block mt-1 bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">NEW</div>}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Top Countries & Cities */}
-                <div className="bg-white border-y border-gray-100 mb-4 shadow-sm p-5 space-y-8">
-                  <div>
-                    <h3 className="font-bold text-[15px] flex items-center gap-2 mb-5"><Globe className="h-4 w-4" /> Top Countries</h3>
-                    <BarList data={locationAnalytics?.countries} showFlag />
-                  </div>
-                  <div className="h-px bg-gray-100 w-full" />
-                  <div>
-                    <h3 className="font-bold text-[15px] flex items-center gap-2 mb-5"><MapPin className="h-4 w-4" /> Top Cities</h3>
-                    <BarList data={locationAnalytics?.cities} showFlag parentData={locationAnalytics?.countries} />
-                  </div>
-                  <div className="h-px bg-gray-100 w-full" />
-                  <div>
-                    <h3 className="font-bold text-[15px] flex items-center gap-2 mb-5"><FileText className="h-4 w-4" /> Top Pages</h3>
-                    <BarList data={locationAnalytics?.pages} />
-                  </div>
-                </div>
-
-                {/* Donut Charts */}
-                <div className="space-y-4 px-4 mb-4">
-                  <DonutCard title="Operating Systems" data={locationAnalytics?.os} />
-                  <DonutCard title="Browsers" data={locationAnalytics?.browsers} />
-                  <DonutCard title="Traffic Sources" data={locationAnalytics?.referrers} />
-                </div>
-
-                {/* Click Log Table */}
-                <div className="bg-white border-y border-gray-100 shadow-sm mt-4 overflow-hidden">
-                  <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white">
-                    <h3 className="font-bold text-[15px] flex items-center gap-2"><ListIcon /> Click Log</h3>
-                    <span className="text-xs text-gray-500 font-medium">{locationAnalytics?.summary?.total_events} Total</span>
-                  </div>
-                  <div className="p-3 border-b border-gray-100 bg-white">
-                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-3 py-2.5 rounded-xl">
-                      <Search className="h-4 w-4 text-gray-400" />
-                      <input type="text" placeholder="Search by country, city, browser..." className="bg-transparent border-none outline-none text-sm w-full placeholder-gray-400" />
-                    </div>
-                  </div>
-                  <div className="w-full">
-                    <div className="grid grid-cols-3 text-xs font-bold text-gray-500 p-4 border-b border-gray-100 bg-[#f9f9f9]">
-                      <div>Time</div>
-                      <div>Location</div>
-                      <div>Device</div>
-                    </div>
-                    {locationAnalytics?.live_activity?.map((log: any, i: number) => (
-                      <div key={i} className="grid grid-cols-3 text-[12px] p-4 border-b border-gray-50 items-center hover:bg-gray-50 transition">
-                        <div className="text-gray-500">
-                          {new Date(log.time).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}<br/>
-                          {new Date(log.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </div>
-                        <div className="flex items-center gap-2 font-medium text-gray-900"><span className="text-base">{getFlag(log.country)}</span> {log.city}</div>
-                        <div className="text-gray-600">{log.device}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="animate-in fade-in duration-500">
+                <EnterpriseAnalyticsPanel identity={tgUser} />
               </div>
             )}
 
@@ -1007,132 +853,12 @@ export function AdminView() {
   );
 }
 
-const ListIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
-
 function NavBtn({ active, icon: Icon, label, onClick }: any) {
   return (
     <button onClick={onClick} className={cn("flex flex-col items-center gap-1 transition-colors w-16", active ? "text-black" : "text-gray-400 hover:text-gray-800")}>
       <Icon className={cn("h-6 w-6", active ? "fill-black stroke-black" : "")} strokeWidth={active ? 2.5 : 2} />
       <span className={cn("text-[10px] font-medium tracking-wide", active ? "text-black font-bold" : "")}>{label}</span>
     </button>
-  );
-}
-
-function OverviewCard({ icon: Icon, title, value, trend }: any) {
-  return (
-    <div className="bg-white border border-gray-100 rounded-[20px] p-4 shadow-sm flex flex-col justify-between min-h-[100px]">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-3.5 w-3.5 text-gray-400" strokeWidth={2.5} />
-        <span className="text-[11px] text-gray-500 font-semibold">{title}</span>
-        {trend && <span className="ml-auto text-[10px] text-gray-500 font-bold flex items-center gap-0.5"><TrendingUp className="h-3 w-3" strokeWidth={3}/> {trend}</span>}
-      </div>
-      <div className="text-2xl font-black text-gray-900 tracking-tight">{value}</div>
-    </div>
-  );
-}
-
-function BarList({ data, showFlag, parentData }: any) {
-  if (!data?.length) return null;
-  const max = Math.max(...data.map((d: any) => d.count), 1);
-  const getFlag = (c: string) => { const f:any = {"India":"🇮🇳","United Kingdom":"🇬🇧","Canada":"🇨🇦","South Korea":"🇰🇷","United States":"🇺🇸","Pakistan":"🇵🇰","Bangladesh":"🇧🇩","Nepal":"🇳🇵","Sri Lanka":"🇱🇰"}; return f[c]||"🌐";};
-  
-  return (
-    <div className="space-y-4">
-      {data.slice(0,6).map((item: any, i: number) => {
-        let name = item.name || "Unknown";
-        let country = name;
-        if (parentData) { country = "India"; } // Simplified
-        return (
-          <div key={i} className="flex items-center gap-3">
-            {showFlag && <span className="text-2xl">{getFlag(country)}</span>}
-            <div className="flex-1">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-semibold text-gray-900">{name}</span>
-                <span className="font-black text-gray-900">{item.count}</span>
-              </div>
-              <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden flex justify-end">
-                <div className="h-full bg-black rounded-full" style={{ width: `${Math.max(5, (item.count / max) * 100)}%` }} />
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function DonutCard({ title, data }: any) {
-  if (!data?.length) return null;
-  const COLORS = ['#111', '#555', '#999', '#ccc', '#eee'];
-  return (
-    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-5">
-      <h3 className="font-bold text-[15px] mb-4">{title}</h3>
-      <div className="h-44 w-full mb-6">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.slice(0,5)} innerRadius={60} outerRadius={85} paddingAngle={2} dataKey="count" stroke="none">
-              {data.map((entry:any, index:number) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-            </Pie>
-            <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #eee', fontWeight: 'bold' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="space-y-2.5">
-        {data.slice(0,3).map((item: any, i: number) => (
-          <div key={i} className="flex justify-between items-center text-sm">
-            <div className="flex items-center gap-2.5">
-              <div className="h-2.5 w-2.5 rounded-full" style={{backgroundColor: COLORS[i]}}></div>
-              <span className="text-gray-500 font-medium">{item.name}</span>
-            </div>
-            <span className="font-bold text-gray-900">{item.count}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Heatmap({ data }: any) {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const max = Math.max(...(data||[]).map((d:any)=>d.count), 1);
-  
-  return (
-    <div>
-      <div className="flex mb-2">
-        <div className="w-8"></div>
-        <div className="flex-1 flex justify-between text-[10px] text-gray-400 font-medium px-1">
-          <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span>
-        </div>
-      </div>
-      <div className="space-y-2">
-        {days.map((day, dIdx) => (
-          <div key={day} className="flex items-center">
-            <span className="w-8 text-[11px] text-gray-500 font-medium">{day}</span>
-            <div className="flex-1 flex justify-between gap-[2px]">
-              {Array.from({length: 24}).map((_, hIdx) => {
-                const pt = data?.find((x:any) => x.day === dIdx && x.hour === hIdx);
-                const opacity = pt ? Math.max(0.1, pt.count / max) : 0.05;
-                return (
-                  <div key={hIdx} className="aspect-square flex-1 rounded-full bg-black" style={{ opacity }} title={`${day} ${hIdx}:00 - ${pt?.count||0}`} />
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
-        <div className="flex items-center gap-2 text-[11px] text-gray-400 font-medium w-full max-w-[200px]">
-          <span>Less</span>
-          <div className="flex-1 flex justify-between gap-1">
-             <div className="aspect-square flex-1 rounded-full bg-black/10"/><div className="aspect-square flex-1 rounded-full bg-black/30"/><div className="aspect-square flex-1 rounded-full bg-black/60"/><div className="aspect-square flex-1 rounded-full bg-black"/>
-          </div>
-          <span>More</span>
-        </div>
-        <div className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-1 rounded-lg">
-          Peak: Sun 09:00
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -1191,7 +917,7 @@ function StoryRequestCard({ req, onUpdate }: any) {
 }
 
 // ─── Buyer Detail Sub-Page ───────────────────────────────────────────────────
-function BuyerDetailPage({ buyer, stories, onBack }: any) {
+function BuyerDetailPage({ buyer, stories, tgUser, onBack }: any) {
   const story = (name: string) => stories.find((s: any) => s.story_name_en === name || s.story_id === name);
   const joinedDate = buyer.joined_at ? new Date(buyer.joined_at).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : "Unknown";
   const firstOrderDate = buyer.payments?.[0]?.created_at ? new Date(buyer.payments[0].created_at).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) : null;
